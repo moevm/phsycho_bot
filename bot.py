@@ -2,11 +2,12 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 import logging
 import sys 
+from db import push_user_feeling, get_user_feelings, get_user_list
+import schedule
+import time
 
 
-
-def start(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /start is issued."""
+def keyboard_setup() -> None:
     keyboard = [
         [
             InlineKeyboardButton("Веселый", callback_data='fun'),
@@ -16,29 +17,48 @@ def start(update: Update, context: CallbackContext) -> None:
             InlineKeyboardButton("Злой", callback_data='angry'),
             InlineKeyboardButton("Тревожный", callback_data='anxious'),
         ],
+        [InlineKeyboardButton("Состояние из ряда вон", callback_data='urgent')],
+        [InlineKeyboardButton("Моя статистика (также доступно по команде /stats)", callback_data='stats')]
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    return InlineKeyboardMarkup(keyboard)
 
-    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение. Расскажи, как ты себя чувствуешь?', reply_markup=reply_markup)
+
+def start(update: Update, context: CallbackContext) -> None:
+    """Send a message when the command /start is issued."""
+
+    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение. Расскажи, как ты себя чувствуешь?', reply_markup=keyboard_setup())
 
 def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
-
-    # CallbackQueries need to be answered, even if no notification to the user is needed
-    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
 
-    query.edit_message_text(text=f"Selected option: {query.data}")
+    push_user_feeling(update.effective_user.id, query.data, update.effective_message.date)
+
+    text = "Спасибо за ответ! "
+    if query.data == "urgent":
+        text = "Ого!"
+    if query.data == "stats":
+        text = get_user_feelings(update.effective_user.id)
+
+    query.edit_message_text(text=text)
 
 
 def help(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
 
+def stats(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(get_user_feelings(update.effective_user.id))
 
 def error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(f'Error!')
+
+
+def cron(updater):
+    users = get_user_list()
+    for user in users:
+        updater.bot.send_message(user, "Расскажи, как ты себя чувствуешь?", reply_markup=setup_keyboard())
+
 
 def main(token):
 
@@ -51,9 +71,15 @@ def main(token):
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
 
     updater.dispatcher.add_handler(CommandHandler('help', help))
+    updater.dispatcher.add_handler(CommandHandler('stats', stats))
     updater.dispatcher.add_error_handler(error)
     updater.start_polling()
-    updater.idle()
+    #updater.idle()
+
+    schedule.every(5).minutes.do(cron, updater=updater)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 if __name__ == '__main__':
     main(sys.argv[1])
