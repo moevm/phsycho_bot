@@ -2,46 +2,56 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 import logging
 import sys 
-from db import push_user_feeling, get_user_feelings, get_user_list
+from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, get_user_list_for_feeling_ask, set_user_ready_flag
 import schedule
 import time
+from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
 
 
-def keyboard_setup() -> None:
-    keyboard = [
-        [
-            InlineKeyboardButton("Веселый", callback_data='fun'),
-            InlineKeyboardButton("Грустный", callback_data='sad'),
-        ],
-        [
-            InlineKeyboardButton("Злой", callback_data='angry'),
-            InlineKeyboardButton("Тревожный", callback_data='anxious'),
-        ],
-        [InlineKeyboardButton("Состояние из ряда вон", callback_data='urgent')],
-        [InlineKeyboardButton("Моя статистика (также доступно по команде /stats)", callback_data='stats')]
-    ]
-
-    return InlineKeyboardMarkup(keyboard)
 
 
 def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
 
-    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение. Расскажи, как ты себя чувствуешь?', reply_markup=keyboard_setup())
+    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение')
+    update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
+
+def ask_focus(update: Update) -> None:
+    update.effective_user.send_message('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:', reply_markup=focus_keyboard())
+
 
 def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
 
-    push_user_feeling(update.effective_user.id, query.data, update.effective_message.date)
-
-    text = "Спасибо за ответ! "
-    if query.data == "urgent":
-        text = "Ого!"
-    if query.data == "stats":
-        text = get_user_feelings(update.effective_user.id)
-
-    query.edit_message_text(text=text)
+    if query.data.startswith('s_'):
+        # User entered schedule 
+        push_user_schedule(update.effective_user.id, query.data, update.effective_message.date)
+        text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
+        query.edit_message_text(text=text)
+        ask_focus(update)
+    elif query.data.startswith('f_'):
+        # User entered week focus
+        push_user_focus(update.effective_user.id, query.data, update.effective_message.date)
+        set_user_ready_flag(update.effective_user.id, True)
+        text = f'Ты выбрал фокусом этой недели "{VALUES[query.data]}". Спасибо! В указанное тобой время я попрошу тебя рассказать, как прошел твой день'
+        query.edit_message_text(text=text)
+    elif query.data.startswith('r_'):
+        # User answered to feelings request
+        if query.data == 'r_yes':
+            ask_feelings(update)
+            query.delete_message()
+        else:
+            text = f'Понял тебя. Спрошу через час'
+            query.edit_message_text(text=text)
+            set_user_ready_flag(update.effective_user.id, True)
+    elif query.data.startswith('m_'):
+        # User entered mood
+        push_user_feeling(update.effective_user.id, query.data, update.effective_message.date)
+        set_user_ready_flag(update.effective_user.id, True)
+        text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
+        query.edit_message_text(text=text)
+  
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -54,11 +64,18 @@ def error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(f'Error!')
 
 
-def cron(updater):
-    users = get_user_list()
-    for user in users:
-        updater.bot.send_message(user, "Расскажи, как ты себя чувствуешь?", reply_markup=setup_keyboard())
+def ask_ready(updater, user):
+    set_user_ready_flag(user, False)    
+    updater.bot.send_message(user, "Привет! Пришло время подводить итоги. Давай?", reply_markup=ready_keyboard())
 
+def ask_feelings(update):
+    update.effective_user.send_message("Расскажи, как прошел твой день?", reply_markup=mood_keyboard())
+
+
+def cron(updater):
+    users = get_user_list_for_feeling_ask()
+    for user in users:
+        ask_ready(updater, user)
 
 def main(token):
 
@@ -76,7 +93,7 @@ def main(token):
     updater.start_polling()
     #updater.idle()
 
-    schedule.every(5).minutes.do(cron, updater=updater)
+    schedule.every(1).minutes.do(cron, updater=updater)
     while True:
         schedule.run_pending()
         time.sleep(1)
