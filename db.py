@@ -1,70 +1,117 @@
-import json
-import pymongo
+from pymodm import connect, fields, MongoModel
 
 DATABASE_NAME = 'phsycho_bot'
 COLLECTION_NAME = 'dataset'
+TIME_VALUES = {
+    's_18': 18 * 60 * 60,
+    's_19': 19 * 60 * 60,
+    's_20': 20 * 60 * 60,
+}
+
+connect(f'mongodb://localhost:27017/{DATABASE_NAME}')
 
 
-class DataBase:
-    def __init__(self):
-        self.__client = pymongo.MongoClient('localhost', 27017)
-        self.__db = self.__client[DATABASE_NAME]
+class User(MongoModel):
+    id = fields.IntegerField()
+    username = fields.CharField()
+    first_name = fields.CharField()
+    last_name = fields.CharField()
+    is_bot = fields.BooleanField()
+    language_code = fields.CharField()
+    focuses = fields.ListField(fields.DictField())
+    feelings = fields.ListField(fields.DictField())
+    ready_flag = fields.BooleanField()
 
-        self.__collection = self.__db[COLLECTION_NAME]
-
-    def get_collection(self):
-        return self.__collection
-
-    def insert(self, doc_or_docs):
-        if isinstance(doc_or_docs, dict):
-            return self.__collection.insert_one(doc_or_docs).inserted_id
-        return self.__collection.insert_many(doc_or_docs).inserted_ids
-
-    def find(self, filter_dict=None):
-        return list(self.__collection.find(filter_dict))
-
-    def remove(self, filter_dict=None):
-        return self.__collection.delete_many(filter_dict).deleted_count
-
-    def update(self, query_elements=None, update=None):
-        return self.__collection.update_many(query_elements, update).modified_count
+    def __str__(self):
+        return f'[id] - {self.id} | [first_name] - {self.first_name} | [last_name] - {self.last_name}'
 
 
-db = DataBase()
+class Schedule(MongoModel):
+    # id = fields.IntegerField()
+    user = fields.ReferenceField(User)
+    # survey_step = fields.IntegerField()
+    time_to_send = fields.IntegerField()  # using unix time
+    """
+    sending_list = [
+        {'date': '2021-03-02', 'success': True},
+        {'date': '2021-03-03', 'success': False},
+        {'date': '2021-03-04', 'success': True},
+        {'date': '2021-03-05', 'success': True},
+    ]
+    """
+    sending_list = fields.ListField(fields.DictField())
 
-def init_user(user):
-    if len(db.find({'user': user})) == 0:
-        db.insert({'user': user, 'feelings': [] , 'focuses': []})
+    def __str__(self):
+        return f'[id] - {self.id} | [user] - {self.user} | [survey_step] - {self.survey_step} ' \
+               f'| [done] - {self.done} | [time_to_send] - {self.time_to_send}'
+
+
+class SurveyProgress(MongoModel):
+    id = fields.IntegerField()
+    user = fields.ReferenceField(User)
+    survey_id = fields.IntegerField()
+    survey_step = fields.IntegerField()
+    user_answer = fields.CharField()
+
+    # using unix time
+    time_send_question = fields.IntegerField()
+    time_receive_answer = fields.IntegerField(default=-1, )
+
+    def __str__(self):
+        return f'[id] - {self.id} | [user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
+               f'[survey_step] - {self.survey_step} | [user_answer] - {self.user_answer} | ' \
+               f'[time_send_question] - {self.time_send_question} | [time_receive_answer] - {self.time_receive_answer}'
+
+
+class Survey(MongoModel):
+    id = fields.IntegerField()
+    title = fields.CharField()
+    count_of_questions = fields.IntegerField()
+
+    def __str__(self):
+        return f'[id] - {self.id} | [title] -  {self.title} | [count_of_questions] - {self.count_of_questions}'
+
+
+def init_user(user) -> User:
+    try:
+        return User.objects.get({'id': user.id})
+    except User.DoesNotExist:
+        d = eval(str(user))
+        return User(**d).save()
 
 
 def push_user_schedule(user, schedule, date):
+    # sending every day
     # TODO: param date is unused
-    init_user(user)
-    db.update({'user': user}, {'$push': {'schedule': schedule}})
+    db_user = init_user(user)
+    Schedule(**{
+        'user': db_user,
+        'time_to_send': TIME_VALUES[schedule]
+    }).save()
 
 
 def push_user_focus(user, focus, date):
-    init_user(user)
-    db.update({'user': user}, {'$push': {'focuses': {'focus': focus, 'date': date}}})
+    db_user = init_user(user)
+    db_user.feelings.append({'focus': focus, 'date': date})
+    db_user.save()
 
 
 def push_user_feeling(user, feeling, date):
-    init_user(user)
-    db.update({'user': user}, {'$push': {'feelings': {'feel': feeling, 'date': date}}})
+    db_user = init_user(user)
+    db_user.feelings.append({'feel': feeling, 'date': date})
+    db_user.save()
 
 
 def get_user_feelings(user):
-    return f"Вы сообщали о своем состоянии {len(db[user]['feelings'])} раз"
+    db_user = init_user(user)
+    return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
 
 def set_user_ready_flag(user, flag):
-    init_user(user)
-    db.update({'user': user}, {'$set': {'ready': flag}})
+    db_user = init_user(user)
+    db_user.ready_flag = flag
+    db_user.save()
 
 
 def get_user_list_for_feeling_ask():
-    result = []
-    dataset = db.find({'ready': False})
-    for user_data in dataset:
-        result.append(user_data['user'])
-    return result
+    return list(User.objects.filter({'ready_flag': True}))
