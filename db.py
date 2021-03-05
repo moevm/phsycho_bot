@@ -30,7 +30,7 @@ class Schedule(MongoModel):
     # id = fields.IntegerField()
     user = fields.ReferenceField(User)
     # survey_step = fields.IntegerField()
-    time_to_send = fields.IntegerField()  # using unix time
+    time_to_send = fields.DateTimeField()
     """
     sending_list = [
         {'date': '2021-03-02', 'success': True},
@@ -53,9 +53,8 @@ class SurveyProgress(MongoModel):
     survey_step = fields.IntegerField()
     user_answer = fields.CharField()
 
-    # using unix time
-    time_send_question = fields.IntegerField()
-    time_receive_answer = fields.IntegerField(default=-1, )
+    time_send_question = fields.DateTimeField()
+    time_receive_answer = fields.DateTimeField()
 
     def __str__(self):
         return f'[id] - {self.id} | [user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
@@ -76,8 +75,13 @@ def init_user(user) -> User:
     try:
         return User.objects.get({'id': user.id})
     except User.DoesNotExist:
-        d = eval(str(user))
-        return User(**d).save()
+        return User(**{
+            'id': user.id,
+            'first_name': user.first_name,
+            'is_bot': user.is_bot,
+            'username': user.username,
+            'language_code': user.language_code
+        }).save()
 
 
 def push_user_schedule(user, schedule, date):
