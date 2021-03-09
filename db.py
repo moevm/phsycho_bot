@@ -1,39 +1,121 @@
-import json
-db = {}
+from pymodm import connect, fields, MongoModel
 
-def init_user(user):
-    if user not in db:
-        db[user] = { 'feelings': [] , 'focuses':[]}
+DATABASE_NAME = 'phsycho_bot'
+COLLECTION_NAME = 'dataset'
+TIME_VALUES = {
+    's_18': 18 * 60 * 60,
+    's_19': 19 * 60 * 60,
+    's_20': 20 * 60 * 60,
+}
+
+connect(f'mongodb://localhost:27017/{DATABASE_NAME}')
+
+
+class User(MongoModel):
+    id = fields.IntegerField()
+    username = fields.CharField()
+    first_name = fields.CharField()
+    last_name = fields.CharField()
+    is_bot = fields.BooleanField()
+    language_code = fields.CharField()
+    focuses = fields.ListField(fields.DictField())
+    feelings = fields.ListField(fields.DictField())
+    ready_flag = fields.BooleanField()
+
+    def __str__(self):
+        return f'[id] - {self.id} | [first_name] - {self.first_name} | [last_name] - {self.last_name}'
+
+
+class Schedule(MongoModel):
+    # id = fields.IntegerField()
+    user = fields.ReferenceField(User)
+    # survey_step = fields.IntegerField()
+    time_to_send = fields.DateTimeField()
+    """
+    sending_list = [
+        {'date': '2021-03-02', 'success': True},
+        {'date': '2021-03-03', 'success': False},
+        {'date': '2021-03-04', 'success': True},
+        {'date': '2021-03-05', 'success': True},
+    ]
+    """
+    sending_list = fields.ListField(fields.DictField())
+
+    def __str__(self):
+        return f'[id] - {self.id} | [user] - {self.user} | [survey_step] - {self.survey_step} ' \
+               f'| [done] - {self.done} | [time_to_send] - {self.time_to_send}'
+
+
+class SurveyProgress(MongoModel):
+    id = fields.IntegerField()
+    user = fields.ReferenceField(User)
+    survey_id = fields.IntegerField()
+    survey_step = fields.IntegerField()
+    user_answer = fields.CharField()
+
+    time_send_question = fields.DateTimeField()
+    time_receive_answer = fields.DateTimeField()
+
+    def __str__(self):
+        return f'[id] - {self.id} | [user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
+               f'[survey_step] - {self.survey_step} | [user_answer] - {self.user_answer} | ' \
+               f'[time_send_question] - {self.time_send_question} | [time_receive_answer] - {self.time_receive_answer}'
+
+
+class Survey(MongoModel):
+    id = fields.IntegerField()
+    title = fields.CharField()
+    count_of_questions = fields.IntegerField()
+
+    def __str__(self):
+        return f'[id] - {self.id} | [title] -  {self.title} | [count_of_questions] - {self.count_of_questions}'
+
+
+def init_user(user) -> User:
+    try:
+        return User.objects.get({'id': user.id})
+    except User.DoesNotExist:
+        return User(**{
+            'id': user.id,
+            'first_name': user.first_name,
+            'is_bot': user.is_bot,
+            'username': user.username,
+            'language_code': user.language_code
+        }).save()
+
 
 def push_user_schedule(user, schedule, date):
-    init_user(user)
-
-    db[user]['schedule'] = schedule
+    # sending every day
+    # TODO: param date is unused
+    db_user = init_user(user)
+    Schedule(**{
+        'user': db_user,
+        'time_to_send': TIME_VALUES[schedule]
+    }).save()
 
 
 def push_user_focus(user, focus, date):
-    init_user(user)
+    db_user = init_user(user)
+    db_user.feelings.append({'focus': focus, 'date': date})
+    db_user.save()
 
-    db[user]['focuses'].append({'focus':focus, 'date':date})
-   
+
 def push_user_feeling(user, feeling, date):
-    init_user(user)
+    db_user = init_user(user)
+    db_user.feelings.append({'feel': feeling, 'date': date})
+    db_user.save()
 
-    db[user]['feelings'].append({'feel':feeling, 'date':date})
 
 def get_user_feelings(user):
-    
-    return "Вы сообщали о своем состоянии " + str(len(db[user]['feelings'])) + " раз"
+    db_user = init_user(user)
+    return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
 
 def set_user_ready_flag(user, flag):
-    init_user(user)
+    db_user = init_user(user)
+    db_user.ready_flag = flag
+    db_user.save()
 
-    db[user]['ready'] = flag
 
 def get_user_list_for_feeling_ask():
-    result = []
-    for user in db:
-        if db[user].get('ready', False):
-            result.append(user)
-    return result
+    return list(User.objects.filter({'ready_flag': True}))
