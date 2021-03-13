@@ -5,8 +5,10 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_is_on_flag
+    set_user_ready_flag, set_schedule_is_on_flag, init_user, get_schedule_by_user
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
+
+DEBUG = True
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -56,6 +58,15 @@ def button(update: Update, context: CallbackContext) -> None:
         query.edit_message_text(text=text)
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
+        # debugging zone
+        if DEBUG:
+            user = init_user(update.effective_user)
+            schedule = get_schedule_by_user(user, is_test=True)
+            if schedule:
+                if len(user.feelings) < 7:
+                    schedule.is_on = True
+                    schedule.save()
+
 
 def help(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Help!')
@@ -71,7 +82,8 @@ def error(update: Update, context: CallbackContext) -> None:
 
 def ask_ready(updater, schedule):
     set_schedule_is_on_flag(schedule, False)
-    updater.bot.send_message(schedule.user.id, "Привет! Пришло время подводить итоги. Давай?", reply_markup=ready_keyboard())
+    updater.bot.send_message(schedule.user.id, "Привет! Пришло время подводить итоги. Давай?",
+                             reply_markup=ready_keyboard())
 
 
 def ask_feelings(update):

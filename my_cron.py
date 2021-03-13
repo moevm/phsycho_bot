@@ -19,7 +19,7 @@ def cron(updater):
             today = datetime.datetime.now()
             if today <= focus_date + datetime.timedelta(days=7):
                 filter_schedules.append(_schedule)
-    # return
+
     for _schedule in filter_schedules:
         ask_ready(updater, _schedule)
 
@@ -28,7 +28,6 @@ def main(token):
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     updater = Updater(token, use_context=True)
-    # cron(updater)
     schedule.every(1).seconds.do(cron, updater=updater)
     while True:
         schedule.run_pending()

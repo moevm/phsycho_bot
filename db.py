@@ -1,4 +1,6 @@
 import datetime
+import logging
+from typing import List
 
 from pymodm import connect, fields, MongoModel
 
@@ -24,7 +26,7 @@ connect(f'mongodb://localhost:27017/{DATABASE_NAME}')
 
 class User(MongoModel):
     id = fields.IntegerField()
-    username = fields.CharField()
+    username = fields.CharField(blank=True)
     first_name = fields.CharField()
     last_name = fields.CharField()
     is_bot = fields.BooleanField()
@@ -55,8 +57,7 @@ class Schedule(MongoModel):
     is_on = fields.BooleanField()
 
     def __str__(self):
-        return f'[id] - {self.id} | [user] - {self.user} | [survey_step] - {self.survey_step} ' \
-               f'| [done] - {self.done} | [time_to_send] - {self.time_to_send}'
+        return f'Schedule is {self.is_on}'
 
 
 class SurveyProgress(MongoModel):
@@ -95,6 +96,23 @@ def init_user(user) -> User:
             'username': user.username,
             'language_code': user.language_code
         }).save()
+
+
+def get_schedule_by_user(user, is_test=True):
+    logger = logging.getLogger(__name__)
+    schedules: List[Schedule] = list(Schedule.objects.raw({
+        # 'user': {'$elemMatch': {'id': user.id}},
+        'is_test': is_test
+    }))
+    filter_schedules = []
+    for schedule in schedules:
+        if schedule.user.id == user.id:
+            filter_schedules.append(schedule)
+    if len(filter_schedules) == 0:
+        logger.error('len(filter_schedules) == 0')
+    if len(filter_schedules) > 1:
+        logger.warning('len(filter_schedules) > 1')
+    return filter_schedules[0]
 
 
 def push_user_schedule(user, schedule, date):
@@ -146,7 +164,7 @@ def get_schedule_list_for_feeling_ask():
     today = datetime.datetime.now().date().today()
     today = datetime.datetime(year=1970, month=1, day=1)
     dt_from = datetime.datetime.combine(today, datetime.time(hour=now.hour))
-    dt_to = datetime.datetime.combine(today, datetime.time(hour=now.hour + 1))
+    dt_to = datetime.datetime.combine(today, datetime.time(hour=now.hour)) + datetime.timedelta(hours=1)
     print(dt_from)
     print(dt_to)
     return list(Schedule.objects.raw({
