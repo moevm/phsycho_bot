@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+    bot:
+      build:
+        context: .
+        dockerfile: Dockerfile
+      image: bot
+      restart: unless-stopped
+      env_file: .env
+      #enviroment:
+        #
+      command: python3 bot.py 1635746050:AAExQvSe1bdS8q51gIrxJYsGOF8K66CTOHg
