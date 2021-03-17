@@ -9,6 +9,9 @@ from bot import ask_ready
 from db import get_schedule_list_for_feeling_ask
 
 
+MINUTES_FOR_LOOP = 10
+
+
 def cron(updater):
     schedules = get_schedule_list_for_feeling_ask()
     print(schedules)
@@ -28,7 +31,7 @@ def main(token):
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     updater = Updater(token, use_context=True)
-    schedule.every(1).seconds.do(cron, updater=updater)
+    schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     while True:
         schedule.run_pending()
         time.sleep(1)
