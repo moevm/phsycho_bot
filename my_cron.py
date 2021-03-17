@@ -34,7 +34,7 @@ def main(token):
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(60)
 
 
 if __name__ == '__main__':
