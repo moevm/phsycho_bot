@@ -9,7 +9,7 @@ from bot import ask_ready
 from db import get_schedule_list_for_feeling_ask
 
 
-MINUTES_FOR_LOOP = 10
+MINUTES_FOR_LOOP = 1
 
 
 def cron(updater):
