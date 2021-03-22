@@ -1,5 +1,6 @@
 import datetime
 import logging
+import sys
 import time
 
 import schedule
@@ -38,4 +39,4 @@ def main(token):
 
 
 if __name__ == '__main__':
-    main('1126020892:AAEeIA88MF1vJ4SHxwgTOOFoyTU2YGuUTMs')
+    main(sys.argv[1])
