@@ -4,6 +4,7 @@ VALUES = {
     's_18': "18:00 - 19:00",
     's_19': "19:00 - 20:00",
     's_20': "20:00 - 21:00",
+    's_right_now': "Прямо сейчас",
 
     'm_fun': "Веселый",
     'm_sad': "Грустный",
@@ -28,21 +29,24 @@ def init_button(key) -> InlineKeyboardButton:
     return InlineKeyboardButton(VALUES[key], callback_data=key)
 
 
-def ready_keyboard() -> None:
+def ready_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [init_button('r_yes'), init_button('r_1h')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
-def daily_schedule_keyboard() -> None:
+def daily_schedule_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [init_button('s_18')], [init_button('s_19')], [init_button('s_20')]
+        [init_button('s_18')],
+        [init_button('s_19')],
+        [init_button('s_20')],
+        [init_button('s_right_now')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
-def mood_keyboard() -> None:
+def mood_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [init_button('m_fun'), init_button('m_sad')],
         [init_button('m_angry'), init_button('m_anxious')],
@@ -51,7 +55,7 @@ def mood_keyboard() -> None:
     return InlineKeyboardMarkup(keyboard)
 
 
-def focus_keyboard() -> None:
+def focus_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [init_button('f_tired')],
         [init_button('f_self-doubt')],
