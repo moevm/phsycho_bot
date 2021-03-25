@@ -1,13 +1,30 @@
 version: "3"
 
+#todo добавить volumes/ соединить базу с ботом
+
 services:
-    bot:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      image: bot
-      restart: unless-stopped
-      env_file: .env
-      #enviroment:
-        #
-      command: python3 bot.py 1635746050:AAExQvSe1bdS8q51gIrxJYsGOF8K66CTOHg
+  db:
+    image: mongo
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bot
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - db
+    environment:
+      - MONGODB_HOST=db
+      - TOKEN=${TELEGRAM_TOKEN}
+  #volumes:
+  #dbdata:
+  #

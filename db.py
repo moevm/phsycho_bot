@@ -21,7 +21,7 @@ TIME_VALUES = {
     DEBUG: get_seconds(datetime.datetime.now().time())
 }
 
-connect(f'mongodb://localhost:27017/{DATABASE_NAME}')
+connect(f'mongodb://mongo:27017/{DATABASE_NAME}')
 
 
 class User(MongoModel):
