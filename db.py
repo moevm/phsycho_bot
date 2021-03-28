@@ -1,4 +1,5 @@
 import datetime
+import sys
 import logging
 from typing import List
 
@@ -21,7 +22,7 @@ TIME_VALUES = {
     DEBUG: get_seconds(datetime.datetime.now().time())
 }
 
-connect(f'mongodb://mongo:27017/{DATABASE_NAME}')
+connect(f'mongodb://{sys.argv[4]}:{sys.argv[3]}@{sys.argv[2]}:{sys.argv[5]}/{DATABASE_NAME}?authSource=admin')
 
 
 class User(MongoModel):
