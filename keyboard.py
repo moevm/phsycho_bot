@@ -4,6 +4,9 @@ VALUES = {
     's_18': "18:00 - 19:00",
     's_19': "19:00 - 20:00",
     's_20': "20:00 - 21:00",
+    's_21': "21:00 - 22:00",
+    's_22': "22:00 - 23:00",
+    's_23': "23:00 - 24:00",
     's_right_now': "Прямо сейчас",
 
     'm_fun': "Веселый",
@@ -41,6 +44,9 @@ def daily_schedule_keyboard() -> InlineKeyboardMarkup:
         [init_button('s_18')],
         [init_button('s_19')],
         [init_button('s_20')],
+        [init_button('s_21')],
+        [init_button('s_22')],
+        [init_button('s_23')],
         [init_button('s_right_now')]
     ]
     return InlineKeyboardMarkup(keyboard)

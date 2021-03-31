@@ -5,9 +5,10 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_is_on_flag, init_user, get_schedule_by_user
+    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
 
+DAYS_OFFSET = 7
 DEBUG = True
 
 
@@ -62,8 +63,9 @@ def button(update: Update, context: CallbackContext) -> None:
         if DEBUG:
             user = init_user(update.effective_user)
             schedule = get_schedule_by_user(user, is_test=True)
+            print(schedule)
             if schedule:
-                if len(user.feelings) < 7:
+                if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
 
@@ -81,7 +83,8 @@ def error(update: Update, context: CallbackContext) -> None:
 
 
 def ask_ready(updater, schedule):
-    set_schedule_is_on_flag(schedule, False)
+    # set_schedule_is_on_flag(schedule, False)
+    set_schedule_asked_today(schedule)
     updater.bot.send_message(schedule.user.id, "Привет! Пришло время подводить итоги. Давай?",
                              reply_markup=ready_keyboard())
 

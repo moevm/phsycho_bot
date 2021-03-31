@@ -2,23 +2,28 @@ import datetime
 import logging
 from typing import List
 
+import pytz
 from pymodm import connect, fields, MongoModel
 
 
-def get_seconds(t: datetime.time) -> int:
-    return (t.hour * 60 + t.minute) * 60 + t.second
+def get_datetime_with_tz(date: datetime.date, time: datetime.time):
+    return pytz.utc.localize(datetime.datetime.combine(date, time))
 
 
+START_UNIX = datetime.datetime(year=1970, month=1, day=1)
 DEBUG = 's_right_now'
 DATABASE_NAME = 'phsycho_bot'
 COLLECTION_NAME = 'dataset'
 TIME_VALUES = {
     # TODO: ---------------
-    's_18': 18 * 60 * 60,
-    's_19': 19 * 60 * 60,
-    's_20': 20 * 60 * 60,
+    's_18': get_datetime_with_tz(START_UNIX, datetime.time(hour=18 - 3)),
+    's_19': get_datetime_with_tz(START_UNIX, datetime.time(hour=19 - 3)),
+    's_20': get_datetime_with_tz(START_UNIX, datetime.time(hour=20 - 3)),
+    's_21': get_datetime_with_tz(START_UNIX, datetime.time(hour=21 - 3)),
+    's_22': get_datetime_with_tz(START_UNIX, datetime.time(hour=22 - 3)),
+    's_23': get_datetime_with_tz(START_UNIX, datetime.time(hour=23 - 3)),
     # TODO: ---------------
-    DEBUG: get_seconds(datetime.datetime.now().time())
+    DEBUG: get_datetime_with_tz(START_UNIX, datetime.datetime.utcnow().time())
 }
 
 connect(f'mongodb://localhost:27017/{DATABASE_NAME}')
@@ -158,15 +163,17 @@ def set_schedule_is_on_flag(schedule, flag):
     schedule.save()
 
 
+def set_schedule_asked_today(schedule):
+    schedule.sending_list.append({'date': pytz.utc.localize(datetime.datetime.utcnow()), 'success': True})
+    schedule.save()
+
+
 def get_schedule_list_for_feeling_ask():
-    now = datetime.datetime.now().time()
+    now = datetime.datetime.utcnow().time()
     # TODO: think about time
-    today = datetime.datetime.now().date().today()
     today = datetime.datetime(year=1970, month=1, day=1)
-    dt_from = datetime.datetime.combine(today, datetime.time(hour=now.hour))
-    dt_to = datetime.datetime.combine(today, datetime.time(hour=now.hour)) + datetime.timedelta(hours=1)
-    print(dt_from)
-    print(dt_to)
+    dt_from = get_datetime_with_tz(today, datetime.time(hour=now.hour))
+    dt_to = get_datetime_with_tz(today, datetime.time(hour=now.hour)) + datetime.timedelta(hours=1)
     return list(Schedule.objects.raw({
         'time_to_ask': {
             '$gte': dt_from,
