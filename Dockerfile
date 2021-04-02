@@ -8,7 +8,5 @@ RUN pip3 install -r requirements.txt
 
 ARG TOKEN
 
-#CMD ["python", "./bot.py", "${TOKEN}"]
 
 CMD python ./bot.py ${TOKEN} ${MONGODB_HOST} ${MONGODB_PASSWORD} ${MONGODB_USERNAME} ${MONGODB_PORT}
-#CMD python ./my_cron.py ${TOKEN} ${MONGODB_HOST} ${MONGODB_PASSWORD} ${MONGODB_USERNAME}

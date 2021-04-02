@@ -6,6 +6,8 @@ services:
     image: mongo
     restart: unless-stopped
     env_file: .env
+    volumes:
+      - ./db/:/data/db/
     ports:
       - 27017:27017
     environment:
@@ -19,8 +21,7 @@ services:
     image: bot
     restart: unless-stopped
     env_file: .env
-    volumes:
-    - ./db/:/var/lib/mongodb/
+
     depends_on:
       - db
     environment:
@@ -29,21 +30,3 @@ services:
       - MONGODB_USERNAME=${MONGO_USERNAME}
       - TOKEN=${TELEGRAM_TOKEN}
       - MONGODB_PORT=${MONGO_PORT}
-
-#  scheldule:
-#    build:
-#      context: .
-#      dockerfile: DockerfileScheldule
-#    image: scheldule
-#    restart: unless-stopped
-#    env_file: .env
-#    depends_on:
-#      - db
-#    environment:
-#      - MONGODB_HOST=db
-#      - MONGODB_PASSWORD=${MONGO_PASSWORD}
-#      - MONGODB_USERNAME=${MONGO_USERNAME}
-#      - TOKEN=${TELEGRAM_TOKEN}
-  #volumes:
-  #dbdata:
-  #
