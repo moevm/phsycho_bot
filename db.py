@@ -22,8 +22,6 @@ TIME_VALUES = {
     DEBUG: get_seconds(datetime.datetime.now().time())
 }
 
-connect(f'mongodb://{sys.argv[4]}:{sys.argv[3]}@{sys.argv[2]}:{sys.argv[5]}/{DATABASE_NAME}?authSource=admin')
-
 
 class User(MongoModel):
     id = fields.IntegerField()
@@ -175,3 +173,7 @@ def get_schedule_list_for_feeling_ask():
         },
         'is_on': True
     }))
+
+
+def auth_in_db(username, password):
+    connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')

@@ -8,7 +8,7 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_is_on_flag, init_user, get_schedule_by_user
+    set_user_ready_flag, set_schedule_is_on_flag, init_user, get_schedule_by_user, auth_in_db
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
 
 DEBUG = True
@@ -122,6 +122,8 @@ class Worker(threading.Thread):
             pass
 
     def process(self, token_):
+        auth_in_db(username=sys.argv[2],
+                   password=sys.argv[3])
         if token_ == 'bot':
             main(sys.argv[1])
         else:
