@@ -1,0 +1,30 @@
+version: "3"
+
+
+services:
+  db:
+    image: mongo
+    restart: unless-stopped
+    env_file: env_file
+    volumes:
+      - ./db/:/data/db/
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bot
+    restart: unless-stopped
+    env_file: .env
+
+    depends_on:
+      - db
+    environment:
+      - MONGODB_PASSWORD=${MONGO_PASSWORD}
+      - MONGODB_USERNAME=${MONGO_USERNAME}
+      - TOKEN=${TELEGRAM_TOKEN}
