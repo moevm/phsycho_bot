@@ -1,4 +1,5 @@
 import datetime
+import sys
 import logging
 from typing import List
 
@@ -20,8 +21,6 @@ TIME_VALUES = {
     # TODO: ---------------
     DEBUG: get_seconds(datetime.datetime.now().time())
 }
-
-connect(f'mongodb://localhost:27017/{DATABASE_NAME}')
 
 
 class User(MongoModel):
@@ -174,3 +173,7 @@ def get_schedule_list_for_feeling_ask():
         },
         'is_on': True
     }))
+
+
+def auth_in_db(username, password):
+    connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')

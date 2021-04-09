@@ -1,11 +1,14 @@
 import logging
 import sys
+import threading
+import queue
+import my_cron
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_is_on_flag, init_user, get_schedule_by_user
+    set_user_ready_flag, set_schedule_is_on_flag, init_user, get_schedule_by_user, auth_in_db
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
 
 DEBUG = True
@@ -106,5 +109,32 @@ def main(token):
     # updater.idle()
 
 
+class Worker(threading.Thread):
+    def __init__(self, tokens_queue):
+        super(Worker, self).__init__()
+        self.work_queue = tokens_queue
+
+    def run(self):
+        try:
+            token_try = self.work_queue.get()
+            self.process(token_try)
+        finally:
+            pass
+
+    def process(self, token_):
+        auth_in_db(username=sys.argv[2],
+                   password=sys.argv[3])
+        if token_ == 'bot':
+            main(sys.argv[1])
+        else:
+            my_cron.main(sys.argv[1])
+
+
 if __name__ == '__main__':
-    main(sys.argv[1])
+    tokens = ['bot', 'schedule']
+    work_queue = queue.Queue()
+    for token in tokens:
+        work_queue.put(token)
+    for i in range(len(tokens)):
+        worker = Worker(work_queue)
+        worker.start()
