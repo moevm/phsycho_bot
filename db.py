@@ -1,31 +1,47 @@
 import datetime
-import sys
 import logging
 from typing import List
 
 import pytz
 from pymodm import connect, fields, MongoModel
 
+START_UNIX = datetime.datetime(year=1970, month=1, day=1)
+DEBUG = 's_right_now'
+DATABASE_NAME = 'phsycho_bot'
+COLLECTION_NAME = 'dataset'
+
+TIME_VALUES = {}
+
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
     return pytz.utc.localize(datetime.datetime.combine(date, time))
 
 
-START_UNIX = datetime.datetime(year=1970, month=1, day=1)
-DEBUG = 's_right_now'
-DATABASE_NAME = 'phsycho_bot'
-COLLECTION_NAME = 'dataset'
-TIME_VALUES = {
-    # TODO: ---------------
-    's_18': get_datetime_with_tz(START_UNIX, datetime.time(hour=18 - 3)),
-    's_19': get_datetime_with_tz(START_UNIX, datetime.time(hour=19 - 3)),
-    's_20': get_datetime_with_tz(START_UNIX, datetime.time(hour=20 - 3)),
-    's_21': get_datetime_with_tz(START_UNIX, datetime.time(hour=21 - 3)),
-    's_22': get_datetime_with_tz(START_UNIX, datetime.time(hour=22 - 3)),
-    's_23': get_datetime_with_tz(START_UNIX, datetime.time(hour=23 - 3)),
-    # TODO: ---------------
-    DEBUG: get_datetime_with_tz(START_UNIX, datetime.datetime.utcnow().time())
-}
+def get_datetime_via_hour_msk(hour: int):
+    return get_datetime_with_tz(START_UNIX, datetime.time(hour=(hour - 3) % 24))
+
+
+def get_datetime_via_hour_utc(hour: int):
+    return get_datetime_with_tz(START_UNIX, datetime.time(hour=hour % 24))
+
+
+def get_datetime_via_time(time: datetime.time):
+    return get_datetime_with_tz(START_UNIX, time)
+
+
+def init_time_values():
+    for i in range(24):
+        TIME_VALUES[f's_{i}'] = {
+            'time': get_datetime_via_hour_msk(i),
+            'caption': '{hour_start:0>2}:00 - {hour_end:0>2}:00'.format(hour_start=i, hour_end=i + 1)
+        }
+    TIME_VALUES['s_right_now'] = {
+        'time': get_datetime_via_time(datetime.datetime.utcnow().time()),
+        'caption': 'Прямо чейчас'
+    }
+
+
+init_time_values()
 
 
 class User(MongoModel):
@@ -105,7 +121,6 @@ def init_user(user) -> User:
 def get_schedule_by_user(user, is_test=True):
     logger = logging.getLogger(__name__)
     schedules: List[Schedule] = list(Schedule.objects.raw({
-        # 'user': {'$elemMatch': {'id': user.id}},
         'is_test': is_test
     }))
     filter_schedules = []
@@ -128,7 +143,7 @@ def push_user_schedule(user, schedule, date):
     db_user = init_user(user)
     Schedule(**{
         'user': db_user,
-        'time_to_ask': TIME_VALUES[schedule],
+        'time_to_ask': TIME_VALUES[schedule]['time'],
         'is_test': is_test,
         'is_on': True
     }).save()
@@ -170,9 +185,8 @@ def set_schedule_asked_today(schedule):
 def get_schedule_list_for_feeling_ask():
     now = datetime.datetime.utcnow().time()
     # TODO: think about time
-    today = datetime.datetime(year=1970, month=1, day=1)
-    dt_from = get_datetime_with_tz(today, datetime.time(hour=now.hour))
-    dt_to = get_datetime_with_tz(today, datetime.time(hour=now.hour)) + datetime.timedelta(hours=1)
+    dt_from = get_datetime_via_hour_utc(now.hour)
+    dt_to = get_datetime_via_hour_utc(now.hour + 1)
     return list(Schedule.objects.raw({
         'time_to_ask': {
             '$gte': dt_from,

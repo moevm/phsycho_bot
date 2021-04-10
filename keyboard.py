@@ -1,75 +1,66 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-VALUES = {
-    's_18': "18:00 - 19:00",
-    's_19': "19:00 - 20:00",
-    's_20': "20:00 - 21:00",
-    's_21': "21:00 - 22:00",
-    's_22': "22:00 - 23:00",
-    's_23': "23:00 - 24:00",
-    's_right_now': "Прямо сейчас",
-
-    'm_fun': "Веселый",
-    'm_sad': "Грустный",
-    'm_angry': "Злой",
-    'm_anxious': "Тревожный",
-    'm_urgent': "Состояние из ряда вон",
-
-    'f_tired': "Усталость",
-    'f_self-doubt': "Неуверенность в себе",
-    'f_bad': "Все плохо",
-    'f_lonely': "Одиноко",
-    'f_apathy': "Апатия",
-    'f_results': "Обычные итоги",
-    'f_groundhog': "День сурка",
-
-    'r_yes': 'Да',
-    'r_1h': 'Ответить через час'
-}
+from config import VALUES, Mood, Focus
+from db import TIME_VALUES
 
 
 def init_button(key) -> InlineKeyboardButton:
-    return InlineKeyboardButton(VALUES[key], callback_data=key)
+    if key in TIME_VALUES:
+        return InlineKeyboardButton(TIME_VALUES[key]['caption'], callback_data=key)
+    elif key in VALUES:
+        return InlineKeyboardButton(VALUES[key]['caption'], callback_data=key)
+    else:
+        if type(key) == Mood:
+            return InlineKeyboardButton(key.value, callback_data=key.name)
+        elif type(key) == Focus:
+            return InlineKeyboardButton(key.value, callback_data=key.name)
+        else:
+            raise Exception(f'Unknown key: {key}')
 
 
 def ready_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
-        [init_button('r_yes'), init_button('r_1h')]
+        [
+            init_button('r_yes'),
+            init_button('r_1h')
+        ]
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def daily_schedule_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [init_button('s_18')],
-        [init_button('s_19')],
-        [init_button('s_20')],
-        [init_button('s_21')],
-        [init_button('s_22')],
-        [init_button('s_23')],
-        [init_button('s_right_now')]
-    ]
+    keyboard = []
+    for i in range(24):
+        keyboard.append([init_button(f's_{i}')])
+    keyboard.append([init_button('s_right_now')])
     return InlineKeyboardMarkup(keyboard)
 
 
 def mood_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [init_button('m_fun'), init_button('m_sad')],
-        [init_button('m_angry'), init_button('m_anxious')],
-        [init_button('m_urgent')], ]
+    keyboard = []
+    for mood in Mood:
+        keyboard.append([init_button(mood)])
+    # keyboard = [
+    #     [init_button('m_fun'), init_button('m_sad')],
+    #     [init_button('m_angry'), init_button('m_anxious')],
+    #     [init_button('m_urgent')],
+    # ]
 
     return InlineKeyboardMarkup(keyboard)
 
 
 def focus_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [init_button('f_tired')],
-        [init_button('f_self-doubt')],
-        [init_button('f_bad')],
-        [init_button('f_lonely')],
-        [init_button('f_apathy')],
-        [init_button('f_results')],
-        [init_button('f_groundhog')]
-
-    ]
+    keyboard = []
+    for focus in Focus:
+        keyboard.append([init_button(focus)])
+    # keyboard = [
+    #     [init_button('f_tired')],
+    #     [init_button('f_self-doubt')],
+    #     [init_button('f_bad')],
+    #     [init_button('f_lonely')],
+    #     [init_button('f_apathy')],
+    #     [init_button('f_results')],
+    #     [init_button('f_groundhog')]
+    #
+    # ]
     return InlineKeyboardMarkup(keyboard)

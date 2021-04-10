@@ -8,8 +8,10 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db
-from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
+    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, TIME_VALUES
+from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard
+from config import VALUES, Focus, Mood
+
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -35,14 +37,14 @@ def button(update: Update, context: CallbackContext) -> None:
 
     if query.data.startswith('s_'):
         # User entered schedule
-        text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
+        text = f"Ты выбрал {TIME_VALUES[query.data]['caption']} в качестве времени для рассылки. Спасибо!"
         query.edit_message_text(text=text)
         ask_focus(update)
         push_user_schedule(update.effective_user, query.data, update.effective_message.date)
     elif query.data.startswith('f_'):
         # User entered week focus
         set_user_ready_flag(update.effective_user, True)
-        text = f'Ты выбрал фокусом этой недели "{VALUES[query.data]}". ' \
+        text = f'Ты выбрал фокусом этой недели "{Focus[query.data].value}". ' \
                f'Спасибо! В указанное тобой время я попрошу тебя рассказать, как прошел твой день'
         query.edit_message_text(text=text)
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
@@ -58,7 +60,7 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data.startswith('m_'):
         # User entered mood
         set_user_ready_flag(update.effective_user, True)
-        text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
+        text = f'Ты указал итогом дня "{Mood[query.data].value}". Спасибо!'
         query.edit_message_text(text=text)
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
