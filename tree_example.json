@@ -1,0 +1,102 @@
+{
+  "weak": {
+    "weak_0": {
+      "script_name": "weak",
+      "id": "weak_0",
+      "message": "Ты выбрал фокусом этой недели работу с усталостью. Для начала вспомни, какие события или действия наполняют тебя ресурсом, дает прилив энергии и сил?",
+      "type_of_user_action": "message",
+      "expected_type": "string",
+      "TODO Добавить логику для выбора в дереве разного количества ответов": "",
+      "next": "weak_1"
+    },
+    "weak_1": {
+      "script_name": "weak",
+      "id": "weak_1",
+      "message": "Привет! Пришло время подводить итоги дня. Давай?",
+      "type_of_user_action": "button_choose",
+      "buttons": [
+        {
+          "button_value": "r_yes"
+        },
+        {
+          "button_value": "r_1h"
+        }
+      ],
+      "next": "weak_2"
+    },
+    "weak_2": {
+      "script_name": "weak",
+      "id": "weak_2",
+      "message": "На сколько усталым ты себя ощущаешь сейчас (0-10)",
+      "type_of_user_action": "message",
+      "expected_type": "int",
+      "range": {
+        "down": 0,
+        "up": 10
+      },
+      "next": "weak_3"
+    },
+    "weak_3": {
+      "script_name": "weak",
+      "id": "weak_3",
+      "message": "Как ты думаешь, с чем связана твоя усталость сегодня?",
+      "type_of_user_action": "message",
+      "expected_type": "string",
+      "next": "weak_4"
+    },
+    "weak_4": {
+      "script_name": "weak",
+      "id": "weak_4",
+      "message": "Что отняло у тебя больше всего сил?",
+      "type_of_user_action": "message",
+      "expected_type": "string",
+      "next": "weak_5"
+    },
+    "weak_5": {
+      "script_name": "weak",
+      "id": "weak_5",
+      "message_expand": [
+        "здесь выбор из степа в начале"
+      ],
+      "message": "Что ты можешь сделать завтра, чтобы меньше устать? Обычно тебя наполняет силами:",
+      "type_of_user_action": "message",
+      "expected_type": "string",
+      "next": "weak_6"
+    },
+    "weak_6": {
+      "script_name": "weak",
+      "id": "weak_6",
+      "message": "Хочешь сейчас немного расслабиться?",
+      "type_of_user_action": "button_choose",
+      "buttons": [
+        {
+          "id": "1",
+          "button_value": "r_yes"
+        },
+        {
+          "button_value": "r_no"
+        }
+      ],
+      "next": "weak_7"
+    },
+    "weak_7": {
+      "script_name": "weak",
+      "id": "weak_7",
+      "message": null,
+      "type_of_user_action": null,
+      "next": null,
+      "multiple_choice": [
+        {
+          "button_id": "1",
+          "message_type": "audio",
+          "link": "super_link"
+        },
+        {
+          "button_id": "2",
+          "message_type": "message",
+          "message": "До встречи завтра"
+        }
+      ]
+    }
+  }
+}
