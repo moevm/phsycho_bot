@@ -4,10 +4,59 @@
       "script_name": "weak",
       "id": "weak_0",
       "message": "Ты выбрал фокусом этой недели работу с усталостью. Для начала вспомни, какие события или действия наполняют тебя ресурсом, дает прилив энергии и сил?",
+      "type_of_user_action": null,
+      "expected_type": null,
+      "next": "weak_0.1",
+      "jump": "immediately"
+    },
+    "weak_0.1": {
+      "script_name": "weak",
+      "id": "weak_0.1",
+      "message": null,
       "type_of_user_action": "message",
       "expected_type": "string",
-      "TODO Добавить логику для выбора в дереве разного количества ответов": "",
-      "next": "weak_1"
+      "next": "weak_0.2",
+      "jump": "immediately"
+    },
+    "weak_0.2": {
+      "script_name": "weak",
+      "id": "weak_0.2",
+      "message": "Что то еще?",
+      "type_of_user_action": "button_choose",
+      "buttons": [
+        {
+          "button_id": "1",
+          "button_value": "r_yes"
+        },
+        {
+          "button_id": "2",
+          "button_value": "r_no"
+        }
+      ],
+      "next": "weak_0.3",
+      "jump": "immediately"
+    },
+    "weak_0.3": {
+      "script_name": "weak",
+      "id": "weak_0.3",
+      "message": null,
+      "type_of_user_action": null,
+      "multiple_choice": [
+        {
+          "button_id": "1",
+          "message_type": null,
+          "link": null,
+          "next": "weak_0.1"
+        },
+        {
+          "button_id": "2",
+          "message_type": "message",
+          "message": "До встречи завтра",
+          "next": "weak_1"
+        }
+      ],
+      "next": null,
+      "jump": "immediately"
     },
     "weak_1": {
       "script_name": "weak",
@@ -89,12 +138,14 @@
         {
           "button_id": "1",
           "message_type": "audio",
-          "link": "super_link"
+          "link": "super_link",
+          "next": null
         },
         {
           "button_id": "2",
           "message_type": "message",
-          "message": "До встречи завтра"
+          "message": "До встречи завтра",
+          "next": null
         }
       ]
     }
