@@ -5,7 +5,7 @@ services:
   db:
     image: mongo
     restart: unless-stopped
-    env_file: env_file
+    env_file: .env
     volumes:
       - ./db/:/data/db/
     ports:

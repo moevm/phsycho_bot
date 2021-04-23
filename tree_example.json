@@ -21,7 +21,7 @@
     "weak_0.2": {
       "script_name": "weak",
       "id": "weak_0.2",
-      "message": "Что то еще?",
+      "message": "Что-то еще?",
       "type_of_user_action": "button_choose",
       "buttons": [
         {
@@ -46,17 +46,19 @@
           "button_id": "1",
           "message_type": null,
           "link": null,
-          "next": "weak_0.1"
+          "next": "weak_0.1",
+          "jump": "immediately"
         },
         {
           "button_id": "2",
           "message_type": "message",
           "message": "До встречи завтра",
-          "next": "weak_1"
+          "next": "weak_1",
+          "jump": "1_day"
         }
       ],
-      "next": null,
-      "jump": "immediately"
+      "next": "multiple_choice",
+      "jump": null
     },
     "weak_1": {
       "script_name": "weak",
@@ -73,6 +75,30 @@
       ],
       "next": "weak_2"
     },
+    "weak_1.1": {
+      "script_name": "weak",
+      "id": "weak_1.1",
+      "message": null,
+      "type_of_user_action": null,
+      "next": "multiple_choice",
+      "jump": null,
+      "multiple_choice": [
+        {
+          "button_id": "1",
+          "message_type": null,
+          "link": null,
+          "next": "weak_2",
+          "jump": "immediately"
+        },
+        {
+          "button_id": "2",
+          "message_type": "message",
+          "message": "Хорошо, напишу через час",
+          "next": "weak_1.1",
+          "jump": "1_hour"
+        }
+      ]
+    },
     "weak_2": {
       "script_name": "weak",
       "id": "weak_2",
@@ -83,7 +109,8 @@
         "down": 0,
         "up": 10
       },
-      "next": "weak_3"
+      "next": "weak_3",
+      "jump": "immediately"
     },
     "weak_3": {
       "script_name": "weak",
@@ -91,7 +118,8 @@
       "message": "Как ты думаешь, с чем связана твоя усталость сегодня?",
       "type_of_user_action": "message",
       "expected_type": "string",
-      "next": "weak_4"
+      "next": "weak_4",
+      "jump": "immediately"
     },
     "weak_4": {
       "script_name": "weak",
@@ -99,18 +127,21 @@
       "message": "Что отняло у тебя больше всего сил?",
       "type_of_user_action": "message",
       "expected_type": "string",
-      "next": "weak_5"
+      "next": "weak_5",
+      "jump": "immediately"
     },
     "weak_5": {
       "script_name": "weak",
       "id": "weak_5",
-      "message_expand": [
-        "здесь выбор из степа в начале"
-      ],
+      "message_expand": {
+        "type": "user_answer",
+        "step_id": "weak_0.1"
+      },
       "message": "Что ты можешь сделать завтра, чтобы меньше устать? Обычно тебя наполняет силами:",
       "type_of_user_action": "message",
       "expected_type": "string",
-      "next": "weak_6"
+      "next": "weak_6",
+      "jump": "immediately"
     },
     "weak_6": {
       "script_name": "weak",
@@ -123,29 +154,34 @@
           "button_value": "r_yes"
         },
         {
+          "id": "2",
           "button_value": "r_no"
         }
       ],
-      "next": "weak_7"
+      "next": "weak_7",
+      "jump": "immediately"
     },
     "weak_7": {
       "script_name": "weak",
       "id": "weak_7",
       "message": null,
       "type_of_user_action": null,
-      "next": null,
+      "next": "multiple_choice",
+      "jump": null,
       "multiple_choice": [
         {
           "button_id": "1",
           "message_type": "audio",
           "link": "super_link",
-          "next": null
+          "next": "weak_1",
+          "jump": "1_day"
         },
         {
           "button_id": "2",
           "message_type": "message",
           "message": "До встречи завтра",
-          "next": null
+          "next": "weak_1",
+          "jump": "1_day"
         }
       ]
     }
