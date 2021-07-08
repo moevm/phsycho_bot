@@ -23,7 +23,8 @@ class Parser:  # класс для загрузки дерева из json
         self.__file_name = file_with_script
 
     def parse(self):
-        self.__data = json.load(open(self.__file_name))
+        with open(self.__file_name) as stream:
+            self.__data = json.load(stream)
         return copy.deepcopy(self.__data)
 
 
@@ -50,14 +51,16 @@ class Step:  # класс для работы с текущим шагом
                     if option['message']['type'] == 'text':
                         self.update.effective_user.send_message(text=option["message"]["text"])
                     elif option['message']['type'] == 'voice':
-                        self.update.effective_user.send_voice(voice=open(option["message"]["source"], 'rb'))
+                        with open(option["message"]["source"], 'rb') as stream:
+                            self.update.effective_user.send_voice(voice=stream)
                     elif option['message']['type'] == 'inline_keyboard':
                         self.update.effective_user.send_message(text=option["message"]["text"],
                                                                 reply_markup=yes_no_keyboard())
                     next_step = option['next']
 
             elif option['type'] == 'send_voice':
-                self.update.effective_user.send_voice(voice=open(option["source"], 'rb'))
+                with open(option["source"], 'rb') as stream:
+                    self.update.effective_user.send_voice(voice=stream)
         return next_step
 
     def execute(self) -> str:
