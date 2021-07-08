@@ -74,3 +74,11 @@ def focus_keyboard() -> InlineKeyboardMarkup:
 
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def yes_no_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [init_button('r_yes')],
+        [init_button('r_no')]
+    ]
+    return InlineKeyboardMarkup(keyboard)

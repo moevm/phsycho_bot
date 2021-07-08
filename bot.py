@@ -5,21 +5,28 @@ import queue
 import my_cron
 
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
+    ConversationHandler, MessageHandler, Filters
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db
-from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, VALUES
+from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
+    VALUES
+from script_engine import Engine
 
 DAYS_OFFSET = 7
 DEBUG = True
 
+PREPARE, TYPING, SELECT_YES_NO = "PREPARE", "TYPING", "SELECT_YES_NO"
 
-def start(update: Update, context: CallbackContext) -> None:
+
+# def start(update: Update, context: CallbackContext) -> int:
+def start(update: Update, context: CallbackContext) -> str:
     """Send a message when the command /start is issued."""
 
     update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение')
     update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
+    return PREPARE
 
 
 def ask_focus(update: Update) -> None:
@@ -29,10 +36,12 @@ def ask_focus(update: Update) -> None:
         reply_markup=focus_keyboard())
 
 
-def button(update: Update, context: CallbackContext) -> None:
+# def button(update: Update, context: CallbackContext) -> int:
+def button(update: Update, context: CallbackContext) -> str:
     query = update.callback_query
     query.answer()
 
+    last_message = query.message.text
     if query.data.startswith('s_'):
         # User entered schedule
         text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
@@ -42,19 +51,18 @@ def button(update: Update, context: CallbackContext) -> None:
     elif query.data.startswith('f_'):
         # User entered week focus
         set_user_ready_flag(update.effective_user, True)
-        text = f'Ты выбрал фокусом этой недели "{VALUES[query.data]}". ' \
-               f'Спасибо! В указанное тобой время я попрошу тебя рассказать, как прошел твой день'
-        query.edit_message_text(text=text)
+        query.delete_message()
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
-    elif query.data.startswith('r_'):
-        # User answered to feelings request
+
+        return engine_callback(update, context)
+    elif query.data.startswith('r_') and last_message == 'Привет! Пришло время подводить итоги. Давай?':
         if query.data == 'r_yes':
-            ask_feelings(update)
-            query.delete_message()
-        else:
+            return engine_callback(update, context)
+        elif query.data == 'r_1h':
             text = f'Понял тебя. Спрошу через час'
             query.edit_message_text(text=text)
             set_user_ready_flag(update.effective_user, True)
+
     elif query.data.startswith('m_'):
         # User entered mood
         set_user_ready_flag(update.effective_user, True)
@@ -71,6 +79,7 @@ def button(update: Update, context: CallbackContext) -> None:
                 if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
+    return PREPARE
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -92,8 +101,20 @@ def ask_ready(updater, schedule):
                              reply_markup=ready_keyboard())
 
 
-def ask_feelings(update):
+def ask_feelings(update: Update, context: CallbackContext) -> None:
     update.effective_user.send_message("Расскажи, как прошел твой день?", reply_markup=mood_keyboard())
+
+
+# def engine_callback(update, context: CallbackContext) -> int:
+def engine_callback(update, context: CallbackContext) -> str:
+    engine = Engine(update, context)
+    current_step = engine.get_next_step()
+    return current_step.execute()
+
+
+def cancel(update: Update, context: CallbackContext):
+    update.message.reply_text('Всего хорошего.')
+    return ConversationHandler.END
 
 
 def main(token):
@@ -103,10 +124,22 @@ def main(token):
     updater = Updater(token, use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
 
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
+
+    updater.dispatcher.add_handler(ConversationHandler(
+        entry_points=[CallbackQueryHandler(button)],
+        states={
+            PREPARE: [CallbackQueryHandler(button)],
+            TYPING: [MessageHandler(Filters.text & ~Filters.command, engine_callback),
+                     CallbackQueryHandler(engine_callback)],
+        },
+        fallbacks=[CommandHandler('cancel', cancel),
+                   CommandHandler('start', start)
+                   ],
+    ))
+
     # updater.dispatcher.add_error_handler(error)
     updater.start_polling()
     # updater.idle()
