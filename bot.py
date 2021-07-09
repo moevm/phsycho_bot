@@ -51,7 +51,6 @@ def button(update: Update, context: CallbackContext) -> str:
     elif query.data.startswith('f_'):
         # User entered week focus
         set_user_ready_flag(update.effective_user, True)
-        query.delete_message()
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
 
         return engine_callback(update, context)

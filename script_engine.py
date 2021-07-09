@@ -82,12 +82,13 @@ class Engine:  # класс движка
     def get_next_step(self) -> Step:
         self.survey_progress = get_survey_progress(self.user, self.last_focus)
         step_number = self.survey_progress.survey_step
+        if self.update.callback_query is not None:
+            self.update.callback_query.delete_message()
         if self.survey_progress.time_send_question != self.survey_progress.time_receive_answer:
             # обработка предыдущего шага
             if self.update.callback_query is not None:
                 query = self.update.callback_query
                 query.answer()
-                query.delete_message()
                 self.survey_progress.user_answer = query.data
                 self.survey_progress.time_receive_answer = query.message.date
             else:
