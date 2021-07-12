@@ -1,5 +1,4 @@
 import datetime
-import sys
 import logging
 from typing import List
 
@@ -67,16 +66,18 @@ class Schedule(MongoModel):
 class SurveyProgress(MongoModel):
     id = fields.IntegerField()
     user = fields.ReferenceField(User)
-    survey_id = fields.IntegerField()
+    # survey_id = fields.IntegerField()
+    survey_id = fields.CharField()
     survey_step = fields.IntegerField()
+    survey_next = fields.IntegerField()
     user_answer = fields.CharField()
 
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
 
     def __str__(self):
-        return f'[id] - {self.id} | [user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
-               f'[survey_step] - {self.survey_step} | [user_answer] - {self.user_answer} | ' \
+        return f'[user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
+               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [user_answer] - {self.user_answer} | ' \
                f'[time_send_question] - {self.time_send_question} | [time_receive_answer] - {self.time_receive_answer}'
 
 
@@ -100,6 +101,38 @@ def init_user(user) -> User:
             'username': user.username,
             'language_code': user.language_code
         }).save()
+
+
+def init_survey_progress(user, focus, id=0, survey_step=0, user_answer="INIT PROGRESS") -> SurveyProgress:
+    date = pytz.utc.localize(datetime.datetime.utcnow())
+    return SurveyProgress(**{
+        'id': id,
+        'user': user,
+        'survey_id': focus,
+        'survey_step': survey_step,
+        'survey_next': survey_step+1,
+        'user_answer': user_answer,
+        'time_send_question': date,
+        'time_receive_answer': date
+    })
+
+
+def get_user_answer(user, focus, step) -> str:
+    list_survey_progress = SurveyProgress.objects.raw({'survey_id': focus})
+    for survey_step in list_survey_progress.reverse():
+        if survey_step.user.id == user.id and survey_step.survey_step == step:
+            return survey_step.user_answer
+
+
+def get_survey_progress(user, focus) -> SurveyProgress:
+    list_survey_progress = SurveyProgress.objects.raw({'survey_id': focus})
+    filtered_survey = []
+    for i in list_survey_progress:
+        if i.user.id == user.id:
+            filtered_survey.append(i)
+    if len(filtered_survey) == 0:
+        return init_survey_progress(user, focus)
+    return filtered_survey[-1]
 
 
 def get_schedule_by_user(user, is_test=True):

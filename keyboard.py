@@ -24,6 +24,7 @@ VALUES = {
     'f_groundhog': "День сурка",
 
     'r_yes': 'Да',
+    'r_no': 'Нет',
     'r_1h': 'Ответить через час'
 }
 
@@ -71,5 +72,13 @@ def focus_keyboard() -> InlineKeyboardMarkup:
         [init_button('f_results')],
         [init_button('f_groundhog')]
 
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def yes_no_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [init_button('r_yes')],
+        [init_button('r_no')]
     ]
     return InlineKeyboardMarkup(keyboard)

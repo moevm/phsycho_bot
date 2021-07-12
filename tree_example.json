@@ -1,0 +1,268 @@
+{
+  "f_tired": {
+    "script_body": [
+      {
+        "script_name": "f_tired",
+        "id": "tired_0",
+        "next": 1,
+        "state": "TYPING",
+        "survey_step": 0,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Ты выбрал фокусом этой недели работу с усталостью. Для начала вспомни, какие события или действия наполняют тебя ресурсом, дает прилив энергии и сил?"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_0.1",
+        "next": 2,
+        "state": -1,
+        "survey_step": 1,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Спасибо! В указанное тобой время я попрошу тебя рассказать, как прошел твой день"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_0",
+        "next": 3,
+        "state": "TYPING",
+        "survey_step": 2,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "На сколько усталым ты себя ощущаешь сейчас (0-10)"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_3",
+        "next": 4,
+        "state": "TYPING",
+        "survey_step": 3,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Как ты думаешь, с чем связана твоя усталость сегодня?"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_4",
+        "next": 5,
+        "state": "TYPING",
+        "survey_step": 4,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Что отняло у тебя больше всего сил?"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_5",
+        "next": 6,
+        "state": "TYPING",
+        "survey_step": 5,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Что ты можешь сделать завтра, чтобы меньше устать? Обычно тебя наполняет силами:"
+          },
+          {
+            "type": "get_user_answer",
+            "step": 0
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_7",
+        "message": "Хочешь сейчас немного расслабиться?",
+        "next": 7,
+        "state": "TYPING",
+        "survey_step": 6,
+        "options": [
+          {
+            "type": "inline_keyboard",
+            "text": "Хочешь сейчас немного расслабиться?",
+            "name": "yes_no"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_9",
+        "next": 2,
+        "state": -1,
+        "survey_step": 7,
+        "options": [
+          {
+            "type": "inline_answer",
+            "answer": "r_yes",
+            "message": {
+              "type": "voice",
+              "source": "./sample1.ogg"
+            },
+            "next": 2
+          },
+          {
+            "type": "inline_answer",
+            "answer": "r_no",
+            "message": {
+              "type": "text",
+              "text": "До встречи завтра"
+            },
+            "next": 2
+          }
+        ]
+      }
+    ]
+  },
+  "f_self-doubt": {
+    "script_body": [
+      {
+        "script_name": "f_self-doubt",
+        "id": "self-doubt_0",
+        "next": 1,
+        "state": -1,
+        "survey_step": 0,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Спасибо! В указанное тобой время я попрошу тебя рассказать, как прошел твой день"
+          }
+        ]
+      },
+      {
+        "script_name": "f_self-doubt",
+        "id": "self-doubt_1",
+        "next": 2,
+        "state": "TYPING",
+        "survey_step": 1,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Ты выбрал фокусом недели работу с уверенностью в себе. В силу разных причин, нам бывает сложно обращать внимание на наши успехи. Мы обесцениванием их, считаем незначительными. Первое время может быть сложно замечать хорошее о себе, это может потребовать усилий и времени. Подходят любые вещи, кажущиеся незначительными. Может помочь такой мысленный эксперимент: представь себе, что ты \"Идеальный родитель\" для себя самого, за что бы ты мог себя похвалить?\n Прослушай аудиозапись, которая поможет тебе находить хорошее о себе."
+          },
+          {
+            "type": "send_voice",
+            "source": "./sample1.ogg"
+          },
+          {
+            "type": "send_message",
+            "text": "За что ты можешь себя сегодня похвалить?"
+          }
+        ]
+      },
+      {
+        "script_name": "f_self-doubt",
+        "id": "self-doubt_2",
+        "next": 3,
+        "state": "TYPING",
+        "survey_step": 2,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "За что еще ты можешь себя сегодня похвалить?"
+          }
+        ]
+      },
+      {
+        "script_name": "f_self-doubt",
+        "id": "self-doubt_3",
+        "next": 4,
+        "state": "TYPING",
+        "survey_step": 3,
+        "options": [
+          {
+            "type": "inline_keyboard",
+            "text": "Есть ли еще за что ты можешь себя еще похвалить?",
+            "name": "yes_no"
+          }
+        ]
+      },
+      {
+        "script_name": "f_self-doubt",
+        "id": "self-doubt_4",
+        "next": 0,
+        "state": "TYPING",
+        "survey_step": 4,
+        "options": [
+          {
+            "type": "inline_answer",
+            "answer": "r_yes",
+            "message": {
+              "type": "text",
+              "text": "За что еще ты можешь себя сегодня похвалить?"
+            },
+            "next": 3
+          },
+          {
+            "type": "inline_answer",
+            "answer": "r_no",
+            "message": {
+              "type": "text",
+              "text": "Сегодня ты написал две вещи, за которые ты можешь себя похвалить. Завтра я попрошу тебя написать три вещи."
+            },
+            "next": 5
+          },
+          {
+            "type": "inline_answer",
+            "answer": "r_no",
+            "message": {
+              "type": "inline_keyboard",
+              "text": "Было ли тебе сложно находить за что можно себя похвалить?",
+              "name": "yes_no"
+            },
+            "next": 5
+          }
+        ]
+      },
+      {
+        "script_name": "f_self-doubt",
+        "id": "self-doubt_5",
+        "next": 2,
+        "state": -1,
+        "survey_step": 5,
+        "options": [
+          {
+            "type": "inline_answer",
+            "answer": "r_yes",
+            "message": {
+              "type": "text",
+              "text": "Да, было сложно. Прослушай это аудио, возможно, оно поможет тебе с большей легкостью находить хорошее о себе."
+            },
+            "next": 2
+          },
+          {
+            "type": "inline_answer",
+            "answer": "r_yes",
+            "message": {
+              "type": "voice",
+              "source": "./sample1.ogg"
+            },
+            "next": 2
+          },
+          {
+            "type": "inline_answer",
+            "answer": "r_no",
+            "message": {
+              "type": "text",
+              "text": "Отлично, так держать. В конце недели у тебя накопится много моментов"
+            },
+            "next": 2
+          }
+        ]
+      }
+    ]
+  }
+}

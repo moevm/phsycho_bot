@@ -1,5 +1,5 @@
-python-telegram-bot
-schedule
-pymongo
-pymodm
-cPython
+python-telegram-bot==13.4.1
+schedule==1.1.0
+pymongo==3.11.3
+pymodm==0.4.3
+cPython==0.0.6
