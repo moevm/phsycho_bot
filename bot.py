@@ -9,7 +9,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
     ConversationHandler, MessageHandler, Filters
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db
+    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     VALUES
 from script_engine import Engine
@@ -19,10 +19,12 @@ DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO = "PREPARE", "TYPING", "SELECT_YES_NO"
 
-
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
     """Send a message when the command /start is issued."""
+
+    user = init_user(update.effective_user)
+    set_last_usage(user)
 
     update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение')
     update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
@@ -40,6 +42,9 @@ def ask_focus(update: Update) -> None:
 def button(update: Update, context: CallbackContext) -> str:
     query = update.callback_query
     query.answer()
+
+    user = init_user(update.effective_user)
+    set_last_usage(user)
 
     last_message = query.message.text
     if query.data.startswith('s_'):
@@ -82,10 +87,14 @@ def button(update: Update, context: CallbackContext) -> str:
 
 
 def help(update: Update, context: CallbackContext) -> None:
+    user = init_user(update.effective_user)
+    set_last_usage(user)
     update.message.reply_text('Help!')
 
 
 def stats(update: Update, context: CallbackContext) -> None:
+    user = init_user(update.effective_user)
+    set_last_usage(user)
     update.message.reply_text(get_user_feelings(update.effective_user))
 
 
@@ -112,6 +121,8 @@ def engine_callback(update, context: CallbackContext) -> str:
 
 
 def cancel(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    set_last_usage(user)
     update.message.reply_text('Всего хорошего.')
     return ConversationHandler.END
 
