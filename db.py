@@ -218,7 +218,7 @@ def get_schedule_list_for_feeling_ask():
     }))
 
 
-def get_users_not_finish_servey():
+def get_users_not_finish_survey():
     users = []
     for user in User.objects.all():
         if user.focuses:
