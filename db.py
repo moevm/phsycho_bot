@@ -218,26 +218,25 @@ def get_schedule_list_for_feeling_ask():
     }))
 
 
-def get_users_not_finish_servey():
+def get_users_not_finish_survey():
     users = []
-    for user in User.objects.all():
-        if user.focuses:
-            last_focus = user.focuses[-1]['focus']
-            survey_progress = get_survey_progress(user, last_focus)
-            if survey_progress.need_answer:
-                list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
-                for i in list_survey_progress:
-                    if i.user.id == user.id and i.survey_step==0:
-                        start_time = i.time_send_question
-                        time_not_finish = datetime.datetime.utcnow()-start_time
-                users.append({
-                    'id': user.id,
-                    'username': user.username,
-                    'survey_type': last_focus,
-                    'start_time': start_time,
-                    'time_not_finish': time_not_finish,
-                    'survey_step': survey_progress.survey_step,
-                })
+    for user in User.objects.raw({'focuses': {'$exists': True}}):
+        last_focus = user.focuses[-1]['focus']
+        survey_progress = get_survey_progress(user, last_focus)
+        if survey_progress.need_answer:
+            list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
+            for i in list_survey_progress:
+                if i.user.id == user.id and i.survey_step==0:
+                    start_time = i.time_send_question
+                    time_not_finish = datetime.datetime.utcnow()-start_time
+            users.append({
+                'id': user.id,
+                'username': user.username,
+                'survey_type': last_focus,
+                'start_time': start_time,
+                'time_not_finish': time_not_finish,
+                'survey_step': survey_progress.survey_step,
+            })
     return users
 
 def auth_in_db(username, password):
