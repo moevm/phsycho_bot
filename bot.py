@@ -9,7 +9,8 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
     ConversationHandler, MessageHandler, Filters
 
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
-    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage
+    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
+    get_users_not_answer_last24hours
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     VALUES
 from script_engine import Engine
@@ -98,6 +99,10 @@ def stats(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(get_user_feelings(update.effective_user))
 
 
+def debug_get_users_not_answer_last24hours(update: Update, context: CallbackContext):
+    update.message.reply_text('\n'.join(str(item) for item in get_users_not_answer_last24hours()))
+
+
 def error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(f'Error!')
 
@@ -137,6 +142,8 @@ def main(token):
 
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
+
+    updater.dispatcher.add_handler(CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
 
     updater.dispatcher.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(button)],
