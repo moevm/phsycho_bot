@@ -4,8 +4,9 @@ from telegram import Update
 import pytz
 import datetime
 
-from db import User, SurveyProgress
+from db import User, SurveyProgress, init_user
 from script_engine import Script, Parser, Step
+from pymodm import connect
 
 
 class TestScript(unittest.TestCase):
@@ -38,4 +39,5 @@ class TestStep(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    connect('mongodb://127.0.0.1:27017/test_db')
     unittest.main()
