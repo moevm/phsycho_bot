@@ -37,6 +37,7 @@ class User(MongoModel):
     focuses = fields.ListField(fields.DictField())
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
+    last_usage = fields.DateTimeField()
 
     def __str__(self):
         return f'[id] - {self.id} | [first_name] - {self.first_name} | [last_name] - {self.last_name}'
@@ -213,6 +214,23 @@ def get_schedule_list_for_feeling_ask():
         },
         'is_on': True
     }))
+
+
+def set_last_usage(user):
+    db_user = init_user(user)
+    db_user.last_usage = pytz.utc.localize(datetime.datetime.utcnow())
+    db_user.save()
+
+
+def get_users_not_answer_last24hours():
+    users = []
+    for user in User.objects.all():
+        if user.last_usage==None or pytz.utc.localize(user.last_usage) < pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=1):
+            users.append({
+                'id': user.id,
+                'username': user.username
+            })
+    return users
 
 
 def auth_in_db(username, password):
