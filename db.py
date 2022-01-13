@@ -71,6 +71,7 @@ class SurveyProgress(MongoModel):
     survey_id = fields.CharField()
     survey_step = fields.IntegerField()
     survey_next = fields.IntegerField()
+    need_answer = fields.BooleanField()
     user_answer = fields.CharField()
 
     time_send_question = fields.DateTimeField()
@@ -78,7 +79,7 @@ class SurveyProgress(MongoModel):
 
     def __str__(self):
         return f'[user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
-               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [user_answer] - {self.user_answer} | ' \
+               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [need_answer] - {self.need_answer} | [user_answer] - {self.user_answer} | ' \
                f'[time_send_question] - {self.time_send_question} | [time_receive_answer] - {self.time_receive_answer}'
 
 
@@ -104,7 +105,7 @@ def init_user(user) -> User:
         }).save()
 
 
-def init_survey_progress(user, focus, id=0, survey_step=0, user_answer="INIT PROGRESS") -> SurveyProgress:
+def init_survey_progress(user, focus, id=0, survey_step=0, need_answer=False, user_answer="INIT PROGRESS") -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(**{
         'id': id,
@@ -112,6 +113,7 @@ def init_survey_progress(user, focus, id=0, survey_step=0, user_answer="INIT PRO
         'survey_id': focus,
         'survey_step': survey_step,
         'survey_next': survey_step+1,
+        'need_answer': need_answer,
         'user_answer': user_answer,
         'time_send_question': date,
         'time_receive_answer': date
@@ -215,6 +217,28 @@ def get_schedule_list_for_feeling_ask():
         'is_on': True
     }))
 
+
+def get_users_not_finish_survey():
+    users = []
+    for user in User.objects.all():
+        if user.focuses:
+            last_focus = user.focuses[-1]['focus']
+            survey_progress = get_survey_progress(user, last_focus)
+            if survey_progress.need_answer:
+                list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
+                for i in list_survey_progress:
+                    if i.user.id == user.id and i.survey_step==0:
+                        start_time = i.time_send_question
+                        time_not_finish = datetime.datetime.utcnow()-start_time
+                users.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'survey_type': last_focus,
+                    'start_time': start_time,
+                    'time_not_finish': time_not_finish,
+                    'survey_step': survey_progress.survey_step,
+                })
+    return users
 
 def set_last_usage(user):
     db_user = init_user(user)

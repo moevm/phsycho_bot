@@ -68,6 +68,7 @@ class Step:  # класс для работы с текущим шагом
         if next is not None:
             self.survey_progress.survey_next = next
         self.survey_progress.time_send_question = pytz.utc.localize(datetime.datetime.utcnow())
+        self.survey_progress.need_answer = self.step_info['need_answer']
         self.survey_progress.save()
         return self.step_info['state']
 
