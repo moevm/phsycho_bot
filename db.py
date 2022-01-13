@@ -105,14 +105,15 @@ def init_user(user) -> User:
         }).save()
 
 
-def init_survey_progress(user, focus, id=0, survey_step=0, need_answer=False, user_answer="INIT PROGRESS") -> SurveyProgress:
+def init_survey_progress(user, focus, id=0, survey_step=0, need_answer=False,
+                         user_answer="INIT PROGRESS") -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(**{
         'id': id,
         'user': user,
         'survey_id': focus,
         'survey_step': survey_step,
-        'survey_next': survey_step+1,
+        'survey_next': survey_step + 1,
         'need_answer': need_answer,
         'user_answer': user_answer,
         'time_send_question': date,
@@ -226,9 +227,9 @@ def get_users_not_finish_survey():
         if survey_progress.need_answer:
             list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
             for i in list_survey_progress:
-                if i.user.id == user.id and i.survey_step==0:
+                if i.user.id == user.id and i.survey_step == 0:
                     start_time = i.time_send_question
-                    time_not_finish = datetime.datetime.utcnow()-start_time
+                    time_not_finish = datetime.datetime.utcnow() - start_time
             users.append({
                 'id': user.id,
                 'username': user.username,
@@ -238,6 +239,7 @@ def get_users_not_finish_survey():
                 'survey_step': survey_progress.survey_step,
             })
     return users
+
 
 def auth_in_db(username, password):
     connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')

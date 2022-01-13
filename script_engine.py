@@ -38,7 +38,7 @@ class Step:  # класс для работы с текущим шагом
         next_step = None
         for option in self.step_info['options']:
             if option['type'] == 'send_message':
-                self.update.effective_user.send_message(text=option['text'],)
+                self.update.effective_user.send_message(text=option['text'], )
             elif option['type'] == 'get_user_answer':
                 answer = get_user_answer(init_user(self.update.effective_user), self.step_info['script_name'],
                                          option['step'])
@@ -85,6 +85,19 @@ class Engine:  # класс движка
         step_number = self.survey_progress.survey_step
         if self.update.callback_query is not None:
             self.update.callback_query.delete_message()
+        if self.survey_progress.need_answer == True and self.survey_progress.user_answer == "INIT PROGRESS" and \
+                self.survey_progress.time_send_question+datetime.timedelta(days=0, seconds=7200) < datetime.datetime.utcnow():
+            step = Step(self.update, self.survey_progress, self.last_focus)
+            if self.update.callback_query is not None:
+                query = self.update.callback_query
+                query.answer()
+                self.survey_progress.user_answer = query.data
+                self.survey_progress.time_receive_answer = query.message.date
+            else:
+                self.survey_progress.user_answer = self.update.message.text
+                self.survey_progress.time_receive_answer = self.update.message.date
+            self.survey_progress.save()
+            return step
         if self.survey_progress.time_send_question != self.survey_progress.time_receive_answer:
             # обработка предыдущего шага
             if self.update.callback_query is not None:

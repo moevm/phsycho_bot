@@ -50,9 +50,9 @@ def cron(updater):
 
 def ask_resume_survey(updater):
     users = get_users_not_finish_survey()
-    for i in users:
-        if i['time_not_finish'] > datetime.timedelta(days=0, seconds=7200):
-            resume_survey(updater, i['id'])
+    for user in users:
+        if user['time_not_finish'] > datetime.timedelta(days=0, seconds=7200):
+            resume_survey(updater, user['id'])
 
 
 def main(token):
