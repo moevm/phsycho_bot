@@ -37,6 +37,7 @@ class User(MongoModel):
     focuses = fields.ListField(fields.DictField())
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
+    last_usage = fields.DateTimeField()
 
     def __str__(self):
         return f'[id] - {self.id} | [first_name] - {self.first_name} | [last_name] - {self.last_name}'
