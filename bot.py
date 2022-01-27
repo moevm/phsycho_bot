@@ -14,6 +14,7 @@ from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     VALUES
 from script_engine import Engine
+from logs import init_logger
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -137,8 +138,7 @@ def cancel(update: Update, context: CallbackContext):
 
 
 def main(token):
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    init_logger()
 
     updater = Updater(token, use_context=True)
 

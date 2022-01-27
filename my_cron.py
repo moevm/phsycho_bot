@@ -9,6 +9,7 @@ from telegram.ext import Updater
 
 from bot import ask_ready
 from db import get_schedule_list_for_feeling_ask, Schedule
+from logs import init_logger
 
 MINUTES_FOR_LOOP = 1
 DAYS_OFFSET = 7
@@ -49,8 +50,7 @@ def cron(updater):
 
 
 def main(token):
-    logging.basicConfig(level=logging.ERROR,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    init_logger()
     updater = Updater(token, use_context=True)
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     while True:
