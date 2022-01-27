@@ -20,6 +20,7 @@ DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO = "PREPARE", "TYPING", "SELECT_YES_NO"
 
+
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
     """Send a message when the command /start is issued."""
@@ -109,7 +110,7 @@ def error(update: Update, context: CallbackContext) -> None:
 
 def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
     update.message.reply_text('\n'.join(str(item) for item in get_users_not_finish_survey()))
-    
+
 
 def ask_ready(updater, schedule):
     # set_schedule_is_on_flag(schedule, False)
@@ -136,6 +137,14 @@ def cancel(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 
+def change_focus(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    set_last_usage(user)
+    update.effective_user.send_message(
+        'Выберете новый фокус:',
+        reply_markup=focus_keyboard())
+
+
 def main(token):
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -146,6 +155,8 @@ def main(token):
 
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
+
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
 
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
     updater.dispatcher.add_handler(CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))

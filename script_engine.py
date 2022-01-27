@@ -98,6 +98,7 @@ class Engine:  # класс движка
             self.survey_progress.save()
             step_number = self.survey_progress.survey_next
         # Генерация нового
-        new_survey_progress = init_survey_progress(self.user, self.last_focus, self.update.update_id, step_number)
+        new_step_info = Script(Parser("tree_example.json").parse()).get_script(self.last_focus)[step_number]
+        new_survey_progress = init_survey_progress(self.user, self.last_focus, self.update.update_id, step_number, new_step_info['next'])
         next_step = Step(self.update, new_survey_progress, self.last_focus)
         return next_step
