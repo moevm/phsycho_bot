@@ -1,5 +1,6 @@
 import unittest
 from json.decoder import JSONDecodeError
+from sys import argv
 from telegram import Update
 import pytz
 import datetime
@@ -39,5 +40,6 @@ class TestStep(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    connect('mongodb://127.0.0.1:27017/test_db')
-    unittest.main()
+    db_address = argv[1]
+    connect(db_address)
+    unittest.main(argv=['first-arg-is-ignored'])

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DB_ADDRESS='mongodb://127.0.0.1:27017/test_db'
+
 # drop test db
 mongo test_db --eval "db.dropDatabase()"
 
@@ -22,4 +24,5 @@ fi
 
 
 # run tests
-python3 test_script_engine.py -v 2>&1 | tee unittest_logs.txt
+python3 test_script_engine.py ${DB_ADDRESS} -v 2>&1 | tee unittest_logs.txt
+echo $?
