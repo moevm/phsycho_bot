@@ -12,13 +12,14 @@ from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
     get_users_not_answer_last24hours, get_users_not_finish_survey
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
-    VALUES
+    menu_kyeboard, VALUES
 from script_engine import Engine
 
 DAYS_OFFSET = 7
 DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO = "PREPARE", "TYPING", "SELECT_YES_NO"
+
 
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
@@ -84,12 +85,23 @@ def button(update: Update, context: CallbackContext) -> str:
                 if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
+
+    elif query.data.startswith('menu_'):
+        if query.data == 'menu_share_event':
+            # TODO обработка выбора "поделиться событием"
+            pass
+        if query.data == 'menu_change_focus':
+            # TODO обработка смены фокуса
+            pass
+        if query.data == 'menu_help':
+            help(update, context)
     return PREPARE
 
 
 def help(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     set_last_usage(user)
+    # TODO сделать справку
     update.message.reply_text('Help!')
 
 
@@ -109,7 +121,7 @@ def error(update: Update, context: CallbackContext) -> None:
 
 def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
     update.message.reply_text('\n'.join(str(item) for item in get_users_not_finish_survey()))
-    
+
 
 def ask_ready(updater, schedule):
     # set_schedule_is_on_flag(schedule, False)
@@ -148,7 +160,8 @@ def main(token):
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
 
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-    updater.dispatcher.add_handler(CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
 
     updater.dispatcher.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(button)],

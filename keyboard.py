@@ -23,9 +23,13 @@ VALUES = {
     'f_results': "Обычные итоги",
     'f_groundhog': "День сурка",
 
-    'r_yes': 'Да',
-    'r_no': 'Нет',
-    'r_1h': 'Ответить через час'
+    'r_yes': "Да",
+    'r_no': "Нет",
+    'r_1h': "Ответить через час",
+    
+    'menu_change_focus': "Сменить фокус",
+    'menu_share_event': "Поделиться событием",
+    'menu_help': "Справка"
 }
 
 
@@ -80,5 +84,14 @@ def yes_no_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [init_button('r_yes')],
         [init_button('r_no')]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+
+def menu_kyeboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [init_button('menu_share_event')],
+        [init_button('menu_change_focus')],
+        [init_button('menu_help')]
     ]
     return InlineKeyboardMarkup(keyboard)
