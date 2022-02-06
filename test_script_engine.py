@@ -1,6 +1,6 @@
 import unittest
 from json.decoder import JSONDecodeError
-from sys import argv
+import sys
 from telegram import Update
 import pytz
 import datetime
@@ -40,6 +40,10 @@ class TestStep(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    db_address = argv[1]
+    db_address = sys.argv[1]
     connect(db_address)
-    unittest.main(argv=['first-arg-is-ignored'])
+    res = unittest.main(argv=['first-arg-is-ignored'], exit=False)
+    if res.result.wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)

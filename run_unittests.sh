@@ -25,4 +25,5 @@ fi
 
 # run tests
 python3 test_script_engine.py ${DB_ADDRESS} -v 2>&1 | tee unittest_logs.txt
-echo $?
+exit_code="${PIPESTATUS[0]}"
+#echo $?
