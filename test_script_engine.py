@@ -43,7 +43,4 @@ if __name__ == '__main__':
     db_address = sys.argv[1]
     connect(db_address)
     res = unittest.main(argv=['first-arg-is-ignored'], exit=False)
-    if res.result.wasSuccessful():
-        sys.exit(0)
-    else:
-        sys.exit(1)
+    sys.exit(int(not res.result.wasSuccessful()))

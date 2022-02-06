@@ -16,7 +16,7 @@ if [ $? -gt 0 ]; then
     echo 'Error occured during importing collection "Survey progress"'
     exit 1
 fi
-mongoimport --db test_db --collection schedule> --file test_schedule.json
+mongoimport --db test_db --collection schedule --file test_schedule.json
 if [ $? -gt 0 ]; then
     echo 'Error occured during importing collection "Schedule"'
     exit 1
@@ -25,5 +25,4 @@ fi
 
 # run tests
 python3 test_script_engine.py ${DB_ADDRESS} -v 2>&1 | tee unittest_logs.txt
-exit_code="${PIPESTATUS[0]}"
-#echo $?
+exit ${PIPESTATUS[0]}
