@@ -1,0 +1,19 @@
+{
+  "f_tired": {
+    "script_body": [
+      {
+        "script_name": "f_tired",
+        "options": [
+          {
+            "type": "send_message",
+            "text": "message"
+          }
+        ]
+      },
+      {
+        "script_name": "f_tired",
+        "id": "tired_0.1"
+      }
+    ]
+  }
+}
