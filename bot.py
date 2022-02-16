@@ -62,7 +62,7 @@ def button(update: Update, context: CallbackContext) -> str:
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
 
         return engine_callback(update, context)
-    elif query.data.startswith('r_') and last_message == 'Привет! Пришло время подводить итоги. Давай?':
+    elif query.data.startswith('r_') and (last_message == 'Привет! Пришло время подводить итоги. Давай?' or "Продолжить прохождение опроса?"):
         if query.data == 'r_yes':
             return engine_callback(update, context)
         elif query.data == 'r_1h':
@@ -129,6 +129,10 @@ def ask_ready(updater, schedule):
     set_schedule_asked_today(schedule)
     updater.bot.send_message(schedule.user.id, "Привет! Пришло время подводить итоги. Давай?",
                              reply_markup=ready_keyboard())
+
+
+def resume_survey(updater, user) -> None:
+    updater.bot.send_message(user, "Продолжить прохождение опроса?", reply_markup=ready_keyboard())
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:

@@ -7,9 +7,10 @@ from typing import List
 import schedule
 from telegram.ext import Updater
 
-from bot import ask_ready
-from db import get_schedule_list_for_feeling_ask, Schedule
+from bot import ask_ready, resume_survey
+from db import get_schedule_list_for_feeling_ask, Schedule, get_users_not_finish_survey
 from logs import init_logger
+
 
 MINUTES_FOR_LOOP = 1
 DAYS_OFFSET = 7
@@ -49,10 +50,18 @@ def cron(updater):
         ask_ready(updater, _schedule)
 
 
+def ask_resume_survey(updater):
+    users = get_users_not_finish_survey()
+    for user in users:
+        if user['time_not_finish'] > datetime.timedelta(days=0, seconds=7200):
+            resume_survey(updater, user['id'])
+
+
 def main(token):
     init_logger()
     updater = Updater(token, use_context=True)
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
+    schedule.every().hour.do(ask_resume_survey, updater=updater)
     while True:
         schedule.run_pending()
         time.sleep(60)
