@@ -14,6 +14,7 @@ from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     menu_kyeboard, VALUES
 from script_engine import Engine
+from logs import init_logger
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -148,9 +149,16 @@ def cancel(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 
+def change_focus(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    set_last_usage(user)
+    update.effective_user.send_message(
+        'Выберете новый фокус:',
+        reply_markup=focus_keyboard())
+
+
 def main(token):
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    init_logger()
 
     updater = Updater(token, use_context=True)
 
@@ -158,6 +166,8 @@ def main(token):
 
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
+
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
 
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
     updater.dispatcher.add_handler(
