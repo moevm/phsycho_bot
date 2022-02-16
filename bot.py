@@ -12,13 +12,15 @@ from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
     get_users_not_answer_last24hours, get_users_not_finish_survey
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
-    VALUES
+    menu_kyeboard, VALUES
 from script_engine import Engine
+from logs import init_logger
 
 DAYS_OFFSET = 7
 DEBUG = True
 
-PREPARE, TYPING, SELECT_YES_NO = "PREPARE", "TYPING", "SELECT_YES_NO"
+PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
+
 
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
@@ -27,7 +29,7 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение')
+    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение', reply_markup=menu_kyeboard())
     update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
     return PREPARE
 
@@ -87,9 +89,20 @@ def button(update: Update, context: CallbackContext) -> str:
     return PREPARE
 
 
+def menu_processing(update: Update, context: CallbackContext):
+    if update.message.text == VALUES['menu_share_event']:
+        # TODO обработка выбора "поделиться событием"
+        pass
+    elif update.message.text == VALUES['menu_change_focus']:
+        change_focus(update, context)
+    elif update.message.text == VALUES['menu_help']:
+        help(update, context)
+
+
 def help(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     set_last_usage(user)
+    # TODO сделать справку
     update.message.reply_text('Help!')
 
 
@@ -109,7 +122,7 @@ def error(update: Update, context: CallbackContext) -> None:
 
 def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
     update.message.reply_text('\n'.join(str(item) for item in get_users_not_finish_survey()))
-    
+
 
 def ask_ready(updater, schedule):
     # set_schedule_is_on_flag(schedule, False)
@@ -140,9 +153,16 @@ def cancel(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 
+def change_focus(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    set_last_usage(user)
+    update.effective_user.send_message(
+        'Выберете новый фокус:',
+        reply_markup=focus_keyboard())
+
+
 def main(token):
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    init_logger()
 
     updater = Updater(token, use_context=True)
 
@@ -151,8 +171,13 @@ def main(token):
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
 
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+
+    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, menu_processing))
+
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-    updater.dispatcher.add_handler(CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
 
     updater.dispatcher.add_handler(ConversationHandler(
         entry_points=[CallbackQueryHandler(button)],

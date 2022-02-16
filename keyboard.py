@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 VALUES = {
     's_18': "18:00 - 19:00",
@@ -23,9 +23,13 @@ VALUES = {
     'f_results': "Обычные итоги",
     'f_groundhog': "День сурка",
 
-    'r_yes': 'Да',
-    'r_no': 'Нет',
-    'r_1h': 'Ответить через час'
+    'r_yes': "Да",
+    'r_no': "Нет",
+    'r_1h': "Ответить через час",
+    
+    'menu_change_focus': "Сменить фокус",
+    'menu_share_event': "Поделиться событием",
+    'menu_help': "Справка"
 }
 
 
@@ -82,3 +86,12 @@ def yes_no_keyboard() -> InlineKeyboardMarkup:
         [init_button('r_no')]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def menu_kyeboard() -> ReplyKeyboardMarkup:
+    keyboard = [
+        [VALUES['menu_share_event']],
+        [VALUES['menu_change_focus']],
+        [VALUES['menu_help']]
+    ]
+    return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)

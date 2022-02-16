@@ -105,8 +105,7 @@ def init_user(user) -> User:
         }).save()
 
 
-def init_survey_progress(user, focus, id=0, survey_step=0, need_answer=False,
-                         user_answer="INIT PROGRESS") -> SurveyProgress:
+def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS") -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(**{
         'id': id,
