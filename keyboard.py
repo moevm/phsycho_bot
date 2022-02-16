@@ -1,4 +1,4 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 VALUES = {
     's_18': "18:00 - 19:00",
@@ -88,10 +88,10 @@ def yes_no_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def menu_kyeboard() -> InlineKeyboardMarkup:
+def menu_kyeboard() -> ReplyKeyboardMarkup:
     keyboard = [
-        [init_button('menu_share_event')],
-        [init_button('menu_change_focus')],
-        [init_button('menu_help')]
+        [VALUES['menu_share_event']],
+        [VALUES['menu_change_focus']],
+        [VALUES['menu_help']]
     ]
-    return InlineKeyboardMarkup(keyboard)
+    return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)

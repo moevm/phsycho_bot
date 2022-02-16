@@ -19,7 +19,7 @@ from logs import init_logger
 DAYS_OFFSET = 7
 DEBUG = True
 
-PREPARE, TYPING, SELECT_YES_NO = "PREPARE", "TYPING", "SELECT_YES_NO"
+PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -29,7 +29,7 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение')
+    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение', reply_markup=menu_kyeboard())
     update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
     return PREPARE
 
@@ -86,17 +86,17 @@ def button(update: Update, context: CallbackContext) -> str:
                 if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
-
-    elif query.data.startswith('menu_'):
-        if query.data == 'menu_share_event':
-            # TODO обработка выбора "поделиться событием"
-            pass
-        if query.data == 'menu_change_focus':
-            # TODO обработка смены фокуса
-            pass
-        if query.data == 'menu_help':
-            help(update, context)
     return PREPARE
+
+
+def menu_processing(update: Update, context: CallbackContext):
+    if update.message.text == VALUES['menu_share_event']:
+        # TODO обработка выбора "поделиться событием"
+        pass
+    elif update.message.text == VALUES['menu_change_focus']:
+        change_focus(update, context)
+    elif update.message.text == VALUES['menu_help']:
+        help(update, context)
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -168,6 +168,8 @@ def main(token):
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
 
     updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+
+    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, menu_processing))
 
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
     updater.dispatcher.add_handler(
