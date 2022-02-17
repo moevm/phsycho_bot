@@ -58,7 +58,6 @@ def ask_resume_survey(updater):
 
 
 def main(token):
-    init_logger()
     updater = Updater(token, use_context=True)
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     schedule.every().hour.do(ask_resume_survey, updater=updater)
