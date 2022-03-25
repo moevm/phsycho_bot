@@ -20,6 +20,7 @@ DAYS_OFFSET = 7
 DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
+# TEXT, BUTTON, COMMAND = 'TEXT', 'BUTTON', 'COMMAND'
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -32,6 +33,7 @@ def start(update: Update, context: CallbackContext) -> str:
     update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение', reply_markup=menu_kyeboard())
     update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
     return PREPARE
+    # return COMMAND
 
 
 def ask_focus(update: Update) -> None:
@@ -89,7 +91,7 @@ def button(update: Update, context: CallbackContext) -> str:
     return PREPARE
 
 
-def menu_processing(update: Update, context: CallbackContext):
+def text_processing(update: Update, context: CallbackContext):
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
         pass
@@ -97,6 +99,9 @@ def menu_processing(update: Update, context: CallbackContext):
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
         help(update, context)
+    else:
+        engine_callback(update, context)
+    return TYPING
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -104,12 +109,14 @@ def help(update: Update, context: CallbackContext) -> None:
     set_last_usage(user)
     # TODO сделать справку
     update.message.reply_text('Help!')
+    # return COMMAND
 
 
 def stats(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     set_last_usage(user)
     update.message.reply_text(get_user_feelings(update.effective_user))
+    # return COMMAND
 
 
 def debug_get_users_not_answer_last24hours(update: Update, context: CallbackContext):
@@ -143,7 +150,9 @@ def ask_feelings(update: Update, context: CallbackContext) -> None:
 def engine_callback(update, context: CallbackContext) -> str:
     engine = Engine(update, context)
     current_step = engine.get_next_step()
+    # current_step.execute()
     return current_step.execute()
+    # return PREPARE
 
 
 def cancel(update: Update, context: CallbackContext):
@@ -159,6 +168,7 @@ def change_focus(update: Update, context: CallbackContext):
     update.effective_user.send_message(
         'Выберете новый фокус:',
         reply_markup=focus_keyboard())
+    # return COMMAND
 
 
 def main(token):
@@ -173,7 +183,7 @@ def main(token):
 
     updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
 
-    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, menu_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
 
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
     updater.dispatcher.add_handler(
@@ -183,13 +193,29 @@ def main(token):
         entry_points=[CallbackQueryHandler(button)],
         states={
             PREPARE: [CallbackQueryHandler(button)],
-            TYPING: [MessageHandler(Filters.text & ~Filters.command, engine_callback),
-                     CallbackQueryHandler(engine_callback)],
+            TYPING: [MessageHandler(Filters.text & ~Filters.command, engine_callback)],
+                     # CallbackQueryHandler(engine_callback)],
         },
         fallbacks=[CommandHandler('cancel', cancel),
                    CommandHandler('start', start)
                    ],
     ))
+
+    # updater.dispatcher.add_handler(ConversationHandler(
+    #     entry_points=[CommandHandler('start', start)],
+    #     states={
+    #         TYPING: [MessageHandler(Filters.text & ~Filters.command, text_processing)],
+    #         PREPARE: [CallbackQueryHandler(button)],
+    #         COMMAND: [CommandHandler('start', start),
+    #                   CommandHandler('help', help),
+    #                   CommandHandler('stats', stats),
+    #                   CommandHandler('change_focus', change_focus),
+    #                   CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey),
+    #                   CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours)
+    #                   ]
+    #     },
+    #     fallbacks=[CommandHandler('cancel', cancel)]
+    # ))
 
     # updater.dispatcher.add_error_handler(error)
     updater.start_polling()
