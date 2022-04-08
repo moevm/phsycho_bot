@@ -1,4 +1,36 @@
 {
+  "share_event": {
+    "script_body": [
+      {
+        "script_name": "share_event",
+        "id": "share_event_0",
+        "next": 1,
+        "state": "TYPING",
+        "survey_step": 0,
+        "need_answer": true,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Расскажи что тебя беспокоит в одном сообщении:"
+          }
+        ]
+      },
+      {
+        "script_name": "share_event",
+        "id": "share_event_1",
+        "next": 2,
+        "state": -1,
+        "survey_step": 1,
+        "need_answer": false,
+        "options": [
+          {
+            "type": "send_message",
+            "text": "Спасибо, что поделился! Всегда рад тебя выслушать!"
+          }
+        ]
+      }
+    ]
+  },
   "f_tired": {
     "script_body": [
       {
