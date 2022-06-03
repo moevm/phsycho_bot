@@ -29,9 +29,9 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение', reply_markup=menu_kyeboard())
+    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+                              reply_markup=menu_kyeboard())
     update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
-    return PREPARE
 
 
 def ask_focus(update: Update) -> None:
@@ -62,7 +62,8 @@ def button(update: Update, context: CallbackContext) -> str:
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
 
         return engine_callback(update, context)
-    elif query.data.startswith('r_') and (last_message == 'Привет! Пришло время подводить итоги. Давай?' or "Продолжить прохождение опроса?"):
+    elif query.data.startswith('r_') and (
+            last_message == 'Привет! Пришло время подводить итоги. Давай?' or "Продолжить прохождение опроса?"):
         if query.data == 'r_yes':
             return engine_callback(update, context)
         elif query.data == 'r_1h':
@@ -86,10 +87,9 @@ def button(update: Update, context: CallbackContext) -> str:
                 if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
-    return PREPARE
 
 
-def menu_processing(update: Update, context: CallbackContext):
+def text_processing(update: Update, context: CallbackContext):
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
         pass
@@ -97,6 +97,8 @@ def menu_processing(update: Update, context: CallbackContext):
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
         help(update, context)
+    else:
+        engine_callback(update, context)
 
 
 def help(update: Update, context: CallbackContext) -> None:
@@ -143,7 +145,7 @@ def ask_feelings(update: Update, context: CallbackContext) -> None:
 def engine_callback(update, context: CallbackContext) -> str:
     engine = Engine(update, context)
     current_step = engine.get_next_step()
-    return current_step.execute()
+    current_step.execute()
 
 
 def cancel(update: Update, context: CallbackContext):
@@ -167,29 +169,16 @@ def main(token):
     updater = Updater(token, use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
-
     updater.dispatcher.add_handler(CommandHandler('help', help))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
-
     updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-
-    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, menu_processing))
-
     updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
     updater.dispatcher.add_handler(
         CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
-    updater.dispatcher.add_handler(ConversationHandler(
-        entry_points=[CallbackQueryHandler(button)],
-        states={
-            PREPARE: [CallbackQueryHandler(button)],
-            TYPING: [MessageHandler(Filters.text & ~Filters.command, engine_callback),
-                     CallbackQueryHandler(engine_callback)],
-        },
-        fallbacks=[CommandHandler('cancel', cancel),
-                   CommandHandler('start', start)
-                   ],
-    ))
+    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
 
     # updater.dispatcher.add_error_handler(error)
     updater.start_polling()
