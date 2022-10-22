@@ -2,6 +2,7 @@ from pymodm import connect
 from multiprocessing import Process
 import datetime
 import time
+import sys
 import pytz
 from unittest import mock
 
@@ -122,11 +123,12 @@ def dialog(id, first_name, username):
 
 if __name__ == "__main__":
     connect('mongodb://127.0.0.1:27017/phsycho_bot_speed_test')
+    users_number = int(sys.argv[1])
     first_name = 'Name'
     username = 'name'
     procs = []
 
-    for i in range(0, 100):
+    for i in range(0, users_number):
         proc = Process(target=dialog, args=(i, first_name + str(i), username + str(i)))
         procs.append(proc)
         proc.start()
