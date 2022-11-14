@@ -13,10 +13,7 @@ services:
       - TOKEN=${TELEGRAM_TOKEN}
 
   vosk:
-    build:
-      context: .
-      dockerfile: Dockerfile.kaldi-ru
-    image: vosk
+    image: "plyushchenko/vosk:latest"
     restart: always
     ports:
       - 2700:2700

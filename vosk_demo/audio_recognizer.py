@@ -13,22 +13,22 @@ class AudioRecognizer:
 class VoskAudioRecognizer(AudioRecognizer):
     def __init__(self, host):
         self._host = host
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         self._event_loop = asyncio.get_event_loop()
 
     def recognize(self, file_name):
-        print(">>>> Recognizer!")
         wav_path = "./" + file_name.split('.')[0] + ".wav"
         print(wav_path)
         # convert oog to wav
         command = f"ffmpeg -i {file_name} -ar 16000 -ac 2 -ab 192K -f wav {wav_path}"
         _ = subprocess.check_call(command.split())
-        print(">>>>>>>> Change audio!")
         recognizer_results = self._event_loop.run_until_complete(
             self.send_audio_to_recognizer(file_name)
         )
         # recognizer_results = self.send_audio_to_recognizer(file_name)
         # recognized_words = list(map(self.parse_recognizer_result, recognizer_results))
-        print(">>>>>>>>>>", recognizer_results)
+        print(recognizer_results)
 
     async def send_audio_to_recognizer(self, file_name):
         recognizer_results = []
