@@ -1,28 +1,51 @@
+import asyncio
 import json
 import wave
 import subprocess
-import os
-
-from vosk import KaldiRecognizer, Model  # оффлайн-распознавание от Vosk
+import websockets
 
 
-def recognizer(file_path):
-    wav_path = "." + file_path.split('.')[1] + ".wav"
+class AudioRecognizer:
+    def recognize(self, audio):
+        pass
 
-    # convert oog to wav
-    command = f"ffmpeg -i {file_path} -ar 16000 -ac 2 -ab 192K -f wav {wav_path}"
-    _ = subprocess.check_call(command.split())
 
-    model = Model("./model/")
+class VoskAudioRecognizer(AudioRecognizer):
+    def __init__(self, host):
+        self._host = host
+        self._event_loop = asyncio.get_event_loop()
 
-    wave_audio_file = wave.open(wav_path, "rb")
-    offline_recognizer = KaldiRecognizer(model, 24000)
-    data = wave_audio_file.readframes(wave_audio_file.getnframes())
+    def recognize(self, file_name):
+        print(">>>> Recognizer!")
+        wav_path = "./" + file_name.split('.')[0] + ".wav"
+        print(wav_path)
+        # convert oog to wav
+        command = f"ffmpeg -i {file_name} -ar 16000 -ac 2 -ab 192K -f wav {wav_path}"
+        _ = subprocess.check_call(command.split())
+        print(">>>>>>>> Change audio!")
+        recognizer_results = self._event_loop.run_until_complete(
+            self.send_audio_to_recognizer(file_name)
+        )
+        # recognizer_results = self.send_audio_to_recognizer(file_name)
+        # recognized_words = list(map(self.parse_recognizer_result, recognizer_results))
+        print(">>>>>>>>>>", recognizer_results)
 
-    offline_recognizer.AcceptWaveform(data)
-    recognized_data = json.loads(offline_recognizer.Result())["text"]
-    print(recognized_data)
+    async def send_audio_to_recognizer(self, file_name):
+        recognizer_results = []
+        async with websockets.connect(self._host) as websocket:
+            wf = wave.open(file_name, "rb")
+            await websocket.send('''{"config" : { "sample_rate" : 8000.0 }}''')
+            while True:
+                data = wf.readframes(1000)
+                if len(data) == 0:
+                    break
+                await websocket.send(data)
+                # print(await websocket.recv())
+                json_data = json.loads(await websocket.recv())
+                if 'result' in json_data:
+                    recognizer_results += json_data['result']
 
-    os.remove(wav_path)
-
-    return recognized_data
+            await websocket.send('{"eof" : 1}')
+            await websocket.recv()
+            # print(await websocket.recv())
+            return recognizer_results

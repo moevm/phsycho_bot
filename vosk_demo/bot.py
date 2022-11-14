@@ -12,7 +12,7 @@ from telegram.ext import (
     CallbackContext,
 )
 
-from audio_recognizer import recognizer
+from audio_recognizer import VoskAudioRecognizer
 
 # Enable logging
 logging.basicConfig(
@@ -37,8 +37,10 @@ def voice_handler(update, context):
     update.message.voice.get_file().download()
     filename = update.message.voice.get_file().file_path
     filename = filename.split('/')[-1]
-    recognizer(filename)
-    os.remove(filename)
+    recog = VoskAudioRecognizer(config.VOSK_URL)
+    recog.recognize(filename)
+    # recognizer(filename)
+    # os.remove(filename)
     update.message.reply_text("Спасибо!")
 
 
@@ -67,5 +69,5 @@ def main(token):
 
 
 if __name__ == '__main__':
-    # main(sys.argv[1])
-    main(config.BOT_TOKEN)
+    main(sys.argv[1])
+    # main(config.BOT_TOKEN)
