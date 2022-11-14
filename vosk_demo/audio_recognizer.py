@@ -26,7 +26,6 @@ class VoskAudioRecognizer(AudioRecognizer):
         recognizer_results = self._event_loop.run_until_complete(
             self.send_audio_to_recognizer(file_name)
         )
-        # recognizer_results = self.send_audio_to_recognizer(file_name)
         # recognized_words = list(map(self.parse_recognizer_result, recognizer_results))
         print(recognizer_results)
 

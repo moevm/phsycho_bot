@@ -37,10 +37,9 @@ def voice_handler(update, context):
     update.message.voice.get_file().download()
     filename = update.message.voice.get_file().file_path
     filename = filename.split('/')[-1]
-    recog = VoskAudioRecognizer(config.VOSK_URL)
-    recog.recognize(filename)
-    # recognizer(filename)
-    # os.remove(filename)
+    recognizer = VoskAudioRecognizer(config.VOSK_URL)
+    recognizer.recognize(filename)
+    os.remove(filename)
     update.message.reply_text("Спасибо!")
 
 
