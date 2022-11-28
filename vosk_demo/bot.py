@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 
 def start_callback(update: Update, context: CallbackContext) -> None:
     msg = "Отправь мне голосовое сообщение)"
-    print("Start!")
+    logger.info("Start!")
     update.message.reply_text(msg)
 
 
 def audio_handler(update, context):
-    print(update.message.audio)
+    logger.info(update.message.audio)
     update.message.reply_text("What a nice sound!")
 
 
@@ -38,9 +38,10 @@ def voice_handler(update, context):
     filename = update.message.voice.get_file().file_path
     filename = filename.split('/')[-1]
     recognizer = VoskAudioRecognizer(config.VOSK_URL)
-    recognizer.recognize(filename)
+    recog_words = recognizer.recognize(filename)
+    logger.info(recog_words)
     os.remove(filename)
-    update.message.reply_text("Спасибо!")
+    update.message.reply_text("Thanks!")
 
 
 def main(token):
