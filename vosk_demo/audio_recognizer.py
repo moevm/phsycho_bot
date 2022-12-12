@@ -71,7 +71,7 @@ class VoskAudioRecognizer(AudioRecognizer):
     def recognize(self, file_name):
         wav_path = "./" + file_name.split('.')[0] + ".wav"
         # convert oog to wav
-        command = f"ffmpeg -i {file_name} -ar 16000 -ac 2 -ab 192K -f wav {wav_path}"
+        command = f"ffmpeg -i {file_name} -ar 16000 -ac 1 -ab 256K -f wav {wav_path}"
         _ = subprocess.check_call(command.split())
 
         # wav_path = 'file.wav'
