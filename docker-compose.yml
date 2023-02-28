@@ -7,9 +7,9 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - ./db/:/data/db/
+      - db-data:/data/db/
     ports:
-      - 27017:27017
+      - "127.0.0.1:27018:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
@@ -28,3 +28,6 @@ services:
       - MONGODB_PASSWORD=${MONGO_PASSWORD}
       - MONGODB_USERNAME=${MONGO_USERNAME}
       - TOKEN=${TELEGRAM_TOKEN}
+
+volumes:
+  db-data:
