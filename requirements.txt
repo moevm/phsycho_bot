@@ -3,3 +3,4 @@ schedule==1.1.0
 pymongo==3.11.3
 pymodm==0.4.3
 cPython==0.0.6
+vosk==0.3.44

@@ -3,6 +3,10 @@ import sys
 import threading
 import queue
 import my_cron
+import os
+import subprocess
+import wave
+import json
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
@@ -15,6 +19,8 @@ from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, rea
     menu_kyeboard, VALUES
 from script_engine import Engine
 from logs import init_logger
+
+from vosk import KaldiRecognizer, Model
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -163,25 +169,59 @@ def change_focus(update: Update, context: CallbackContext):
         reply_markup=focus_keyboard())
 
 
-def main(token):
+def audio_to_text(filename):
+    model = Model("vosk-model-small-ru-0.22")
+    wf = wave.open(filename, "rb")
+    rec = KaldiRecognizer(model, 24000)
+
+    data = wf.readframes(wf.getnframes())
+
+    rec.AcceptWaveform(data)
+    recognized_data = json.loads(rec.Result())["text"]
+    return recognized_data
+
+
+def download_voice(update: Update, context: CallbackContext):
+    update.message.voice.get_file().download()
+    ogg_filename = update.message.voice.get_file().file_path
+    ogg_filename = ogg_filename.split('/')[-1]
+
+    wav_filename = "./" + ogg_filename.split('.')[0] + ".wav"
+    command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
+    _ = subprocess.check_call(command.split())
+    os.remove(ogg_filename)
+
+    #generated_text = audio_to_text(wav_filename)
+    #update.message.reply_text(generated_text)
+
+
+def main(token, mode):
     init_logger()
 
     updater = Updater(token, use_context=True)
 
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
-    updater.dispatcher.add_handler(CommandHandler('stats', stats))
-    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-    updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-    updater.dispatcher.add_handler(
-        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
-    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+    if mode == "voice":
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, download_voice))
 
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+    elif mode == "text":
 
-    # updater.dispatcher.add_error_handler(error)
+
+        #print(dir(updater))
+        updater.dispatcher.add_handler(CommandHandler('start', start))
+        updater.dispatcher.add_handler(CommandHandler('help', help))
+        updater.dispatcher.add_handler(CommandHandler('stats', stats))
+        updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+        updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
+        updater.dispatcher.add_handler(
+            CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+        updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+
+        updater.dispatcher.add_handler(CallbackQueryHandler(button))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+
     updater.start_polling()
+    
+    
     # updater.idle()
 
 
@@ -201,7 +241,7 @@ class Worker(threading.Thread):
         auth_in_db(username=sys.argv[2],
                    password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1])
+            main(sys.argv[1], sys.argv[4])
         else:
             my_cron.main(sys.argv[1])
 
