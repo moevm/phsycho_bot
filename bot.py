@@ -166,10 +166,10 @@ def change_focus(update: Update, context: CallbackContext):
 def main(token, mode):
     init_logger()
     
-    if(mode == "voice"):
+    if mode == "voice":
         #DO SOMETHING
         print("Add DEMO")
-    elif(mode == "text"):
+    elif mode == "text":
 
         updater = Updater(token, use_context=True)
         #print(dir(updater))
