@@ -163,25 +163,30 @@ def change_focus(update: Update, context: CallbackContext):
         reply_markup=focus_keyboard())
 
 
-def main(token):
+def main(token, mode):
     init_logger()
+    
+    if mode == "voice":
+        #DO SOMETHING
+        print("Add DEMO")
+    elif mode == "text":
 
-    updater = Updater(token, use_context=True)
+        updater = Updater(token, use_context=True)
+        #print(dir(updater))
+        updater.dispatcher.add_handler(CommandHandler('start', start))
+        updater.dispatcher.add_handler(CommandHandler('help', help))
+        updater.dispatcher.add_handler(CommandHandler('stats', stats))
+        updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+        updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
+        updater.dispatcher.add_handler(
+            CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+        updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
-    updater.dispatcher.add_handler(CommandHandler('stats', stats))
-    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-    updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-    updater.dispatcher.add_handler(
-        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
-    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
-
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
-
-    # updater.dispatcher.add_error_handler(error)
-    updater.start_polling()
+        updater.dispatcher.add_handler(CallbackQueryHandler(button))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+        updater.start_polling()
+    
+    
     # updater.idle()
 
 
@@ -201,7 +206,7 @@ class Worker(threading.Thread):
         auth_in_db(username=sys.argv[2],
                    password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1])
+            main(sys.argv[1], sys.argv[4])
         else:
             my_cron.main(sys.argv[1])
 

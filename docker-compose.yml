@@ -28,6 +28,7 @@ services:
       - MONGODB_PASSWORD=${MONGO_PASSWORD}
       - MONGODB_USERNAME=${MONGO_USERNAME}
       - TOKEN=${TELEGRAM_TOKEN}
+      - MODE=${MODE_ENV}
 
 volumes:
   db-data:
