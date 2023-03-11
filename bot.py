@@ -1,11 +1,9 @@
 import sys
-import json
 import os
 import queue
-import subprocess
 import sys
 import threading
-import wave
+
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
@@ -20,6 +18,7 @@ from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, rea
     menu_kyeboard, VALUES
 from logs import init_logger
 from script_engine import Engine
+from voice_module import download_voice, audio_to_text, text_to_audio, work_with_audio
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -168,38 +167,13 @@ def change_focus(update: Update, context: CallbackContext):
         reply_markup=focus_keyboard())
 
 
-def audio_to_text(filename):
-    model = Model("vosk-model-small-ru-0.22")
-    wf = wave.open(filename, "rb")
-    rec = KaldiRecognizer(model, 24000)
-    data = wf.readframes(wf.getnframes())
-    rec.AcceptWaveform(data)
-    recognized_data = json.loads(rec.Result())["text"]
-    return recognized_data
-
-
-def download_voice(update: Update, context: CallbackContext):
-    downloaded_file = update.message.voice.get_file()
-    voice_bytearray = downloaded_file.download_as_bytearray()
-    ogg_filename = os.path.join('user_voices', f'user_{update.message.chat.id}')
-    if not os.path.exists(ogg_filename):
-        os.makedirs(ogg_filename)
-    ogg_filename += f"/{downloaded_file.file_unique_id}.ogg"
-    with open(ogg_filename, "wb") as voice_file:
-        voice_file.write(voice_bytearray)
-    wav_filename = ogg_filename.split(".")[0]+".wav"
-    command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}" #16000 - частота дискретизации, 1 - кол-во аудиоканалов, 256К - битрейт
-    subprocess.run(command.split())
-    os.remove(ogg_filename)
-
-
 def main(token, mode):
     init_logger()
 
     updater = Updater(token, use_context=True)
 
     if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, download_voice))
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
         updater.dispatcher.add_handler(CommandHandler('help', help))
@@ -212,7 +186,6 @@ def main(token, mode):
 
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
-
     updater.start_polling()
     # updater.idle()
 
