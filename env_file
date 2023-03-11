@@ -1,3 +1,4 @@
 TELEGRAM_TOKEN=PasteYourTelegramToken
 MONGO_USERNAME=username
 MONGO_PASSWORD=password
+MODE_ENV=SetModeTextOrVoice

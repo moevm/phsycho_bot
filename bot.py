@@ -212,6 +212,7 @@ def main(token, mode):
 
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+
     updater.start_polling()
     # updater.idle()
 
