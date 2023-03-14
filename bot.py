@@ -1,24 +1,20 @@
-import sys
-import os
-import queue
+import logging
 import sys
 import threading
-
+import queue
+import my_cron
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
     ConversationHandler, MessageHandler, Filters
-from vosk import KaldiRecognizer, Model
 
-import my_cron
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
     get_users_not_answer_last24hours, get_users_not_finish_survey
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     menu_kyeboard, VALUES
-from logs import init_logger
 from script_engine import Engine
-from voice_module import download_voice, audio_to_text, text_to_audio, work_with_audio
+from logs import init_logger
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -169,12 +165,14 @@ def change_focus(update: Update, context: CallbackContext):
 
 def main(token, mode):
     init_logger()
-
-    updater = Updater(token, use_context=True)
-
+    
     if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+        #DO SOMETHING
+        print("Add DEMO")
     elif mode == "text":
+
+        updater = Updater(token, use_context=True)
+        #print(dir(updater))
         updater.dispatcher.add_handler(CommandHandler('start', start))
         updater.dispatcher.add_handler(CommandHandler('help', help))
         updater.dispatcher.add_handler(CommandHandler('stats', stats))
@@ -186,7 +184,9 @@ def main(token, mode):
 
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
         updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
-    updater.start_polling()
+        updater.start_polling()
+    
+    
     # updater.idle()
 
 
