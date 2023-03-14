@@ -18,7 +18,7 @@ from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, rea
     menu_kyeboard, VALUES
 from logs import init_logger
 from script_engine import Engine
-from voice_module import download_voice, audio_to_text, text_to_audio, work_with_audio
+from voice_module import work_with_audio
 
 DAYS_OFFSET = 7
 DEBUG = True
