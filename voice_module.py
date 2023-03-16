@@ -3,6 +3,7 @@ import subprocess
 
 from telegram import Update
 from telegram.ext import CallbackContext
+from db import init_survey_progress, init_user
 
 
 def download_voice(update: Update):
@@ -23,4 +24,6 @@ def download_voice(update: Update):
 
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename = download_voice(update)
+    init_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=wav_filename)
+
 
