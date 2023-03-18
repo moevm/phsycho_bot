@@ -63,4 +63,4 @@ def convert_wav_to_ogg(wav_filename):
     ogg_file = os.path.splitext("wav_filename.wav")[0]+".ogg"
     voice = AudioSegment.from_wav(wav_file)
     voice.export(ogg_file, format="ogg")
-    return song
+    return voice
