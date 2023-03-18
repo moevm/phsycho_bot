@@ -1,12 +1,14 @@
 import json
-import os
+import os, sys
 import subprocess
 import wave
+# import soundfile
 
 import pyttsx3
 from telegram import Update
 from telegram.ext import CallbackContext
 from vosk import KaldiRecognizer, Model
+from pydub import AudioSegment
 
 model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
 engine = pyttsx3.init()
@@ -51,3 +53,14 @@ def work_with_audio(update: Update, context: CallbackContext):
     output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_text)
 
+# def convert_wav_to_ogg(wav_filename):
+#     data, samplerate = soundfile.read(wav_filename)
+#     ogg_file = soundfile.write('newfile.ogg', data, samplerate)
+#     return ogg_file
+
+def convert_wav_to_ogg(wav_filename):
+    wav_file = "wav_filename.wav"
+    ogg_file = os.path.splitext("wav_filename.wav")[0]+".ogg"
+    voice = AudioSegment.from_wav(wav_file)
+    voice.export(ogg_file, format="ogg")
+    return song
