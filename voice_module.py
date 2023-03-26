@@ -52,15 +52,3 @@ def work_with_audio(update: Update, context: CallbackContext):
     input_text = audio_to_text(wav_filename)
     output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_text)
-
-# def convert_wav_to_ogg(wav_filename):
-#     data, samplerate = soundfile.read(wav_filename)
-#     ogg_file = soundfile.write('newfile.ogg', data, samplerate)
-#     return ogg_file
-
-def convert_wav_to_ogg(wav_filename):
-    wav_file = "wav_filename.wav"
-    ogg_file = os.path.splitext("wav_filename.wav")[0]+".ogg"
-    voice = AudioSegment.from_wav(wav_file)
-    voice.export(ogg_file, format="ogg")
-    return voice
