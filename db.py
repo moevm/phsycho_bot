@@ -73,13 +73,13 @@ class SurveyProgress(MongoModel):
     survey_next = fields.IntegerField()
     need_answer = fields.BooleanField()
     user_answer = fields.CharField()
-
+    is_voice = fields.BooleanField()
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
 
     def __str__(self):
         return f'[user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
-               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [need_answer] - {self.need_answer} | [user_answer] - {self.user_answer} | ' \
+               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [need_answer] - {self.need_answer} | [user_answer] - {self.user_answer} | [is_voice] - {self.is_voice} | ' \
                f'[time_send_question] - {self.time_send_question} | [time_receive_answer] - {self.time_receive_answer}'
 
 
@@ -105,7 +105,7 @@ def init_user(user) -> User:
         }).save()
 
 
-def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS") -> SurveyProgress:
+def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", is_voice = False) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(**{
         'id': id,
@@ -115,6 +115,7 @@ def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_ans
         'survey_next': survey_step + 1,
         'need_answer': need_answer,
         'user_answer': user_answer,
+        'is_voice': is_voice,
         'time_send_question': date,
         'time_receive_answer': date
     })
