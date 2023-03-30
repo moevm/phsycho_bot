@@ -1,8 +1,7 @@
 import json
-import os, sys
+import os
 import subprocess
 import wave
-# import soundfile
 
 import pyttsx3
 from telegram import Update
@@ -10,8 +9,10 @@ from telegram.ext import CallbackContext
 from db import push_user_survey_progress, init_user
 from vosk import KaldiRecognizer, Model
 
+
 model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
 engine = pyttsx3.init()
+engine.setProperty("voice", "russian")
 
 
 def audio_to_text(filename):
@@ -19,16 +20,17 @@ def audio_to_text(filename):
     rec = KaldiRecognizer(model, 24000)
     data = wf.readframes(wf.getnframes())
     rec.AcceptWaveform(data)
+    wf.close()
     recognized_data = json.loads(rec.Result())["text"]
     return recognized_data
 
 
 def text_to_audio(text_to_convert, wav_filename):
-    output_filename_mp3 = wav_filename.split(".")[0]+"_answer.mp3"
+    output_filename = wav_filename.split(".")[0] + "_answer.wav"
     print(text_to_convert)
-    engine.save_to_file(text_to_convert, output_filename_mp3)
+    engine.save_to_file(text_to_convert, output_filename)
     engine.runAndWait()
-    return output_filename_mp3
+    return output_filename
 
 
 def download_voice(update: Update):
@@ -52,6 +54,7 @@ def work_with_audio(update: Update, context: CallbackContext):
     input_text = audio_to_text(wav_filename)
     output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_text)
+
     push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_text, is_voice=True)
 
 # def convert_wav_to_ogg(wav_filename):
