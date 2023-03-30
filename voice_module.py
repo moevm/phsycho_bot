@@ -1,9 +1,34 @@
-import os
+import json
+import os, sys
 import subprocess
+import wave
+# import soundfile
 
+import pyttsx3
 from telegram import Update
 from telegram.ext import CallbackContext
-from db import init_survey_progress, init_user
+from db import push_user_survey_progress, init_user
+from vosk import KaldiRecognizer, Model
+
+model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
+engine = pyttsx3.init()
+
+
+def audio_to_text(filename):
+    wf = wave.open(filename, "rb")
+    rec = KaldiRecognizer(model, 24000)
+    data = wf.readframes(wf.getnframes())
+    rec.AcceptWaveform(data)
+    recognized_data = json.loads(rec.Result())["text"]
+    return recognized_data
+
+
+def text_to_audio(text_to_convert, wav_filename):
+    output_filename_mp3 = wav_filename.split(".")[0]+"_answer.mp3"
+    print(text_to_convert)
+    engine.save_to_file(text_to_convert, output_filename_mp3)
+    engine.runAndWait()
+    return output_filename_mp3
 
 
 def download_voice(update: Update):
@@ -24,6 +49,19 @@ def download_voice(update: Update):
 
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename = download_voice(update)
-    init_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=wav_filename)
+    input_text = audio_to_text(wav_filename)
+    output_file = text_to_audio(input_text, wav_filename)
+    update.effective_user.send_message(input_text)
+    push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_text, is_voice=True)
 
+# def convert_wav_to_ogg(wav_filename):
+#     data, samplerate = soundfile.read(wav_filename)
+#     ogg_file = soundfile.write('newfile.ogg', data, samplerate)
+#     return ogg_file
 
+def convert_wav_to_ogg(wav_filename):
+    wav_file = "wav_filename.wav"
+    ogg_file = os.path.splitext("wav_filename.wav")[0]+".ogg"
+    voice = AudioSegment.from_wav(wav_file)
+    voice.export(ogg_file, format="ogg")
+    return voice

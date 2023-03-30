@@ -182,6 +182,22 @@ def push_user_feeling(user, feeling, date):
     db_user.feelings.append({'feel': feeling, 'date': date})
     db_user.save()
 
+def push_user_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", is_voice = False):
+    date = pytz.utc.localize(datetime.datetime.utcnow())
+    db_user = init_user(user)
+    SurveyProgress(**{
+        'id': id,
+        'user': db_user,
+        'survey_id': focus,
+        'survey_step': survey_step,
+        'survey_next': survey_step + 1,
+        'need_answer': need_answer,
+        'user_answer': user_answer,
+        'is_voice': is_voice,
+        'time_send_question': date,
+        'time_receive_answer': date
+    }).save()
+    
 
 def get_user_feelings(user):
     db_user = init_user(user)
