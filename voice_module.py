@@ -1,8 +1,35 @@
+import json
 import os
 import subprocess
+import wave
 
+import pyttsx3
 from telegram import Update
 from telegram.ext import CallbackContext
+from vosk import KaldiRecognizer, Model
+
+
+model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
+engine = pyttsx3.init()
+engine.setProperty("voice", "russian")
+
+
+def audio_to_text(filename):
+    wf = wave.open(filename, "rb")
+    rec = KaldiRecognizer(model, 24000)
+    data = wf.readframes(wf.getnframes())
+    rec.AcceptWaveform(data)
+    wf.close()
+    recognized_data = json.loads(rec.Result())["text"]
+    return recognized_data
+
+
+def text_to_audio(text_to_convert, wav_filename):
+    output_filename = wav_filename.split(".")[0] + "_answer.wav"
+    print(text_to_convert)
+    engine.save_to_file(text_to_convert, output_filename)
+    engine.runAndWait()
+    return output_filename
 
 
 def download_voice(update: Update):
@@ -23,4 +50,6 @@ def download_voice(update: Update):
 
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename = download_voice(update)
-
+    input_text = audio_to_text(wav_filename)
+    output_file = text_to_audio(input_text, wav_filename)
+    update.effective_user.send_message(input_text)
