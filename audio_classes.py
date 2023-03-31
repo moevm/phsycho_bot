@@ -1,7 +1,7 @@
 import json
 
 
-class recognized_word:
+class RecognizedWord:
     def __init__(self, word, begin_timestamp, end_timestamp, probability):
         self.word = word
         self.start = begin_timestamp
@@ -21,7 +21,7 @@ class recognized_word:
         return self.conf
 
 
-class recognized_sentence:
+class RecognizedSentence:
     def __init__(self, json_file):
         self.words = []
         self.text = json_file['text']
@@ -29,7 +29,7 @@ class recognized_sentence:
             self.add_word(i['word'], i['start'], i['end'], i['conf'])
 
     def add_word(self, word, start, end, conf):
-        self.words.append(recognized_word(word, start, end, conf))
+        self.words.append(RecognizedWord(word, start, end, conf))
 
     def generate_output_info(self):
         answer = f"Полученное предложение: \n{self.text}\nСтатистика по сообщению:\n"

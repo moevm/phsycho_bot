@@ -7,7 +7,7 @@ import pyttsx3
 from telegram import Update
 from telegram.ext import CallbackContext
 from vosk import KaldiRecognizer, Model
-from audio_classes import recognized_sentence, recognized_word
+from audio_classes import RecognizedSentence, RecognizedWord
 
 
 model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
@@ -26,7 +26,7 @@ def audio_to_text(filename):
         rec.AcceptWaveform(data)
     wf.close()
     recognized_data = json.loads(rec.FinalResult())
-    input_sentence = recognized_sentence(recognized_data)
+    input_sentence = RecognizedSentence(recognized_data)
     return input_sentence
 
 
