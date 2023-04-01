@@ -1,40 +1,28 @@
 import json
+from dataclasses import dataclass
 
 
+@dataclass(frozen=True)
 class RecognizedWord:
-    def __init__(self, word, begin_timestamp, end_timestamp, probability):
-        self.word = word
-        self.start = begin_timestamp
-        self.end = end_timestamp
-        self.conf = probability
-
-    def get_word(self):
-        return self.word
-
-    def get_start(self):
-        return self.start
-
-    def get_end(self):
-        return self.end
-
-    def get_probability(self):
-        return self.conf
+    word: str
+    begin_timestamp: float
+    end_timestamp: float
+    probability: float
 
 
 class RecognizedSentence:
     def __init__(self, json_file):
-        self.words = []
-        self.text = json_file['text']
+        self._words = []
+        self._text = json_file['text']
         for i in json_file['result']:
-            self.add_word(i['word'], i['start'], i['end'], i['conf'])
+            self.__add_word(i['word'], i['start'], i['end'], i['conf'])
 
-    def add_word(self, word, start, end, conf):
-        self.words.append(RecognizedWord(word, start, end, conf))
+    def __add_word(self, word, start, end, conf):
+        self._words.append(RecognizedWord(word, float(start), float(end), float(conf)))
 
     def generate_output_info(self):
-        answer = f"Полученное предложение: \n{self.text}\nСтатистика по сообщению:\n"
-        for i in self.words:
-            answer += f"Слово \"{i.get_word()}\" было сказано в промежутке {i.get_start()} - {i.get_end()} с " \
-                      f"вероятностью {i.get_probability()}\n"
-        return answer
-
+        answer_list = [f"Полученное предложение: \n{self._text}\nСтатистика по сообщению:\n"]
+        for i in self._words:
+            answer_list.append(f"Слово \"{i.word}\" было сказано в промежутке {i.begin_timestamp} - {i.end_timestamp} с "
+                               f"вероятностью {i.probability}\n")
+        return "".join(answer_list)
