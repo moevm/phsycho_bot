@@ -26,3 +26,10 @@ class RecognizedSentence:
             answer_list.append(f"Слово \"{i.word}\" было сказано в промежутке {i.begin_timestamp} - {i.end_timestamp} с "
                                f"вероятностью {i.probability}\n")
         return "".join(answer_list)
+
+    def generate_stats(self):
+        answer_list = []
+        for i in self._words:
+            answer_list.append(f"{i.word} - {i.begin_timestamp} - {i.end_timestamp} - {i.probability}\n")
+        return "".join(answer_list)
+

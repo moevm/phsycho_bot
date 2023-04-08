@@ -76,10 +76,12 @@ class SurveyProgress(MongoModel):
     is_voice = fields.BooleanField()
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
+    stats = fields.CharField()
+
 
     def __str__(self):
         return f'[user] -  {self.user} | [survey_id] - {self.survey_id} | ' \
-               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [need_answer] - {self.need_answer} | [user_answer] - {self.user_answer} | [is_voice] - {self.is_voice} | ' \
+               f'[survey_step] - {self.survey_step} | [survey_next] - {self.survey_next} | [need_answer] - {self.need_answer} | [user_answer] - {self.user_answer} | [stats] - {self.stats} | [is_voice] - {self.is_voice} | ' \
                f'[time_send_question] - {self.time_send_question} | [time_receive_answer] - {self.time_receive_answer}'
 
 
@@ -105,7 +107,7 @@ def init_user(user) -> User:
         }).save()
 
 
-def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", is_voice = False) -> SurveyProgress:
+def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", stats="", is_voice = False) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(**{
         'id': id,
@@ -116,6 +118,7 @@ def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_ans
         'need_answer': need_answer,
         'user_answer': user_answer,
         'is_voice': is_voice,
+        'stats': stats,
         'time_send_question': date,
         'time_receive_answer': date
     })
@@ -182,7 +185,7 @@ def push_user_feeling(user, feeling, date):
     db_user.feelings.append({'feel': feeling, 'date': date})
     db_user.save()
 
-def push_user_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", is_voice = False):
+def push_user_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", stats="", is_voice = False):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
     SurveyProgress(**{
@@ -194,6 +197,7 @@ def push_user_survey_progress(user, focus, id=0, survey_step=0, next_step=1, nee
         'need_answer': need_answer,
         'user_answer': user_answer,
         'is_voice': is_voice,
+        'stats': stats,
         'time_send_question': date,
         'time_receive_answer': date
     }).save()
