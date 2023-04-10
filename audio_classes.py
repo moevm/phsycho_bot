@@ -27,13 +27,6 @@ class RecognizedSentence:
                                f"вероятностью {i.probability}\n")
         return "".join(answer_list)
 
-    def generate_sentence(self):
-        answer =[f"{self._text}"]
-        return "".join(answer)
-
     def generate_stats(self):
-        answer_list = []
-        for i in self._words:
-            answer_list.append(f"{i.word} - {i.begin_timestamp} - {i.end_timestamp} - {i.probability}\n")
-        return "".join(answer_list)
+        return '\n'.join([f"{i.word} - {i.begin_timestamp} - {i.end_timestamp} - {i.probability}" for i in self._words])
 

@@ -60,7 +60,6 @@ def work_with_audio(update: Update, context: CallbackContext):
     stats_sentence = input_sentence.generate_stats()
     #output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_sentence.generate_output_info())
-    push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence.generate_sentence(), stats=stats_sentence, is_voice=True)
-
+    push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence._text, stats=stats_sentence, is_voice=True)
 
 
