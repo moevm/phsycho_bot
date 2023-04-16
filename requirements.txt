@@ -5,3 +5,5 @@ pymodm==0.4.3
 cPython==0.0.6
 vosk==0.3.44
 pyttsx3==2.90
+noisereduce==2.0.1
+pydub

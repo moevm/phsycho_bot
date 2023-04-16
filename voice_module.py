@@ -4,6 +4,8 @@ import subprocess
 import wave
 
 import pyttsx3
+import noisereduce as nr
+from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
 from vosk import KaldiRecognizer, Model
@@ -51,6 +53,14 @@ def download_voice(update: Update):
     subprocess.run(command.split())
     os.remove(ogg_filename)
     return wav_filename
+
+
+def noise_reduce(input_audio):
+    rate, data = wavfile.read(input_audio)
+    date_noise_reduce = nr.reduce_noise(y=data, sr=rate)
+    output_audio_without_noise = input_audio.split('.')[0]+"_nonoise.wav"
+    wavfile.write(output_audio_without_noise, rate, date_noise_reduce)
+    return output_audio_without_noise
 
 
 def work_with_audio(update: Update, context: CallbackContext):
