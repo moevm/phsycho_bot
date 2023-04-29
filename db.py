@@ -3,7 +3,9 @@ import logging
 from typing import List
 
 import pytz
-from pymodm import connect, fields, MongoModel
+from pymodm import connect, fields, MongoModel, files
+from pymodm.connection import _get_db
+import gridfs
 
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
@@ -198,6 +200,10 @@ def get_user_feelings(user):
 #TODO доделать функцию для возвращения пользователю голосового сообщения
 def get_user_audio(user):
     db_user = init_user(user)
+    progrs = list(SurveyProgress.objects.values().all())
+    fs = gridfs.GridFSBucket(_get_db())
+    audio_file = fs.open_download_stream(progrs[-1]["audio_file"]).read()
+    return audio_file
     
 
 def set_user_ready_flag(user, flag):
