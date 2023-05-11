@@ -65,7 +65,7 @@ def noise_reduce(input_audio):
 
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename = download_voice(update)
-    input_sentence = audio_to_text(wav_filename)
+    no_noise_audio = noise_reduce(wav_filename)
+    input_sentence = audio_to_text(no_noise_audio)
     #output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_sentence.generate_output_info())
-
