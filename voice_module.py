@@ -2,10 +2,12 @@ import json
 import os
 import subprocess
 import wave
+import io
 
 import pyttsx3
 from telegram import Update
 from telegram.ext import CallbackContext
+from db import push_user_survey_progress, init_user, get_user_audio
 from vosk import KaldiRecognizer, Model
 from audio_classes import RecognizedSentence, RecognizedWord
 
@@ -49,13 +51,20 @@ def download_voice(update: Update):
     wav_filename = ogg_filename.split(".")[0]+".wav"
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}" #16000 - частота дискретизации, 1 - кол-во аудиоканалов, 256К - битрейт
     subprocess.run(command.split())
-    os.remove(ogg_filename)
-    return wav_filename
+    return (wav_filename, ogg_filename)
 
 
 def work_with_audio(update: Update, context: CallbackContext):
-    wav_filename = download_voice(update)
+    wav_filename, ogg_filename = download_voice(update)
     input_sentence = audio_to_text(wav_filename)
+    stats_sentence = input_sentence.generate_stats()
     #output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_sentence.generate_output_info())
-
+    push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence._text, stats=stats_sentence, audio_file=open(ogg_filename, 'rb'))
+    os.remove(ogg_filename)
+    with open('text.ogg', 'wb') as f:
+        f.write(get_user_audio(update.effective_user))
+    with open('text.ogg', 'rb') as f:
+        update.effective_user.send_audio(f)
+    #update.effective_user.send_message(get_user_audio(update.effective_user))
+    #возвращение пользователю голосового из бд для проверки корректности сохранения
