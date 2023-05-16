@@ -1,0 +1,13 @@
+version: "3"
+services:
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bot
+    restart: unless-stopped
+    env_file: .env
+
+    environment:
+      - TOKEN=${TELEGRAM_TOKEN}
