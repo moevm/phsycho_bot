@@ -10,14 +10,15 @@ speaker = 'aidar'
 device = torch.device('cpu')
 example_text = 'Привет я бот-психолог'
 
-def silero_test():
+
+def silero_test(text=example_text):
     model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
                                          model='silero_tts',
                                          language=language,
                                          speaker=model_id)
     model.to(device)  # gpu or cpu
 
-    audio = model.apply_tts(text=example_text,
+    audio = model.apply_tts(text=text,
                             speaker=speaker,
                             sample_rate=sample_rate)
     filename = 'test_1.wav'

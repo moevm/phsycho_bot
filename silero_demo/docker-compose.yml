@@ -11,3 +11,4 @@ services:
 
     environment:
       - TOKEN=${TELEGRAM_TOKEN}
+      - MODE=${MODE_ENV}

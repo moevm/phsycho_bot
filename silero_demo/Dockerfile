@@ -14,4 +14,4 @@ COPY . .
 
 ARG TOKEN
 
-CMD python ./bot.py ${TOKEN}
+CMD python ./bot.py ${TOKEN} ${MODE}
