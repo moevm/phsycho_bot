@@ -19,6 +19,7 @@ from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, rea
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
+from silero_module import bot_answer_audio
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -167,6 +168,11 @@ def change_focus(update: Update, context: CallbackContext):
         reply_markup=focus_keyboard())
 
 
+def send_audio_answer(update: Update, context: CallbackContext):
+    audio = bot_answer_audio('Спасибо, что поделился своими переживаниями')
+    with open(audio, 'rb') as f:
+        update.effective_user.send_audio(f)
+
 def main(token, mode):
     init_logger()
 
@@ -174,6 +180,7 @@ def main(token, mode):
 
     if mode == "voice":
         updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
         updater.dispatcher.add_handler(CommandHandler('help', help))
