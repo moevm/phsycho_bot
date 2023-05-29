@@ -5,6 +5,8 @@ import wave
 import io
 
 import pyttsx3
+from noisereduce import reduce_noise
+from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
 from db import push_user_survey_progress, init_user, get_user_audio
@@ -54,9 +56,18 @@ def download_voice(update: Update):
     return (wav_filename, ogg_filename)
 
 
+def noise_reduce(input_audio):
+    rate, data = wavfile.read(input_audio)
+    date_noise_reduce = reduce_noise(y=data, sr=rate)
+    output_audio_without_noise = input_audio.split('.')[0] + "_nonoise.wav"
+    wavfile.write(output_audio_without_noise, rate, date_noise_reduce)
+    return output_audio_without_noise
+
+
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename, ogg_filename = download_voice(update)
-    input_sentence = audio_to_text(wav_filename)
+    no_noise_audio = noise_reduce(wav_filename)
+    input_sentence = audio_to_text(no_noise_audio)
     stats_sentence = input_sentence.generate_stats()
     #output_file = text_to_audio(input_text, wav_filename)
     update.effective_user.send_message(input_sentence.generate_output_info())
