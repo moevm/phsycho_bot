@@ -2,22 +2,17 @@ import json
 import os
 import subprocess
 import wave
-import io
 
-import pyttsx3
 from noisereduce import reduce_noise
 from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
-from db import push_user_survey_progress, init_user, get_user_audio
 from vosk import KaldiRecognizer, Model
-from audio_classes import RecognizedSentence, RecognizedWord
 
+from audio_classes import RecognizedSentence
+from db import push_user_survey_progress, init_user, get_user_audio
 
 model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
-engine = pyttsx3.init()
-engine.setProperty("voice", "russian")
-
 
 def audio_to_text(filename):
     wf = wave.open(filename, "rb")
@@ -32,13 +27,6 @@ def audio_to_text(filename):
     recognized_data = json.loads(rec.FinalResult())
     input_sentence = RecognizedSentence(recognized_data)
     return input_sentence
-
-
-def text_to_audio(text_to_convert, wav_filename):
-    output_filename = wav_filename.split(".")[0] + "_answer.wav"
-    engine.save_to_file(text_to_convert, output_filename)
-    engine.runAndWait()
-    return output_filename
 
 
 def download_voice(update: Update):

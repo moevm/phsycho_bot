@@ -8,7 +8,6 @@ import threading
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
     ConversationHandler, MessageHandler, Filters
-from vosk import KaldiRecognizer, Model
 
 import my_cron
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
@@ -173,13 +172,14 @@ def send_audio_answer(update: Update, context: CallbackContext):
     with open(audio, 'rb') as f:
         update.effective_user.send_audio(f)
 
+
 def main(token, mode):
     init_logger()
 
     updater = Updater(token, use_context=True)
 
     if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+        #updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
         updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
