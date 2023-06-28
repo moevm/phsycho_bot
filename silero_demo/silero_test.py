@@ -11,6 +11,12 @@ speaker = 'aidar'
 device = torch.device('cpu')
 example_text = "Привет. я бот-психолог"
 
+def add_intonation(text, words, intonation_parameters):
+    text = text.lower()
+    for word in words:
+        text = text.replace(word, f"<{' '.join(intonation_parameters)}>" + word + f"</{intonation_parameters[0]}>")
+    return text
+
 
 def reformat_text(text):
     paragraphs = text.split('\n')
@@ -28,6 +34,7 @@ def silero_test(text=example_text):
     model.to(device)  # gpu or cpu
 
     text = reformat_text(text)
+    text = add_intonation(text, ["привет"], ['prosody', 'pitch="x-high"'])
 
     audio = model.apply_tts(ssml_text=text,
                             speaker=speaker,
