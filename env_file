@@ -1,4 +1,8 @@
 TELEGRAM_TOKEN=PasteYourTelegramToken
 MONGO_INITDB_ROOT_USERNAME=username
 MONGO_INITDB_ROOT_PASSWORD=password
-MODE=SetModeTextOrVoice
+MODE=SetMode(text\voice)
+LANGUAGE=ru
+MODEL_ID=v3_1_ru
+SAMPLE_RATE=48000
+SPEAKER=aidar
