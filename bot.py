@@ -1,20 +1,24 @@
-import logging
+import sys
+import os
+import queue
 import sys
 import threading
-import queue
-import my_cron
+
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
     ConversationHandler, MessageHandler, Filters
 
+import my_cron
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
     get_users_not_answer_last24hours, get_users_not_finish_survey
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     menu_kyeboard, VALUES
-from script_engine import Engine
 from logs import init_logger
+from script_engine import Engine
+from voice_module import work_with_audio
+from silero_module import bot_answer_audio
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -163,24 +167,32 @@ def change_focus(update: Update, context: CallbackContext):
         reply_markup=focus_keyboard())
 
 
-def main(token):
+def send_audio_answer(update: Update, context: CallbackContext):
+    audio = bot_answer_audio('Спасибо, что поделился своими переживаниями')
+    with open(audio, 'rb') as f:
+        update.effective_user.send_audio(f)
+
+
+def main(token, mode):
     init_logger()
 
     updater = Updater(token, use_context=True)
 
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
-    updater.dispatcher.add_handler(CommandHandler('stats', stats))
-    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-    updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-    updater.dispatcher.add_handler(
-        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
-    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+    if mode == "voice":
+        #updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
+    elif mode == "text":
+        updater.dispatcher.add_handler(CommandHandler('start', start))
+        updater.dispatcher.add_handler(CommandHandler('help', help))
+        updater.dispatcher.add_handler(CommandHandler('stats', stats))
+        updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+        updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
+        updater.dispatcher.add_handler(
+            CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+        updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
-
-    # updater.dispatcher.add_error_handler(error)
+        updater.dispatcher.add_handler(CallbackQueryHandler(button))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
     updater.start_polling()
     # updater.idle()
 
@@ -201,7 +213,7 @@ class Worker(threading.Thread):
         auth_in_db(username=sys.argv[2],
                    password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1])
+            main(sys.argv[1], sys.argv[4])
         else:
             my_cron.main(sys.argv[1])
 
