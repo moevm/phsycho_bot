@@ -1,4 +1,4 @@
 TELEGRAM_TOKEN=PasteYourTelegramToken
 MONGO_INITDB_ROOT_USERNAME=username
 MONGO_INITDB_ROOT_PASSWORD=password
-MODE_ENV=SetModeTextOrVoice
+MODE=SetModeTextOrVoice
