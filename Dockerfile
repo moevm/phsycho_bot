@@ -12,10 +12,11 @@ RUN mkdir model && wget -q http://alphacephei.com/kaldi/models/vosk-model-small-
    && rm -rf model/extra \
    && rm -rf vosk-model-small-ru-${RUVERSION}.zip
 
+COPY ./requirements.txt /bot/
+RUN pip3 install -r requirements.txt
 
 COPY . /bot/
 
-RUN pip3 install -r requirements.txt
 
 ARG TELEGRAM_TOKEN
 
