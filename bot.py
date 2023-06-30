@@ -168,7 +168,13 @@ def change_focus(update: Update, context: CallbackContext):
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
+    update.effective_user.send_message("Уже обрабатываю твоё сообщение")
     audio = bot_answer_audio('Спасибо, что поделился своими переживаниями')
+    debug = os.environ.get("DEBUG_MODE")
+    if debug == "debug":
+        work_with_audio(update, context)
+    elif debug == "default":
+        pass
     with open(audio, 'rb') as f:
         update.effective_user.send_audio(f)
 
@@ -177,10 +183,10 @@ def main(token, mode):
     init_logger()
 
     updater = Updater(token, use_context=True)
-
+    debug = os.environ.get('DEBUG_MODE')
     if mode == "voice":
-        #updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer)) 
+        
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
         updater.dispatcher.add_handler(CommandHandler('help', help))
