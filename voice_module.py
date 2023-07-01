@@ -7,24 +7,19 @@ from noisereduce import reduce_noise
 from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
-from vosk import KaldiRecognizer, Model
+import whisper
 
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
-model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
+model = whisper.load_model("base")
+
 
 def audio_to_text(filename):
-    wf = wave.open(filename, "rb")
-    rec = KaldiRecognizer(model, wf.getframerate())
-    rec.SetWords(True)
-    while True:
-        data = wf.readframes(1000)
-        if len(data) == 0:
-            break
-        rec.AcceptWaveform(data)
-    wf.close()
-    recognized_data = json.loads(rec.FinalResult())
+    transcription = model.transcribe(filename, word_timestamps=True)
+    result_json = json.dumps(transcription)
+
+    recognized_data = json.loads(result_json)
     input_sentence = RecognizedSentence(recognized_data)
     return input_sentence
 
