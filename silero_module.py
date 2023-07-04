@@ -1,8 +1,6 @@
 import os
-import torch
+import requests
 import time
-import sounddevice as sd
-import torchaudio
 
 
 class SpeakerSettings:
@@ -12,21 +10,21 @@ class SpeakerSettings:
     speaker = os.environ.get('SPEAKER')
 
 
-device = torch.device('cpu')
-
-
 def bot_answer_audio(bot_text):
-    model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
-                                         model='silero_tts',
-                                         language=SpeakerSettings.language,
-                                         speaker=SpeakerSettings.model_id)
-    model.to(device)
 
-    audio = model.apply_tts(text=bot_text,
-                            speaker=SpeakerSettings.speaker,
-                            sample_rate=SpeakerSettings.sample_rate)
-    filename = 'test_1.wav'
-    torchaudio.save(filename,
-                    audio.unsqueeze(0),
-                    sample_rate=SpeakerSettings.sample_rate)
-    return filename
+    request_params = {'voice': SpeakerSettings.speaker, 'text': bot_text}
+    answer = requests.get('https://silero-tts-service/process', params=request_params)
+
+    return answer
+
+
+def clear_audio_cache():
+    return requests.get('https://silero-tts-service/clear_cache')
+
+
+def get_bot_voices():
+    return requests.get('https://silero-tts-service/voices')
+
+
+def get_bot_settings():
+    return requests.get('https://silero-tts-service/settings')

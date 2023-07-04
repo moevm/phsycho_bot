@@ -21,5 +21,13 @@ services:
     depends_on:
       - db
 
+  silero-tts-service:
+    image: "navatusein/silero-tts-service"
+    container_name: "silero-tts-service"
+    ports:
+      - "9898:9898"
+    restart: unless-stopped
+    env_file: .env
+
 volumes:
   db-data:

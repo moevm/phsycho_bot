@@ -18,7 +18,7 @@ from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, rea
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
-from silero_module import bot_answer_audio
+from silero_module import bot_answer_audio, clear_audio_cache
 
 DAYS_OFFSET = 7
 DEBUG = True
@@ -171,6 +171,7 @@ def send_audio_answer(update: Update, context: CallbackContext):
     audio = bot_answer_audio('Спасибо, что поделился своими переживаниями')
     with open(audio, 'rb') as f:
         update.effective_user.send_audio(f)
+    clear_audio_cache()
 
 
 def main(token, mode):
