@@ -57,8 +57,11 @@ def work_with_audio(update: Update, context: CallbackContext):
     no_noise_audio = noise_reduce(wav_filename)
     input_sentence = audio_to_text(no_noise_audio)
     stats_sentence = input_sentence.generate_stats()
-    #output_file = text_to_audio(input_text, wav_filename)
-    update.effective_user.send_message(input_sentence.generate_output_info())
+    debug = os.environ.get("DEBUG_MODE")
+    if debug == "debug":
+        update.effective_user.send_message(input_sentence.generate_output_info())
+    elif debug == "default":
+        pass
     push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence._text, stats=stats_sentence, audio_file=open(ogg_filename, 'rb'))
     os.remove(ogg_filename)
     #возвращение пользователю голосового из бд для проверки корректности сохранения
