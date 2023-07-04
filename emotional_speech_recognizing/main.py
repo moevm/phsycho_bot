@@ -44,7 +44,6 @@ for emotion in emotions.keys():
 X = np.array(X)
 y = np.array(y)
 
-X = np.expand_dims(X, axis=2)
 # Разделение на обучающую и тестовую выборки
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
