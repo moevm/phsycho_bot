@@ -8,6 +8,7 @@ from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
 from vosk import KaldiRecognizer, Model
+from bson import json_util
 
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
@@ -58,14 +59,12 @@ def work_with_audio(update: Update, context: CallbackContext):
     input_sentence = audio_to_text(no_noise_audio)
     stats_sentence = input_sentence.generate_stats()
     debug = os.environ.get("DEBUG_MODE")
-    if debug == "debug":
+    if debug == "true":
         update.effective_user.send_message(input_sentence.generate_output_info())
-    elif debug == "default":
+    elif debug == "false":
         pass
     push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence._text, stats=stats_sentence, audio_file=open(ogg_filename, 'rb'))
     os.remove(ogg_filename)
-    #возвращение пользователю голосового из бд для проверки корректности сохранения
-    #with open('text.ogg', 'wb') as f:
-    #    f.write(get_user_audio(update.effective_user))
-    #with open('text.ogg', 'rb') as f:
-    #    update.effective_user.send_audio(f)
+    if debug == "true":
+        print(get_user_audio(update.effective_user))
+        update.effective_user.send_message("ID записи с твоим аудиосообщением в базе данных: " + str(json.loads(json_util.dumps(get_user_audio(update.effective_user)))))
