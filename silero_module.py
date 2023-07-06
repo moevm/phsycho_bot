@@ -3,28 +3,27 @@ import requests
 import time
 
 
-class SpeakerSettings:
-    language = os.environ.get('LANGUAGE')
-    model_id = os.environ.get('MODEL_ID')
-    sample_rate = int(os.environ.get('SAMPLE_RATE'))
+class VoiceSettings:
+    link = 'http://silero-tts-service'
     speaker = os.environ.get('SPEAKER')
+
+    language = os.environ.get('LANGUAGE')
+    sample_rate = os.environ.get('SAMPLE_RATE')
 
 
 def bot_answer_audio(bot_text):
 
-    request_params = {'voice': SpeakerSettings.speaker, 'text': bot_text}
-    answer = requests.get('https://silero-tts-service/process', params=request_params)
+    request_params = {'VOICE': VoiceSettings.speaker, 'INPUT_TEXT': bot_text}
+    try:
+        answer = requests.get(VoiceSettings.link + '/process', params=request_params)
+    except ConnectionError:
+        return None
 
     return answer
 
 
 def clear_audio_cache():
-    return requests.get('https://silero-tts-service/clear_cache')
-
-
-def get_bot_voices():
-    return requests.get('https://silero-tts-service/voices')
-
-
-def get_bot_settings():
-    return requests.get('https://silero-tts-service/settings')
+    try:
+        return requests.get(VoiceSettings.link + '/clear_cache')
+    except ConnectionError:
+        return None
