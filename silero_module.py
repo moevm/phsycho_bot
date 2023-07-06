@@ -16,7 +16,7 @@ def bot_answer_audio(bot_text):
     request_params = {'VOICE': VoiceSettings.speaker, 'INPUT_TEXT': bot_text}
     try:
         answer = requests.get(VoiceSettings.link + '/process', params=request_params)
-    except ConnectionError:
+    except requests.exceptions.RequestException:
         return None
 
     return answer
@@ -25,5 +25,5 @@ def bot_answer_audio(bot_text):
 def clear_audio_cache():
     try:
         return requests.get(VoiceSettings.link + '/clear_cache')
-    except ConnectionError:
+    except requests.exceptions.RequestException:
         return None
