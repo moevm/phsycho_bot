@@ -7,7 +7,7 @@ import re
 language = 'ru'
 model_id = 'v3_1_ru'
 sample_rate = 48000
-speaker = 'aidar'
+speaker = 'baya'
 device = torch.device('cpu')
 example_text = "Привет. я бот-психолог"
 
@@ -34,7 +34,8 @@ def silero_test(text=example_text):
     model.to(device)  # gpu or cpu
 
     text = reformat_text(text)
-    text = add_intonation(text, ["привет"], ['prosody', 'pitch="x-high"'])
+    text = add_intonation(text, ["привет"], ['prosody', 'pitch="x-high" rate="x-slow"'])
+    text = add_intonation(text, ["пока"], ['prosody', 'pitch="x-low" rate="x-fast"'])
 
     audio = model.apply_tts(ssml_text=text,
                             speaker=speaker,
