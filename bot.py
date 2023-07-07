@@ -173,6 +173,8 @@ def send_audio_answer(update: Update, context: CallbackContext):
         with open(audio, 'rb') as f:
             update.effective_user.send_audio(f)
         clear_audio_cache()
+    else:
+        error(update, context)
 
 
 def main(token, mode):

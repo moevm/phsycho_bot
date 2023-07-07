@@ -4,7 +4,7 @@ import time
 
 
 class VoiceSettings:
-    link = 'http://silero-tts-service'
+    link = 'http://silero-tts-service:9898'
     speaker = os.environ.get('SPEAKER')
 
     language = os.environ.get('LANGUAGE')
