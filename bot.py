@@ -170,8 +170,7 @@ def change_focus(update: Update, context: CallbackContext):
 def send_audio_answer(update: Update, context: CallbackContext):
     audio = bot_answer_audio('Спасибо, что поделился своими переживаниями')
     if audio:
-        with open(audio, 'rb') as f:
-            update.effective_user.send_audio(f)
+        update.effective_user.send_audio(audio=audio.content, title='answer')
         clear_audio_cache()
     else:
         error(update, context)
