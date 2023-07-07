@@ -12,7 +12,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 import my_cron
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
-    get_users_not_answer_last24hours, get_users_not_finish_survey
+    get_users_not_answer_last24hours, get_users_not_finish_survey, push_bot_answer, get_bot_audio
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     menu_kyeboard, VALUES
 from logs import init_logger
@@ -168,7 +168,11 @@ def change_focus(update: Update, context: CallbackContext):
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-    audio = bot_answer_audio('Спасибо, что поделился своими переживаниями')
+    text = 'Спасибо, что поделился своими переживаниями'
+    update.effective_user.send_message("Уже обрабатываю твоё сообщение")
+    audio = bot_answer_audio(text)
+    work_with_audio(update, context)
+    push_bot_answer(update.update_id, answer=open(audio,'rb'), text=text)
     with open(audio, 'rb') as f:
         update.effective_user.send_audio(f)
 
@@ -177,9 +181,7 @@ def main(token, mode):
     init_logger()
 
     updater = Updater(token, use_context=True)
-
     if mode == "voice":
-        #updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
         updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
