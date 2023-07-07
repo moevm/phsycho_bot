@@ -175,6 +175,7 @@ def send_audio_answer(update: Update, context: CallbackContext):
     push_bot_answer(update.update_id, answer=open(audio,'rb'), text=text)
     with open(audio, 'rb') as f:
         update.effective_user.send_audio(f)
+    # work_with_audio(update, context)
 
 
 def main(token, mode):
@@ -182,7 +183,9 @@ def main(token, mode):
 
     updater = Updater(token, use_context=True)
     if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+        # updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
+
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
         updater.dispatcher.add_handler(CommandHandler('help', help))

@@ -14,8 +14,9 @@ class RecognizedSentence:
     def __init__(self, json_file):
         self._words = []
         self._text = json_file['text']
-        for i in json_file['result']:
-            self.__add_word(i['word'], i['start'], i['end'], i['conf'])
+        for segment in json_file['segments']:
+            for i in segment['words']:
+                self.__add_word(i['word'], i['start'], i['end'], i['probability'])
 
     def __add_word(self, word, start, end, conf):
         self._words.append(RecognizedWord(word, float(start), float(end), float(conf)))
