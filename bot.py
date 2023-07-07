@@ -171,12 +171,11 @@ def send_audio_answer(update: Update, context: CallbackContext):
    
     update.effective_user.send_message("Уже обрабатываю твоё сообщение")
     
-    text = 'Спасибо, что поделился своими переживаниями'
+    text = update.message.text#'Спасибо, что поделился своими переживаниями'
     audio = bot_answer_audio(text)
     
     if audio:
         update.effective_user.send_voice(voice=audio.content)
-        work_with_audio(update, context)
         # push_bot_answer(update.update_id, answer=audio.content, text=text)
         clear_audio_cache()
     else:
@@ -188,8 +187,8 @@ def main(token, mode):
 
     updater = Updater(token, use_context=True)
     if mode == "voice":
-        # updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer))
+        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+        updater.dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer))
 
     elif mode == "text":
         updater.dispatcher.add_handler(CommandHandler('start', start))
