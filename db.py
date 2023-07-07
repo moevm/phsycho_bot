@@ -6,6 +6,7 @@ import pytz
 from pymodm import connect, fields, MongoModel, files
 from pymodm.connection import _get_db
 import gridfs
+from bson import json_util
 
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
@@ -93,6 +94,16 @@ class Survey(MongoModel):
         return f'{self.id} | {self.title} | {self.count_of_questions}'
 
 
+class BotAudioAnswer(MongoModel):
+    id = fields.IntegerField()
+    audio_answer = fields.FileField()
+    text_of_audio_answer = fields.CharField()
+    time_send_answer = fields.DateTimeField()
+    
+    def __str__(self) -> str:
+        return f'{self.id=} | {self.audio_answer=} | {self.text_of_audio_answer=} | {self.time_send_answer=}'
+    
+    
 def init_user(user) -> User:
     try:
         return User.objects.get({'id': user.id})
@@ -192,19 +203,32 @@ def push_user_survey_progress(user, focus, id=0, survey_step=0, next_step=1, nee
                    time_send_question=date, 
                    time_receive_answer=date).save()
     
-
+def push_bot_answer(id=0, answer=None, text=""):
+    date = pytz.utc.localize(datetime.datetime.utcnow())
+    BotAudioAnswer(id=id,
+                   audio_answer = answer,
+                   text_of_audio_answer = text,
+                   time_send_answer=date).save()
+    
 def get_user_feelings(user):
     db_user = init_user(user)
     return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
-#TODO доделать функцию для возвращения пользователю голосового сообщения
 def get_user_audio(user):
     db_user = init_user(user)
-    progrs = list(SurveyProgress.objects.values().all())
+    progress = list(SurveyProgress.objects.values().all())
     fs = gridfs.GridFSBucket(_get_db())
-    audio_file = fs.open_download_stream(progrs[-1]["audio_file"]).read()
+    audio_file = fs.open_download_stream(progress[-1]["audio_file"])._id
+    #print(audio_file)
+    #audio_id = fs.find({"filename": 'audio_file'}, no_cursor_timeout=True).distinct('_id')
+    #print(json.loads(json_util.dumps(audio_id)))
     return audio_file
     
+def get_bot_audio():
+    answer = list(BotAudioAnswer.objects.values().all())
+    fs = gridfs.GridFSBucket(_get_db())
+    bot_audio = fs.open_download_stream(answer[-1]["audio_answer"]).read()
+    return bot_audio
 
 def set_user_ready_flag(user, flag):
     db_user = init_user(user)
