@@ -7,24 +7,20 @@ from noisereduce import reduce_noise
 from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
-from vosk import KaldiRecognizer, Model
+import whisper
+from bson import json_util
 
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
-model = Model(os.path.join("model", "vosk-model-small-ru-0.22"))
+model = whisper.load_model("base")
+
 
 def audio_to_text(filename):
-    wf = wave.open(filename, "rb")
-    rec = KaldiRecognizer(model, wf.getframerate())
-    rec.SetWords(True)
-    while True:
-        data = wf.readframes(1000)
-        if len(data) == 0:
-            break
-        rec.AcceptWaveform(data)
-    wf.close()
-    recognized_data = json.loads(rec.FinalResult())
+    transcription = model.transcribe(filename, word_timestamps=True)
+    result_json = json.dumps(transcription)
+
+    recognized_data = json.loads(result_json)
     input_sentence = RecognizedSentence(recognized_data)
     return input_sentence
 
@@ -57,13 +53,13 @@ def work_with_audio(update: Update, context: CallbackContext):
     no_noise_audio = noise_reduce(wav_filename)
     input_sentence = audio_to_text(no_noise_audio)
     stats_sentence = input_sentence.generate_stats()
-    #output_file = text_to_audio(input_text, wav_filename)
-    update.effective_user.send_message(input_sentence.generate_output_info())
+    debug = os.environ.get("DEBUG_MODE")
+    if debug == "true":
+        update.effective_user.send_message(input_sentence.generate_output_info())
+    elif debug == "false":
+        pass
     push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence._text, stats=stats_sentence, audio_file=open(ogg_filename, 'rb'))
     os.remove(ogg_filename)
-    with open('text.ogg', 'wb') as f:
-        f.write(get_user_audio(update.effective_user))
-    with open('text.ogg', 'rb') as f:
-        update.effective_user.send_audio(f)
-    #update.effective_user.send_message(get_user_audio(update.effective_user))
-    #возвращение пользователю голосового из бд для проверки корректности сохранения
+    if debug == "true":
+        print(get_user_audio(update.effective_user))
+        update.effective_user.send_message("ID записи с твоим аудиосообщением в базе данных: " + str(json.loads(json_util.dumps(get_user_audio(update.effective_user)))))

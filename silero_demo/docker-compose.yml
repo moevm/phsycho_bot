@@ -1,7 +1,7 @@
 version: "3"
 services:
 
-  bot:
+  demo_bot:
     build:
       context: .
       dockerfile: Dockerfile
