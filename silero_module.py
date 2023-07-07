@@ -1,32 +1,29 @@
 import os
-import torch
+import requests
 import time
-import sounddevice as sd
-import torchaudio
 
 
-class SpeakerSettings:
-    language = os.environ.get('LANGUAGE')
-    model_id = os.environ.get('MODEL_ID')
-    sample_rate = int(os.environ.get('SAMPLE_RATE'))
+class VoiceSettings:
+    link = 'http://silero-tts-service:9898'
     speaker = os.environ.get('SPEAKER')
 
-
-device = torch.device('cpu')
+    language = os.environ.get('LANGUAGE')
+    sample_rate = os.environ.get('SAMPLE_RATE')
 
 
 def bot_answer_audio(bot_text):
-    model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
-                                         model='silero_tts',
-                                         language=SpeakerSettings.language,
-                                         speaker=SpeakerSettings.model_id)
-    model.to(device)
 
-    audio = model.apply_tts(text=bot_text,
-                            speaker=SpeakerSettings.speaker,
-                            sample_rate=SpeakerSettings.sample_rate)
-    filename = 'test_1.wav'
-    torchaudio.save(filename,
-                    audio.unsqueeze(0),
-                    sample_rate=SpeakerSettings.sample_rate)
-    return filename
+    request_params = {'VOICE': VoiceSettings.speaker, 'INPUT_TEXT': bot_text}
+    try:
+        answer = requests.get(VoiceSettings.link + '/process', params=request_params)
+    except requests.exceptions.RequestException:
+        return None
+
+    return answer
+
+
+def clear_audio_cache():
+    try:
+        return requests.get(VoiceSettings.link + '/clear_cache')
+    except requests.exceptions.RequestException:
+        return None
