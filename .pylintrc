@@ -1,0 +1,46 @@
+[BASIC]
+
+argument-naming-style=snake_case
+attr-naming-style=snake_case
+
+bad-names=
+    foo,
+    bar,
+    baz,
+    toto,
+    tutu,
+    tata
+
+class-const-naming-style=UPPER_CASE
+class-naming-style=PascalCase
+const-naming-style=UPPER_CASE
+docstring-min-length=-1
+function-naming-style=snake_case
+method-naming-style=snake_case
+module-naming-style=snake_case
+variable-naming-style=snake_case
+
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    consider-using-dict-items,
+    consider-iterating-dictionary
+
+enable=
+    import-error,
+    invalid-name,
+    unused-argument,
+    unused-import,
+    missing-final-newline
+
+[FORMAT]
+max-line-length=120
+max-module-lines=1000
+
+[DESIGN]
+max-args=6
+max-branches=12
+max-returns=6
