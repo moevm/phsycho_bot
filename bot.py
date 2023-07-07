@@ -175,9 +175,9 @@ def send_audio_answer(update: Update, context: CallbackContext):
     audio = bot_answer_audio(text)
     
     if audio:
-        push_bot_answer(update.update_id, answer=audio.content, text=text)
-        update.effective_user.send_audio(audio=audio.content, title='answer')
+        update.effective_user.send_voice(voice=audio.content)
         work_with_audio(update, context)
+        # push_bot_answer(update.update_id, answer=audio.content, text=text)
         clear_audio_cache()
     else:
         error(update, context)
