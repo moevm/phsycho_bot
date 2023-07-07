@@ -33,9 +33,11 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    update.message.reply_text('Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
-                              reply_markup=menu_kyeboard())
-    update.message.reply_text('В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard())
+    dialog(update, context, text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+           reply_markup=menu_kyeboard())
+
+    dialog(update, context, text='В какое время тебе удобно подводить итоги дня?',
+           reply_markup=daily_schedule_keyboard())
 
 
 def ask_focus(update: Update) -> None:
@@ -142,7 +144,7 @@ def resume_survey(updater, user) -> None:
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    update.effective_user.send_message("Расскажи, как прошел твой день?", reply_markup=mood_keyboard())
+    dialog(update, context, text='Расскажи, как прошел твой день?', reply_markup=mood_keyboard())
 
 
 # def engine_callback(update, context: CallbackContext) -> int:
@@ -155,16 +157,17 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.message.reply_text('Всего хорошего.')
+
+    dialog(update, context, text='Всего хорошего.')
+
     return ConversationHandler.END
 
 
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.effective_user.send_message(
-        'Выберете новый фокус:',
-        reply_markup=focus_keyboard())
+
+    dialog(update, context, text='Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
@@ -180,6 +183,23 @@ def send_audio_answer(update: Update, context: CallbackContext):
         clear_audio_cache()
     else:
         error(update, context)
+
+
+dialog_mode = os.environ.get('DIALOG_MODE')
+
+
+def dialog(update: Update, context: CallbackContext, text: str, reply_markup=None) -> None:
+    if dialog_mode == 'voice':
+        audio = bot_answer_audio(text)
+
+        if audio:
+            update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
+            clear_audio_cache()
+        else:
+            error(update, context)
+
+    elif dialog_mode == 'text':
+        update.effective_user.send_message(text=text, reply_markup=reply_markup)
 
 
 def main(token, mode):
