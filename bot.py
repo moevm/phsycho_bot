@@ -4,7 +4,6 @@ import queue
 import sys
 import threading
 
-
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
     ConversationHandler, MessageHandler, Filters
@@ -33,18 +32,17 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, context, text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+    dialog(update, text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
            reply_markup=menu_kyeboard())
 
-    dialog(update, context, text='В какое время тебе удобно подводить итоги дня?',
+    dialog(update, text='В какое время тебе удобно подводить итоги дня?',
            reply_markup=daily_schedule_keyboard())
 
 
 def ask_focus(update: Update) -> None:
-    update.effective_user.send_message(
-        'Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:',
-        reply_markup=focus_keyboard())
+    dialog(update, text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+                        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
+           reply_markup=focus_keyboard())
 
 
 # def button(update: Update, context: CallbackContext) -> int:
@@ -59,7 +57,11 @@ def button(update: Update, context: CallbackContext) -> str:
     if query.data.startswith('s_'):
         # User entered schedule
         text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
-        query.edit_message_text(text=text)
+
+        query.delete_message()
+        dialog(update, text=text)
+        # query.edit_message_text(text=text)
+
         ask_focus(update)
         push_user_schedule(update.effective_user, query.data, update.effective_message.date)
     elif query.data.startswith('f_'):
@@ -81,7 +83,11 @@ def button(update: Update, context: CallbackContext) -> str:
         # User entered mood
         set_user_ready_flag(update.effective_user, True)
         text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
-        query.edit_message_text(text=text)
+
+        query.delete_message()
+        dialog(update, text=text)
+        # query.edit_message_text(text=text)
+
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
         # debugging zone
@@ -144,7 +150,7 @@ def resume_survey(updater, user) -> None:
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    dialog(update, context, text='Расскажи, как прошел твой день?', reply_markup=mood_keyboard())
+    dialog(update, text='Расскажи, как прошел твой день?', reply_markup=mood_keyboard())
 
 
 # def engine_callback(update, context: CallbackContext) -> int:
@@ -158,7 +164,7 @@ def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, context, text='Всего хорошего.')
+    dialog(update, text='Всего хорошего.')
 
     return ConversationHandler.END
 
@@ -167,20 +173,19 @@ def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, context, text='Выберете новый фокус:', reply_markup=focus_keyboard())
+    dialog(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-   
     update.effective_user.send_message("Уже обрабатываю твоё сообщение")
-    
-    text = update.message.text#'Спасибо, что поделился своими переживаниями'
+
+    text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
     audio = bot_answer_audio(text)
-    
+
     if audio:
         update.effective_user.send_voice(voice=audio.content)
         # push_bot_answer(update.update_id, answer=audio.content, text=text)
-        clear_audio_cache()
+        clear_audio_cache()  # only for testing 
     else:
         error(update, context)
 
@@ -188,7 +193,7 @@ def send_audio_answer(update: Update, context: CallbackContext):
 dialog_mode = os.environ.get('DIALOG_MODE')
 
 
-def dialog(update: Update, context: CallbackContext, text: str, reply_markup=None) -> None:
+def dialog(update: Update, text: str, reply_markup=None) -> None:
     if dialog_mode == 'voice':
         audio = bot_answer_audio(text)
 
@@ -196,7 +201,7 @@ def dialog(update: Update, context: CallbackContext, text: str, reply_markup=Non
             update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
             clear_audio_cache()
         else:
-            error(update, context)
+            update.message.reply_text(f'Error!')
 
     elif dialog_mode == 'text':
         update.effective_user.send_message(text=text, reply_markup=reply_markup)
