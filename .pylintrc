@@ -23,6 +23,19 @@ variable-naming-style=snake_case
 
 [MESSAGES CONTROL]
 disable=
+    fixme,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    consider-using-dict-items,
+    consider-iterating-dictionary,
+    too-few-public-methods,
+    unspecified-encoding,
+    consider-using-enumerate,
+    subprocess-run-check,
+    redefined-outer-name
+
+enable=
     import-error,
     invalid-name,
     unused-argument,
@@ -48,26 +61,7 @@ disable=
     simplifiable-condition,
     reimported,
     no-member,
-    super-with-arguments,
-
-    fixme,
-    missing-module-docstring,
-    missing-class-docstring,
-    missing-function-docstring,
-    consider-using-dict-items,
-    consider-iterating-dictionary,
-    too-few-public-methods,
-    unspecified-encoding,
-    consider-using-enumerate,
-    subprocess-run-check,
-    redefined-outer-name
-
-; enable=
-;     import-error,
-;     invalid-name,
-;     unused-argument,
-;     unused-import,
-;     missing-final-newline
+    super-with-arguments
 
 [FORMAT]
 max-line-length=120
