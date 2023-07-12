@@ -23,18 +23,51 @@ variable-naming-style=snake_case
 
 [MESSAGES CONTROL]
 disable=
-    missing-module-docstring,
-    missing-class-docstring,
-    missing-function-docstring,
-    consider-using-dict-items,
-    consider-iterating-dictionary
-
-enable=
     import-error,
     invalid-name,
     unused-argument,
     unused-import,
-    missing-final-newline
+    missing-final-newline,
+    line-too-long,
+    wrong-import-order,
+    wildcard-import,
+    trailing-whitespace,
+    cyclic-import,
+    unused-wildcard-import,
+    trailing-newlines,
+    redefined-builtin,
+    singleton-comparison,
+    unused-variable,
+    no-else-return,
+    f-string-without-interpolation,
+    ungrouped-imports,
+    too-many-arguments,
+    consider-using-with,
+    protected-access,
+    inconsistent-return-statements,
+    simplifiable-condition,
+    reimported,
+    no-member,
+    super-with-arguments,
+
+    fixme,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    consider-using-dict-items,
+    consider-iterating-dictionary,
+    too-few-public-methods,
+    unspecified-encoding,
+    consider-using-enumerate,
+    subprocess-run-check,
+    redefined-outer-name
+
+; enable=
+;     import-error,
+;     invalid-name,
+;     unused-argument,
+;     unused-import,
+;     missing-final-newline
 
 [FORMAT]
 max-line-length=120
