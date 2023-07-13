@@ -3,7 +3,7 @@ import os
 import queue
 import sys
 import threading
-
+from datetime import datetime
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
@@ -12,7 +12,8 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 import my_cron
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
-    get_users_not_answer_last24hours, get_users_not_finish_survey, push_bot_answer, get_bot_audio
+    get_users_not_answer_last24hours, get_users_not_finish_survey, push_bot_answer, get_bot_audio, \
+    get_user_word_statistics
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     menu_kyeboard, VALUES
 from logs import init_logger
@@ -102,6 +103,11 @@ def text_processing(update: Update, context: CallbackContext):
     elif update.message.text == VALUES['menu_help']:
         help(update, context)
     else:
+        # example of using get_user_word_statistics()
+        user = init_user(update.effective_user)
+        answers_statistics = str(get_user_word_statistics(user.id))
+        update.effective_user.send_message(answers_statistics)
+
         engine_callback(update, context)
 
 
