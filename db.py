@@ -153,13 +153,13 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
         })
     else:
         survey_progress_objects = SurveyProgress.objects.all()
-    answers = ' '.join([obj.user_answer for obj in survey_progress_objects if obj.user.id == user_id])
+    answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
 
     tokens = mystem.lemmatize(answers.lower())
     stop_words = set(stopwords.words('russian'))
     tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
 
-    words = {word: tokens.count(word) for word in tokens}
+    words = dict(Counter(tokens))
     return words
 
 
