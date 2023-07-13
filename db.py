@@ -5,6 +5,7 @@ import nltk
 from nltk.corpus import stopwords
 from pymystem3 import Mystem
 from string import punctuation
+from collections import Counter
 
 import pytz
 from pymodm import connect, fields, MongoModel, files
@@ -143,17 +144,20 @@ def get_user_answer(user, focus, step) -> str:
 
 
 def get_user_word_statistics(user_id, start_date=None, end_date=None):
-    survey_progress_objects = SurveyProgress.objects.raw({
-        'time_receive_answer': {
-            '$gte': start_date,
-            '$lt': end_date
-        }
-    })
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
     answers = ' '.join([obj.user_answer for obj in survey_progress_objects if obj.user.id == user_id])
 
     tokens = mystem.lemmatize(answers.lower())
     stop_words = set(stopwords.words('russian'))
-    tokens = [token for token in tokens if token not in stop_words and token != " " and token.strip() not in punctuation]
+    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
 
     words = {word: tokens.count(word) for word in tokens}
     return words
