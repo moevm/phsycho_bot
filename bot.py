@@ -3,7 +3,6 @@ import os
 import queue
 import sys
 import threading
-from datetime import datetime
 
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
