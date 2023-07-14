@@ -159,8 +159,7 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
     stop_words = set(stopwords.words('russian'))
     tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
 
-    words = dict(Counter(tokens))
-    return words
+    return dict(Counter(tokens))
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
