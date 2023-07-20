@@ -2,7 +2,6 @@ import sys
 import queue
 import threading
 
-
 from telegram import Update
 from telegram.ext import (
     Updater,
@@ -15,6 +14,7 @@ from telegram.ext import (
 )
 
 import my_cron
+<<<<<<< HEAD
 from db import (
     push_user_feeling,
     push_user_focus,
@@ -37,6 +37,14 @@ from keyboard import (
     menu_kyeboard,
     VALUES,
 )
+=======
+from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
+    set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
+    get_users_not_answer_last24hours, get_users_not_finish_survey, push_bot_answer, get_bot_audio, \
+    get_user_word_statistics
+from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
+    menu_kyeboard, VALUES
+>>>>>>> bc861a4 (switch mode added)
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
@@ -46,6 +54,10 @@ DAYS_OFFSET = 7
 DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
+
+# MODE = True - bot receive text messages - default
+# MODE = False - voice
+MODE = True
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -214,10 +226,25 @@ def send_audio_answer(update: Update, context: CallbackContext):
         error(update, context)
 
 
-def main(token, mode):
+def message_processing(update: Update, context: CallbackContext):
+    if update.message.text and MODE:
+        text_processing(update, context)
+    elif update.message.voice and not MODE:
+        work_with_audio(update, context)
+
+
+def change_mode(update: Update, context: CallbackContext):
+    global MODE
+    MODE = not MODE
+    update.message.reply_text(
+        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if MODE else "голосовые сообщения"}')
+
+
+def main(token):
     init_logger()
 
     updater = Updater(token, use_context=True)
+<<<<<<< HEAD
     if mode == "voice":
         updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
         updater.dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer))
@@ -241,8 +268,27 @@ def main(token, mode):
         updater.dispatcher.add_handler(
             MessageHandler(Filters.text & ~Filters.command, text_processing)
         )
+=======
+
+    updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('help', help))
+    updater.dispatcher.add_handler(CommandHandler('stats', stats))
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+    updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
+    updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+
+    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, message_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.voice, message_processing))
+
+>>>>>>> bc861a4 (switch mode added)
     updater.start_polling()
-    # updater.idle()
+
+
+# updater.idle()
 
 
 class Worker(threading.Thread):
@@ -261,7 +307,7 @@ class Worker(threading.Thread):
     def process(token_):
         auth_in_db(username=sys.argv[2], password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1], sys.argv[4])
+            main(sys.argv[1])
         else:
             my_cron.main(sys.argv[1])
 
