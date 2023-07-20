@@ -4,7 +4,6 @@ import queue
 import sys
 import threading
 
-
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, \
     ConversationHandler, MessageHandler, Filters
@@ -12,7 +11,8 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 import my_cron
 from db import push_user_feeling, push_user_focus, push_user_schedule, get_user_feelings, \
     set_user_ready_flag, set_schedule_asked_today, init_user, get_schedule_by_user, auth_in_db, set_last_usage, \
-    get_users_not_answer_last24hours, get_users_not_finish_survey, push_bot_answer, get_bot_audio
+    get_users_not_answer_last24hours, get_users_not_finish_survey, push_bot_answer, get_bot_audio, \
+    get_user_word_statistics
 from keyboard import daily_schedule_keyboard, mood_keyboard, focus_keyboard, ready_keyboard, \
     menu_kyeboard, VALUES
 from logs import init_logger
@@ -24,6 +24,10 @@ DAYS_OFFSET = 7
 DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
+
+# MODE = True - bot receive text messages - default
+# MODE = False - voice
+MODE = True
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -168,12 +172,11 @@ def change_focus(update: Update, context: CallbackContext):
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-   
     update.effective_user.send_message("Уже обрабатываю твоё сообщение")
-    
-    text = update.message.text#'Спасибо, что поделился своими переживаниями'
+
+    text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
     audio = bot_answer_audio(text)
-    
+
     if audio:
         update.effective_user.send_voice(voice=audio.content)
         # push_bot_answer(update.update_id, answer=audio.content, text=text)
@@ -182,28 +185,43 @@ def send_audio_answer(update: Update, context: CallbackContext):
         error(update, context)
 
 
-def main(token, mode):
+def message_processing(update: Update, context: CallbackContext):
+    if update.message.text and MODE:
+        text_processing(update, context)
+    elif update.message.voice and not MODE:
+        work_with_audio(update, context)
+
+
+def change_mode(update: Update, context: CallbackContext):
+    global MODE
+    MODE = not MODE
+    update.message.reply_text(
+        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if MODE else "голосовые сообщения"}')
+
+
+def main(token):
     init_logger()
 
     updater = Updater(token, use_context=True)
-    if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer))
 
-    elif mode == "text":
-        updater.dispatcher.add_handler(CommandHandler('start', start))
-        updater.dispatcher.add_handler(CommandHandler('help', help))
-        updater.dispatcher.add_handler(CommandHandler('stats', stats))
-        updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-        updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-        updater.dispatcher.add_handler(
-            CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
-        updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+    updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('help', help))
+    updater.dispatcher.add_handler(CommandHandler('stats', stats))
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+    updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
+    updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
-        updater.dispatcher.add_handler(CallbackQueryHandler(button))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, message_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.voice, message_processing))
+
     updater.start_polling()
-    # updater.idle()
+
+
+# updater.idle()
 
 
 class Worker(threading.Thread):
@@ -222,7 +240,7 @@ class Worker(threading.Thread):
         auth_in_db(username=sys.argv[2],
                    password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1], sys.argv[4])
+            main(sys.argv[1])
         else:
             my_cron.main(sys.argv[1])
 
