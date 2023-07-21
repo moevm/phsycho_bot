@@ -1,4 +1,3 @@
-import json
 from dataclasses import dataclass
 
 
@@ -24,10 +23,11 @@ class RecognizedSentence:
     def generate_output_info(self):
         answer_list = [f"Полученное предложение: \n{self._text}\nСтатистика по сообщению:\n"]
         for i in self._words:
-            answer_list.append(f"Слово \"{i.word}\" было сказано в промежутке {i.begin_timestamp} - {i.end_timestamp} с "
-                               f"вероятностью {i.probability}\n")
+            answer_list.append(
+                f"Слово \"{i.word}\" было сказано в промежутке {i.begin_timestamp} - {i.end_timestamp} с "
+                f"вероятностью {i.probability}\n"
+            )
         return "".join(answer_list)
 
     def generate_stats(self):
         return '\n'.join([f"{i.word} - {i.begin_timestamp} - {i.end_timestamp} - {i.probability}" for i in self._words])
-

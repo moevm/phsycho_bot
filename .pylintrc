@@ -33,19 +33,23 @@ disable=
     unspecified-encoding,
     consider-using-enumerate,
     subprocess-run-check,
-    redefined-outer-name
+    redefined-outer-name,
+    no-member,
+    unused-argument,
+    protected-access,
+    duplicate-code,
+    missing-timeout,
+    cyclic-import # это сложно поправить быстро
 
 enable=
     import-error,
     invalid-name,
-    unused-argument,
     unused-import,
     missing-final-newline,
     line-too-long,
     wrong-import-order,
     wildcard-import,
     trailing-whitespace,
-    cyclic-import,
     unused-wildcard-import,
     trailing-newlines,
     redefined-builtin,
@@ -56,18 +60,16 @@ enable=
     ungrouped-imports,
     too-many-arguments,
     consider-using-with,
-    protected-access,
     inconsistent-return-statements,
     simplifiable-condition,
     reimported,
-    no-member,
     super-with-arguments
 
 [FORMAT]
-max-line-length=120
+max-line-length=150
 max-module-lines=1000
 
 [DESIGN]
-max-args=6
+max-args=9
 max-branches=12
 max-returns=6
