@@ -3,10 +3,9 @@ import logging
 from typing import List
 
 import pytz
-from pymodm import connect, fields, MongoModel, files
+from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
-from bson import json_util
 
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
@@ -82,7 +81,18 @@ class SurveyProgress(MongoModel):
     stats = fields.CharField()
 
     def __str__(self):
-        return f'{self.user=} | {self.survey_id=} | {self.survey_step=} | {self.survey_next=} | {self.need_answer=} | {self.user_answer=} | {self.stats=} | {self.audio_file=} | {self.time_send_question=}, {self.time_receive_answer=}'
+        return (
+            f'{self.user=} | '
+            f'{self.survey_id=} | '
+            f'{self.survey_step=} | '
+            f'{self.survey_next=} | '
+            f'{self.need_answer=} | '
+            f'{self.user_answer=} | '
+            f'{self.stats=} | '
+            f'{self.audio_file=} | '
+            f'{self.time_send_question=}, '
+            f'{self.time_receive_answer=}'
+        )
 
 
 class Survey(MongoModel):
@@ -99,34 +109,54 @@ class BotAudioAnswer(MongoModel):
     audio_answer = fields.FileField()
     text_of_audio_answer = fields.CharField()
     time_send_answer = fields.DateTimeField()
-    
+
     def __str__(self) -> str:
-        return f'{self.id=} | {self.audio_answer=} | {self.text_of_audio_answer=} | {self.time_send_answer=}'
-    
-    
+        return (
+            f'{self.id=} | '
+            f'{self.audio_answer=} | '
+            f'{self.text_of_audio_answer=} | '
+            f'{self.time_send_answer=}'
+        )
+
+
 def init_user(user) -> User:
     try:
         return User.objects.get({'id': user.id})
     except User.DoesNotExist:
-        return User(id=user.id, 
-                    first_name=user.first_name, 
-                    is_bot=user.is_bot, 
-                    username=user.username, 
-                    language_code=user.language_code).save()
+        return User(
+            id=user.id,
+            first_name=user.first_name,
+            is_bot=user.is_bot,
+            username=user.username,
+            language_code=user.language_code
+        ).save()
 
 
-def init_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", stats="", audio_file=None) -> SurveyProgress:
+def init_survey_progress(
+    user,
+    focus,
+    id_=0,
+    survey_step=0,
+    next_step=1,
+    need_answer=False,
+    user_answer="INIT PROGRESS",
+    stats="",
+    audio_file=None
+) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
-    return SurveyProgress(id=id, user=user, 
-                        survey_id=focus, 
-                        survey_step=survey_step, 
-                        survey_next=survey_step + 1, 
-                        need_answer=need_answer, 
-                        user_answer=user_answer, 
-                        audio_file=audio_file, 
-                        stats=stats, 
-                        time_send_question=date, 
-                        time_receive_answer=date)
+    return SurveyProgress(
+        id=id_,
+        user=user,
+        survey_id=focus,
+        survey_step=survey_step,
+        survey_next=survey_step + 1,
+        need_answer=need_answer,
+        user_answer=user_answer,
+        audio_file=audio_file,
+        stats=stats,
+        time_send_question=date,
+        time_receive_answer=date
+    )
 
 
 def get_user_answer(user, focus, step) -> str:
@@ -134,6 +164,7 @@ def get_user_answer(user, focus, step) -> str:
     for survey_step in list_survey_progress.reverse():
         if survey_step.user.id == user.id and survey_step.survey_step == step:
             return survey_step.user_answer
+    return ''
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
@@ -171,10 +202,12 @@ def push_user_schedule(user, schedule, date):
     if schedule == DEBUG:
         is_test = True
     db_user = init_user(user)
-    Schedule(user=db_user, 
-             time_to_ask=TIME_VALUES[schedule], 
-             is_test=is_test, 
-             is_on=True).save()
+    Schedule(
+        user=db_user,
+        time_to_ask=TIME_VALUES[schedule],
+        is_test=is_test,
+        is_on=True
+    ).save()
 
 
 def push_user_focus(user, focus, date):
@@ -188,47 +221,66 @@ def push_user_feeling(user, feeling, date):
     db_user.feelings.append({'feel': feeling, 'date': date})
     db_user.save()
 
-def push_user_survey_progress(user, focus, id=0, survey_step=0, next_step=1, need_answer=False, user_answer="INIT PROGRESS", stats="", audio_file=None):
+
+def push_user_survey_progress(
+    user,
+    focus,
+    id_=0,
+    survey_step=0,
+    _=1,
+    need_answer=False,
+    user_answer="INIT PROGRESS",
+    stats="",
+    audio_file=None
+):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
-    SurveyProgress(id=id, 
-                   user=db_user, 
-                   survey_id=focus, 
-                   survey_step=survey_step, 
-                   survey_next=survey_step + 1, 
-                   need_answer=need_answer, 
-                   user_answer=user_answer, 
-                   audio_file=audio_file, 
-                   stats=stats, 
-                   time_send_question=date, 
-                   time_receive_answer=date).save()
-    
-def push_bot_answer(id=0, answer=None, text=""):
+    SurveyProgress(
+        id=id_,
+        user=db_user,
+        survey_id=focus,
+        survey_step=survey_step,
+        survey_next=survey_step + 1,
+        need_answer=need_answer,
+        user_answer=user_answer,
+        audio_file=audio_file,
+        stats=stats,
+        time_send_question=date,
+        time_receive_answer=date
+    ).save()
+
+
+def push_bot_answer(id_=0, answer=None, text=""):
     date = pytz.utc.localize(datetime.datetime.utcnow())
-    BotAudioAnswer(id=id,
-                   audio_answer = answer,
-                   text_of_audio_answer = text,
-                   time_send_answer=date).save()
-    
+    BotAudioAnswer(
+        id=id_,
+        audio_answer=answer,
+        text_of_audio_answer=text,
+        time_send_answer=date
+    ).save()
+
+
 def get_user_feelings(user):
     db_user = init_user(user)
     return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
+
 def get_user_audio(user):
-    db_user = init_user(user)
     progress = list(SurveyProgress.objects.values().all())
-    fs = gridfs.GridFSBucket(_get_db())
-    audio_file = fs.open_download_stream(progress[-1]["audio_file"])._id
-    #print(audio_file)
-    #audio_id = fs.find({"filename": 'audio_file'}, no_cursor_timeout=True).distinct('_id')
-    #print(json.loads(json_util.dumps(audio_id)))
+    file_storage = gridfs.GridFSBucket(_get_db())
+    audio_file = file_storage.open_download_stream(progress[-1]["audio_file"])._id
+    # print(audio_file)
+    # audio_id = file_storage.find({"filename": 'audio_file'}, no_cursor_timeout=True).distinct('_id')
+    # print(json.loads(json_util.dumps(audio_id)))
     return audio_file
-    
+
+
 def get_bot_audio():
     answer = list(BotAudioAnswer.objects.values().all())
-    fs = gridfs.GridFSBucket(_get_db())
-    bot_audio = fs.open_download_stream(answer[-1]["audio_answer"]).read()
+    file_storage = gridfs.GridFSBucket(_get_db())
+    bot_audio = file_storage.open_download_stream(answer[-1]["audio_answer"]).read()
     return bot_audio
+
 
 def set_user_ready_flag(user, flag):
     db_user = init_user(user)
@@ -267,7 +319,8 @@ def get_users_not_finish_survey():
         last_focus = user.focuses[-1]['focus']
         survey_progress = get_survey_progress(user, last_focus)
         if survey_progress.need_answer:
-            list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
+            list_survey_progress = SurveyProgress.objects.raw(
+                {'survey_id': last_focus})
             for i in list_survey_progress:
                 if i.user.id == user.id and i.survey_step == 0:
                     start_time = i.time_send_question
@@ -292,7 +345,8 @@ def set_last_usage(user):
 def get_users_not_answer_last24hours():
     users = []
     for user in User.objects.all():
-        if user.last_usage==None or pytz.utc.localize(user.last_usage) < pytz.utc.localize(datetime.datetime.utcnow()) - datetime.timedelta(days=1):
+        if user.last_usage is None or pytz.utc.localize(user.last_usage) < pytz.utc.localize(
+                datetime.datetime.utcnow()) - datetime.timedelta(days=1):
             users.append({
                 'id': user.id,
                 'username': user.username
@@ -301,4 +355,6 @@ def get_users_not_answer_last24hours():
 
 
 def auth_in_db(username, password):
-    connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')
+    connect(
+        f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin'
+    )

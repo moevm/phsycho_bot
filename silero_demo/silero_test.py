@@ -1,15 +1,15 @@
-import torch
-import time
-import sounddevice as sd
-import torchaudio
 import re
 
-language = 'ru'
-model_id = 'v3_1_ru'
-sample_rate = 48000
-speaker = 'baya'
-device = torch.device('cpu')
-example_text = "Привет. я бот-психолог"
+import torch
+import torchaudio
+
+LANGUAGE = 'ru'
+MODEL_ID = 'v3_1_ru'
+SAMPLE_RATE = 48000
+SPEAKER = 'baya'
+DEVICE = torch.device('cpu')
+EXAMPLE_TEXT = "Привет. я бот-психолог"
+
 
 def add_intonation(text, words, intonation_parameters):
     text = text.lower()
@@ -26,22 +26,30 @@ def reformat_text(text):
     text = "<speak>" + '\n'.join(paragraphs) + "</speak>"
     return text
 
-def silero_test(text=example_text):
-    model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
-                                         model='silero_tts',
-                                         language=language,
-                                         speaker=model_id)
-    model.to(device)  # gpu or cpu
+
+def silero_test(text=EXAMPLE_TEXT):
+    model, _ = torch.hub.load(
+        repo_or_dir='snakers4/silero-models',
+        model='silero_tts',
+        language=LANGUAGE,
+        speaker=MODEL_ID
+    )
+
+    model.to(DEVICE)  # gpu or cpu
 
     text = reformat_text(text)
     text = add_intonation(text, ["привет"], ['prosody', 'pitch="x-high" rate="x-slow"'])
     text = add_intonation(text, ["пока"], ['prosody', 'pitch="x-low" rate="x-fast"'])
 
-    audio = model.apply_tts(ssml_text=text,
-                            speaker=speaker,
-                            sample_rate=sample_rate)
+    audio = model.apply_tts(
+        ssml_text=text,
+        speaker=SPEAKER,
+        sample_rate=SAMPLE_RATE
+    )
     filename = 'test_1.wav'
-    torchaudio.save(filename,
-                    audio.unsqueeze(0),
-                    sample_rate=sample_rate)
+    torchaudio.save(
+        filename,
+        audio.unsqueeze(0),
+        sample_rate=SAMPLE_RATE
+    )
     return filename

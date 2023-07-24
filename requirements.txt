@@ -25,3 +25,5 @@ pymodm==0.4.3
 cPython==0.0.6
 noisereduce==2.0.1
 requests==2.30.0
+torchaudio==2.0.2
+whisper==1.1.10

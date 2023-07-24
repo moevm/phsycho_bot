@@ -7,14 +7,13 @@ Basic example for a bot that can receive payment from user.
 import logging
 import config
 
-from telegram import LabeledPrice, ShippingOption, Update
+from telegram import LabeledPrice, Update
 from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
     Filters,
     PreCheckoutQueryHandler,
-    ShippingQueryHandler,
     CallbackContext,
 )
 
@@ -37,7 +36,8 @@ def start_without_shipping_callback(update: Update, context: CallbackContext) ->
     description = "Payment Example using python-telegram-bot"
     # select a payload just for you to recognize its the donation from your bot
     payload = "Custom-Payload"
-    # In order to get a provider_token see https://core.telegram.org/bots/payments#getting-a-token
+    # In order to get a provider_token see
+    # https://core.telegram.org/bots/payments#getting-a-token
     provider_token = config.PROVIDER_TOKEN
     start_parameter = "test-payment"
     currency = "RUB"
@@ -48,9 +48,7 @@ def start_without_shipping_callback(update: Update, context: CallbackContext) ->
 
     # optionally pass need_name=True, need_phone_number=True,
     # need_email=True, need_shipping_address=True, is_flexible=True
-    context.bot.send_invoice(
-        chat_id, title, description, payload, provider_token, start_parameter, currency, prices
-    )
+    context.bot.send_invoice(chat_id, title, description, payload, provider_token, start_parameter, currency, prices)
 
 
 # after (optional) shipping, it's the pre-checkout

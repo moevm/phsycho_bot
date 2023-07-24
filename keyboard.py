@@ -26,7 +26,7 @@ VALUES = {
     'r_yes': "Да",
     'r_no': "Нет",
     'r_1h': "Ответить через час",
-    
+
     'menu_change_focus': "Сменить фокус",
     'menu_share_event': "Поделиться событием",
     'menu_help': "Справка"
