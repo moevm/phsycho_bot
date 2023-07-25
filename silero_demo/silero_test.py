@@ -14,7 +14,9 @@ EXAMPLE_TEXT = "Привет. я бот-психолог"
 def add_intonation(text, words, intonation_parameters):
     text = text.lower()
     for word in words:
-        text = text.replace(word, f"<{' '.join(intonation_parameters)}>" + word + f"</{intonation_parameters[0]}>")
+        text = text.replace(
+            word, f"<{' '.join(intonation_parameters)}>" + word + f"</{intonation_parameters[0]}>"
+        )
     return text
 
 
@@ -32,7 +34,7 @@ def silero_test(text=EXAMPLE_TEXT):
         repo_or_dir='snakers4/silero-models',
         model='silero_tts',
         language=LANGUAGE,
-        speaker=MODEL_ID
+        speaker=MODEL_ID,
     )
 
     model.to(DEVICE)  # gpu or cpu
@@ -41,15 +43,7 @@ def silero_test(text=EXAMPLE_TEXT):
     text = add_intonation(text, ["привет"], ['prosody', 'pitch="x-high" rate="x-slow"'])
     text = add_intonation(text, ["пока"], ['prosody', 'pitch="x-low" rate="x-fast"'])
 
-    audio = model.apply_tts(
-        ssml_text=text,
-        speaker=SPEAKER,
-        sample_rate=SAMPLE_RATE
-    )
+    audio = model.apply_tts(ssml_text=text, speaker=SPEAKER, sample_rate=SAMPLE_RATE)
     filename = 'test_1.wav'
-    torchaudio.save(
-        filename,
-        audio.unsqueeze(0),
-        sample_rate=SAMPLE_RATE
-    )
+    torchaudio.save(filename, audio.unsqueeze(0), sample_rate=SAMPLE_RATE)
     return filename

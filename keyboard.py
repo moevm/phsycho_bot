@@ -8,13 +8,11 @@ VALUES = {
     's_22': "22:00 - 23:00",
     's_23': "23:00 - 24:00",
     's_right_now': "Прямо сейчас",
-
     'm_fun': "Веселый",
     'm_sad': "Грустный",
     'm_angry': "Злой",
     'm_anxious': "Тревожный",
     'm_urgent': "Состояние из ряда вон",
-
     'f_tired': "Усталость",
     'f_self-doubt': "Неуверенность в себе",
     'f_bad': "Все плохо",
@@ -22,14 +20,12 @@ VALUES = {
     'f_apathy': "Апатия",
     'f_results': "Обычные итоги",
     'f_groundhog': "День сурка",
-
     'r_yes': "Да",
     'r_no': "Нет",
     'r_1h': "Ответить через час",
-
     'menu_change_focus': "Сменить фокус",
     'menu_share_event': "Поделиться событием",
-    'menu_help': "Справка"
+    'menu_help': "Справка",
 }
 
 
@@ -38,9 +34,7 @@ def init_button(key) -> InlineKeyboardButton:
 
 
 def ready_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [init_button('r_yes'), init_button('r_1h')]
-    ]
+    keyboard = [[init_button('r_yes'), init_button('r_1h')]]
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -52,7 +46,7 @@ def daily_schedule_keyboard() -> InlineKeyboardMarkup:
         [init_button('s_21')],
         [init_button('s_22')],
         [init_button('s_23')],
-        [init_button('s_right_now')]
+        [init_button('s_right_now')],
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -61,7 +55,8 @@ def mood_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [init_button('m_fun'), init_button('m_sad')],
         [init_button('m_angry'), init_button('m_anxious')],
-        [init_button('m_urgent')], ]
+        [init_button('m_urgent')],
+    ]
 
     return InlineKeyboardMarkup(keyboard)
 
@@ -74,24 +69,16 @@ def focus_keyboard() -> InlineKeyboardMarkup:
         [init_button('f_lonely')],
         [init_button('f_apathy')],
         [init_button('f_results')],
-        [init_button('f_groundhog')]
-
+        [init_button('f_groundhog')],
     ]
     return InlineKeyboardMarkup(keyboard)
 
 
 def yes_no_keyboard() -> InlineKeyboardMarkup:
-    keyboard = [
-        [init_button('r_yes')],
-        [init_button('r_no')]
-    ]
+    keyboard = [[init_button('r_yes')], [init_button('r_no')]]
     return InlineKeyboardMarkup(keyboard)
 
 
 def menu_kyeboard() -> ReplyKeyboardMarkup:
-    keyboard = [
-        [VALUES['menu_share_event']],
-        [VALUES['menu_change_focus']],
-        [VALUES['menu_help']]
-    ]
+    keyboard = [[VALUES['menu_share_event']], [VALUES['menu_change_focus']], [VALUES['menu_help']]]
     return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)

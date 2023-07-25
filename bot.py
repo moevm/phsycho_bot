@@ -24,7 +24,8 @@ from db import (
     set_schedule_asked_today,
     init_user,
     get_schedule_by_user,
-    auth_in_db, set_last_usage,
+    auth_in_db,
+    set_last_usage,
     get_users_not_answer_last24hours,
     get_users_not_finish_survey,
 )
@@ -56,11 +57,10 @@ def start(update: Update, context: CallbackContext) -> str:
 
     update.message.reply_text(
         'Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
-        reply_markup=menu_kyeboard()
+        reply_markup=menu_kyeboard(),
     )
     update.message.reply_text(
-        'В какое время тебе удобно подводить итоги дня?',
-        reply_markup=daily_schedule_keyboard()
+        'В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard()
     )
 
 
@@ -68,7 +68,7 @@ def ask_focus(update: Update) -> None:
     update.effective_user.send_message(
         'Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
         'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:',
-        reply_markup=focus_keyboard()
+        reply_markup=focus_keyboard(),
     )
 
 
@@ -94,10 +94,8 @@ def button(update: Update, context: CallbackContext) -> str:
         return engine_callback(update, context)
 
     elif query.data.startswith('r_') and (
-        last_message in [
-            'Привет! Пришло время подводить итоги. Давай?',
-            'Продолжить прохождение опроса?'
-        ]
+        last_message
+        in ['Привет! Пришло время подводить итоги. Давай?', 'Продолжить прохождение опроса?']
     ):
         if query.data == 'r_yes':
             return engine_callback(update, context)
@@ -168,7 +166,7 @@ def ask_ready(updater, schedule):
     updater.bot.send_message(
         schedule.user.id,
         "Привет! Пришло время подводить итоги. Давай?",
-        reply_markup=ready_keyboard()
+        reply_markup=ready_keyboard(),
     )
 
 
@@ -177,7 +175,9 @@ def resume_survey(updater, user) -> None:
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    update.effective_user.send_message("Расскажи, как прошел твой день?", reply_markup=mood_keyboard())
+    update.effective_user.send_message(
+        "Расскажи, как прошел твой день?", reply_markup=mood_keyboard()
+    )
 
 
 # def engine_callback(update, context: CallbackContext) -> int:
@@ -197,14 +197,10 @@ def cancel(update: Update, context: CallbackContext):
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.effective_user.send_message(
-        'Выберете новый фокус:',
-        reply_markup=focus_keyboard()
-    )
+    update.effective_user.send_message('Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-
     update.effective_user.send_message("Уже обрабатываю твоё сообщение")
 
     text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
@@ -231,12 +227,20 @@ def main(token, mode):
         updater.dispatcher.add_handler(CommandHandler('user_help', user_help))
         updater.dispatcher.add_handler(CommandHandler('stats', stats))
         updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-        updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
-        updater.dispatcher.add_handler(CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+        updater.dispatcher.add_handler(
+            CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
+        )
+        updater.dispatcher.add_handler(
+            CommandHandler(
+                'get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours
+            )
+        )
         updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
         updater.dispatcher.add_handler(CallbackQueryHandler(button))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+        updater.dispatcher.add_handler(
+            MessageHandler(Filters.text & ~Filters.command, text_processing)
+        )
     updater.start_polling()
     # updater.idle()
 
