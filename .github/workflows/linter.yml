@@ -1,6 +1,6 @@
 name: PEP8 Style Guide Enforcement
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
