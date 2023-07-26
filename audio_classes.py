@@ -30,4 +30,9 @@ class RecognizedSentence:
         return "".join(answer_list)
 
     def generate_stats(self):
-        return '\n'.join([f"{i.word} - {i.begin_timestamp} - {i.end_timestamp} - {i.probability}" for i in self._words])
+        return '\n'.join(
+            [
+                f"{i.word} - {i.begin_timestamp} - {i.end_timestamp} - {i.probability}"
+                for i in self._words
+            ]
+        )

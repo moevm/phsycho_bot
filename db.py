@@ -25,7 +25,7 @@ TIME_VALUES = {
     's_22': get_datetime_with_tz(START_UNIX, datetime.time(hour=22 - 3)),
     's_23': get_datetime_with_tz(START_UNIX, datetime.time(hour=23 - 3)),
     # TODO: ---------------
-    DEBUG: get_datetime_with_tz(START_UNIX, datetime.datetime.utcnow().time())
+    DEBUG: get_datetime_with_tz(START_UNIX, datetime.datetime.utcnow().time()),
 }
 
 
@@ -128,7 +128,7 @@ def init_user(user) -> User:
             first_name=user.first_name,
             is_bot=user.is_bot,
             username=user.username,
-            language_code=user.language_code
+            language_code=user.language_code,
         ).save()
 
 
@@ -141,7 +141,7 @@ def init_survey_progress(
     need_answer=False,
     user_answer="INIT PROGRESS",
     stats="",
-    audio_file=None
+    audio_file=None,
 ) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(
@@ -155,7 +155,7 @@ def init_survey_progress(
         audio_file=audio_file,
         stats=stats,
         time_send_question=date,
-        time_receive_answer=date
+        time_receive_answer=date,
     )
 
 
@@ -180,10 +180,14 @@ def get_survey_progress(user, focus) -> SurveyProgress:
 
 def get_schedule_by_user(user, is_test=True):
     logger = logging.getLogger(__name__)
-    schedules: List[Schedule] = list(Schedule.objects.raw({
-        # 'user': {'$elemMatch': {'id': user.id}},
-        'is_test': is_test
-    }))
+    schedules: List[Schedule] = list(
+        Schedule.objects.raw(
+            {
+                # 'user': {'$elemMatch': {'id': user.id}},
+                'is_test': is_test
+            }
+        )
+    )
     filter_schedules = []
     for schedule in schedules:
         if schedule.user.id == user.id:
@@ -202,12 +206,7 @@ def push_user_schedule(user, schedule, date):
     if schedule == DEBUG:
         is_test = True
     db_user = init_user(user)
-    Schedule(
-        user=db_user,
-        time_to_ask=TIME_VALUES[schedule],
-        is_test=is_test,
-        is_on=True
-    ).save()
+    Schedule(user=db_user, time_to_ask=TIME_VALUES[schedule], is_test=is_test, is_on=True).save()
 
 
 def push_user_focus(user, focus, date):
@@ -231,7 +230,7 @@ def push_user_survey_progress(
     need_answer=False,
     user_answer="INIT PROGRESS",
     stats="",
-    audio_file=None
+    audio_file=None,
 ):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
@@ -246,17 +245,14 @@ def push_user_survey_progress(
         audio_file=audio_file,
         stats=stats,
         time_send_question=date,
-        time_receive_answer=date
+        time_receive_answer=date,
     ).save()
 
 
 def push_bot_answer(id_=0, answer=None, text=""):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     BotAudioAnswer(
-        id=id_,
-        audio_answer=answer,
-        text_of_audio_answer=text,
-        time_send_answer=date
+        id=id_, audio_answer=answer, text_of_audio_answer=text, time_send_answer=date
     ).save()
 
 
@@ -294,7 +290,9 @@ def set_schedule_is_on_flag(schedule, flag):
 
 
 def set_schedule_asked_today(schedule):
-    schedule.sending_list.append({'date': pytz.utc.localize(datetime.datetime.utcnow()), 'success': True})
+    schedule.sending_list.append(
+        {'date': pytz.utc.localize(datetime.datetime.utcnow()), 'success': True}
+    )
     schedule.save()
 
 
@@ -304,13 +302,9 @@ def get_schedule_list_for_feeling_ask():
     today = datetime.datetime(year=1970, month=1, day=1)
     dt_from = get_datetime_with_tz(today, datetime.time(hour=now.hour))
     dt_to = get_datetime_with_tz(today, datetime.time(hour=now.hour)) + datetime.timedelta(hours=1)
-    return list(Schedule.objects.raw({
-        'time_to_ask': {
-            '$gte': dt_from,
-            '$lt': dt_to,
-        },
-        'is_on': True
-    }))
+    return list(
+        Schedule.objects.raw({'time_to_ask': {'$gte': dt_from, '$lt': dt_to}, 'is_on': True})
+    )
 
 
 def get_users_not_finish_survey():
@@ -319,20 +313,21 @@ def get_users_not_finish_survey():
         last_focus = user.focuses[-1]['focus']
         survey_progress = get_survey_progress(user, last_focus)
         if survey_progress.need_answer:
-            list_survey_progress = SurveyProgress.objects.raw(
-                {'survey_id': last_focus})
+            list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
             for i in list_survey_progress:
                 if i.user.id == user.id and i.survey_step == 0:
                     start_time = i.time_send_question
                     time_not_finish = datetime.datetime.utcnow() - start_time
-            users.append({
-                'id': user.id,
-                'username': user.username,
-                'survey_type': last_focus,
-                'start_time': start_time,
-                'time_not_finish': time_not_finish,
-                'survey_step': survey_progress.survey_step,
-            })
+            users.append(
+                {
+                    'id': user.id,
+                    'username': user.username,
+                    'survey_type': last_focus,
+                    'start_time': start_time,
+                    'time_not_finish': time_not_finish,
+                    'survey_step': survey_progress.survey_step,
+                }
+            )
     return users
 
 
@@ -346,15 +341,11 @@ def get_users_not_answer_last24hours():
     users = []
     for user in User.objects.all():
         if user.last_usage is None or pytz.utc.localize(user.last_usage) < pytz.utc.localize(
-                datetime.datetime.utcnow()) - datetime.timedelta(days=1):
-            users.append({
-                'id': user.id,
-                'username': user.username
-            })
+            datetime.datetime.utcnow()
+        ) - datetime.timedelta(days=1):
+            users.append({'id': user.id, 'username': user.username})
     return users
 
 
 def auth_in_db(username, password):
-    connect(
-        f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin'
-    )
+    connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')

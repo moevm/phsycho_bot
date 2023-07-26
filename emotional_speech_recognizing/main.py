@@ -60,7 +60,14 @@ model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=
 
 # Обучение модели
 early_stopping = EarlyStopping(monitor='val_loss', patience=10)
-model.fit(X_train, y_train, epochs=50, batch_size=1, validation_data=(X_test, y_test), callbacks=[early_stopping])
+model.fit(
+    X_train,
+    y_train,
+    epochs=50,
+    batch_size=1,
+    validation_data=(X_test, y_test),
+    callbacks=[early_stopping],
+)
 
 # Оценка модели на тестовой выборке
 loss, accuracy = model.evaluate(X_test, y_test, verbose=0)

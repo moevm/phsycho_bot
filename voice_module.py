@@ -64,12 +64,12 @@ def work_with_audio(update: Update, context: CallbackContext):
         update.update_id,
         user_answer=input_sentence._text,
         stats=stats_sentence,
-        audio_file=open(ogg_filename, 'rb') # pylint: disable=consider-using-with
+        audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
     )
     os.remove(ogg_filename)
     if debug == "true":
         print(get_user_audio(update.effective_user))
         update.effective_user.send_message(
-            "ID записи с твоим аудиосообщением в базе данных: " + str(
-                json.loads(json_util.dumps(get_user_audio(update.effective_user))))
-            )
+            "ID записи с твоим аудиосообщением в базе данных: "
+            + str(json.loads(json_util.dumps(get_user_audio(update.effective_user))))
+        )

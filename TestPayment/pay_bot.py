@@ -48,7 +48,9 @@ def start_without_shipping_callback(update: Update, context: CallbackContext) ->
 
     # optionally pass need_name=True, need_phone_number=True,
     # need_email=True, need_shipping_address=True, is_flexible=True
-    context.bot.send_invoice(chat_id, title, description, payload, provider_token, start_parameter, currency, prices)
+    context.bot.send_invoice(
+        chat_id, title, description, payload, provider_token, start_parameter, currency, prices
+    )
 
 
 # after (optional) shipping, it's the pre-checkout
