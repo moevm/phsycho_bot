@@ -48,6 +48,10 @@ DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
+# MODE = True - bot receive text messages - default
+# MODE = False - voice
+MODE = True
+
 
 
 # def start(update: Update, context: CallbackContext) -> int:
