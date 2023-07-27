@@ -40,6 +40,7 @@ class User(MongoModel):
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
     last_usage = fields.DateTimeField()
+    preferences = fields.ListField(fields.DictField())  # {"voice mode": False - text mode}
 
     def __str__(self):
         return f'{self.id} | {self.first_name} | {self.last_name}'
@@ -260,6 +261,23 @@ def get_user_feelings(user):
     db_user = init_user(user)
     return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
+def change_user_mode(user):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "voice mode" in preference:
+            preference["voice mode"] = not preference["voice mode"]
+            break
+    else:
+        db_user.preferences.append({"voice mode": True})
+    db_user.save()
+
+
+def get_user_mode(user):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "voice mode" in preference:
+            return preference["voice mode"]
+    return False
 
 def get_user_audio(user):
     progress = list(SurveyProgress.objects.values().all())
