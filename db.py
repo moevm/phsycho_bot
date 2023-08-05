@@ -261,6 +261,7 @@ def get_user_feelings(user):
     db_user = init_user(user)
     return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
+
 def change_user_mode(user):
     db_user = init_user(user)
     for preference in db_user.preferences:
@@ -278,6 +279,7 @@ def get_user_mode(user):
         if "voice mode" in preference:
             return preference["voice mode"]
     return False
+
 
 def get_user_audio(user):
     progress = list(SurveyProgress.objects.values().all())

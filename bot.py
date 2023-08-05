@@ -53,7 +53,6 @@ PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "ME
 MODE = True
 
 
-
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
     """Send a message when the command /start is issued."""
@@ -61,17 +60,26 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
-           reply_markup=menu_kyeboard())
+    dialog(
+        update,
+        text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+        reply_markup=menu_kyeboard(),
+    )
 
-    dialog(update, text='В какое время тебе удобно подводить итоги дня?',
-           reply_markup=daily_schedule_keyboard())
+    dialog(
+        update,
+        text='В какое время тебе удобно подводить итоги дня?',
+        reply_markup=daily_schedule_keyboard(),
+    )
 
 
 def ask_focus(update: Update) -> None:
-    dialog(update, text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-                        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
-           reply_markup=focus_keyboard())
+    dialog(
+        update,
+        text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
+        reply_markup=focus_keyboard(),
+    )
 
 
 # def button(update: Update, context: CallbackContext) -> int:
@@ -100,7 +108,9 @@ def button(update: Update, context: CallbackContext) -> str:
 
         return engine_callback(update, context)
     elif query.data.startswith('r_') and (
-            last_message == 'Привет! Пришло время подводить итоги. Давай?' or "Продолжить прохождение опроса?"):
+        last_message == 'Привет! Пришло время подводить итоги. Давай?'
+        or "Продолжить прохождение опроса?"
+    ):
         if query.data == 'r_yes':
             return engine_callback(update, context)
         elif query.data == 'r_1h':
@@ -170,8 +180,11 @@ def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
 def ask_ready(updater, schedule):
     # set_schedule_is_on_flag(schedule, False)
     set_schedule_asked_today(schedule)
-    updater.bot.send_message(schedule.user.id, "Привет! Пришло время подводить итоги. Давай?",
-                             reply_markup=ready_keyboard())
+    updater.bot.send_message(
+        schedule.user.id,
+        "Привет! Пришло время подводить итоги. Давай?",
+        reply_markup=ready_keyboard(),
+    )
 
 
 def resume_survey(updater, user) -> None:
@@ -234,12 +247,12 @@ def dialog(update: Update, text: str, reply_markup=None) -> None:
         update.effective_user.send_message(text=text, reply_markup=reply_markup)
 
 
-
 def change_mode(update: Update, context: CallbackContext):
     change_user_mode(update.effective_user)
     mode = get_user_mode(update.effective_user)
     update.message.reply_text(
-        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}')
+        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
+    )
 
 
 def main(token):
@@ -252,9 +265,12 @@ def main(token):
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
     updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
     updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
-    updater.dispatcher.add_handler(CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey))
     updater.dispatcher.add_handler(
-        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours))
+        CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
+    )
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours)
+    )
     updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
