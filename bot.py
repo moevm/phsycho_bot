@@ -90,7 +90,6 @@ def button(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    last_message = query.message.text
     if query.data.startswith('s_'):
         # User entered schedule
         text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
@@ -107,10 +106,7 @@ def button(update: Update, context: CallbackContext) -> str:
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
 
         return engine_callback(update, context)
-    elif query.data.startswith('r_') and (
-        last_message == 'Привет! Пришло время подводить итоги. Давай?'
-        or "Продолжить прохождение опроса?"
-    ):
+    elif query.data.startswith('r_'):
         if query.data == 'r_yes':
             return engine_callback(update, context)
         if query.data == 'r_1h':
@@ -138,6 +134,8 @@ def button(update: Update, context: CallbackContext) -> str:
                 if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
+
+    return ''
 
 
 def text_processing(update: Update, context: CallbackContext):
