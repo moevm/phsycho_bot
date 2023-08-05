@@ -113,8 +113,8 @@ def button(update: Update, context: CallbackContext) -> str:
     ):
         if query.data == 'r_yes':
             return engine_callback(update, context)
-        elif query.data == 'r_1h':
-            text = f'Понял тебя. Спрошу через час'
+        if query.data == 'r_1h':
+            text = 'Понял тебя. Спрошу через час'
             query.edit_message_text(text=text)
             set_user_ready_flag(update.effective_user, True)
 
@@ -147,12 +147,12 @@ def text_processing(update: Update, context: CallbackContext):
     elif update.message.text == VALUES['menu_change_focus']:
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
-        help(update, context)
+        help_bot(update, context)
     else:
         engine_callback(update, context)
 
 
-def help(update: Update, context: CallbackContext) -> None:
+def help_bot(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     set_last_usage(user)
     # TODO сделать справку
@@ -170,7 +170,7 @@ def debug_get_users_not_answer_last24hours(update: Update, context: CallbackCont
 
 
 def error(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(f'Error!')
+    update.message.reply_text('Error!')
 
 
 def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
@@ -241,7 +241,7 @@ def dialog(update: Update, text: str, reply_markup=None) -> None:
             update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
             clear_audio_cache()
         else:
-            update.message.reply_text(f'Error!')
+            update.message.reply_text('Error!')
 
     else:
         update.effective_user.send_message(text=text, reply_markup=reply_markup)
@@ -261,7 +261,7 @@ def main(token):
     updater = Updater(token, use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
+    updater.dispatcher.add_handler(CommandHandler('help', help_bot))
     updater.dispatcher.add_handler(CommandHandler('stats', stats))
     updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
     updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
