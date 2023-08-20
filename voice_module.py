@@ -62,7 +62,7 @@ def work_with_audio(update: Update, context: CallbackContext):
         update.effective_user,
         init_user(update.effective_user).focuses[-1]['focus'],
         update.update_id,
-        user_answer=input_sentence._text,
+        user_answer=input_sentence.get_text(),
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
     )

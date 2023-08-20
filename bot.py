@@ -2,7 +2,6 @@ import sys
 import queue
 import threading
 
-
 from telegram import Update
 from telegram.ext import (
     Updater,
@@ -28,14 +27,23 @@ from db import (
     set_last_usage,
     get_users_not_answer_last24hours,
     get_users_not_finish_survey,
+    get_user_mode,
+    change_user_mode,
+    push_user_chosen_name,
+    push_user_pronoun,
+    change_user_pronoun,
+    get_user_pronoun,
+    get_user_chosen_name,
+    push_user_mode, push_user_initial_reason,
 )
 from keyboard import (
-    daily_schedule_keyboard,
     mood_keyboard,
     focus_keyboard,
     ready_keyboard,
-    menu_kyeboard,
     VALUES,
+    pronoun_keyboard,
+    conversation_mode_keyboard,
+    questions_keyboard,
 )
 from logs import init_logger
 from script_engine import Engine
@@ -47,6 +55,8 @@ DEBUG = True
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
+MODE = ""  # "WAITING FOR NAME" / "NAME RECEIVED" / "WAITING FOR INITIAL REASON" / "INITIAL REASON RECEIVED"
+
 
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
@@ -55,19 +65,17 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    update.message.reply_text(
-        'Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
-        reply_markup=menu_kyeboard(),
-    )
-    update.message.reply_text(
-        'В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard()
-    )
+    global MODE
+    MODE = "WAITING FOR NAME"
+
+    dialog(update, text='Здравствуйте! Я бот-психолог. Как можно обращаться к вам?')
 
 
 def ask_focus(update: Update) -> None:
-    update.effective_user.send_message(
-        'Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:',
+    dialog(
+        update,
+        text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+               'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
         reply_markup=focus_keyboard(),
     )
 
@@ -80,62 +88,140 @@ def button(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    last_message = query.message.text
     if query.data.startswith('s_'):
-        # User entered schedule
-        text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
-        query.edit_message_text(text=text)
-        ask_focus(update)
-        push_user_schedule(update.effective_user, query.data, update.effective_message.date)
+        handle_schedule(update, query)
     elif query.data.startswith('f_'):
-        # User entered week focus
-        set_user_ready_flag(update.effective_user, True)
-        push_user_focus(update.effective_user, query.data, update.effective_message.date)
-        return engine_callback(update, context)
-
-    elif query.data.startswith('r_') and (
-        last_message
-        in ['Привет! Пришло время подводить итоги. Давай?', 'Продолжить прохождение опроса?']
-    ):
-        if query.data == 'r_yes':
-            return engine_callback(update, context)
-        if query.data == 'r_1h':
-            text = 'Понял тебя. Спрошу через час'
-            query.edit_message_text(text=text)
-            set_user_ready_flag(update.effective_user, True)
+        return handle_focus(update, context, query)
+    elif query.data.startswith('r_'):
+        return handle_ready(update, context, query)
 
     elif query.data.startswith('m_'):
-        # User entered mood
-        set_user_ready_flag(update.effective_user, True)
-        text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
-        query.edit_message_text(text=text)
-        push_user_feeling(update.effective_user, query.data, update.effective_message.date)
+        handle_mood(update, query)
 
-        # debugging zone
-        if DEBUG:
-            user = init_user(update.effective_user)
-            schedule = get_schedule_by_user(user, is_test=True)
-            print(schedule)
-            if schedule:
-                if len(schedule.sending_list) < DAYS_OFFSET:
-                    schedule.is_on = True
-                    schedule.save()
+    elif query.data.startswith('p_'):
+        handle_pronoun(update, user, query)
+    elif query.data.startswith('c_'):
+        handle_conversation_mode(update, context, user, query)
+    elif query.data.startswith('q_'):
+        handle_questions(update, query)
     return ''
 
 
+def handle_schedule(update, query):
+    # User entered schedule
+    text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
+
+    query.delete_message()
+    dialog(update, text=text)
+    # query.edit_message_text(text=text)
+
+    ask_focus(update)
+    push_user_schedule(update.effective_user, query.data, update.effective_message.date)
+
+
+def handle_focus(update, context, query):
+    # User entered week focus
+    set_user_ready_flag(update.effective_user, True)
+    push_user_focus(update.effective_user, query.data, update.effective_message.date)
+    return engine_callback(update, context)
+
+def handle_ready(update, context, query):
+    if query.data == 'r_yes':
+        return engine_callback(update, context)
+    if query.data == 'r_1h':
+        text = 'Понял тебя. Спрошу через час'
+        query.edit_message_text(text=text)
+        set_user_ready_flag(update.effective_user, True)
+    return ''
+
+
+def handle_pronoun(update, user, query):
+    if query.data == 'p_u':
+        push_user_pronoun(user, False)
+    elif query.data == 'p_you':
+        push_user_pronoun(user, True)
+    dialog(update, text='Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun')
+
+
+def handle_conversation_mode(update, context, user, query):
+    if query.data == 'c_text':
+        push_user_mode(user, False)
+    elif query.data == 'c_voice':
+        push_user_mode(user, True)
+    dialog(update, text='Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode')
+    ask_start_questions(update, context)
+
+def handle_mood(update, query):
+    # User entered mood
+    set_user_ready_flag(update.effective_user, True)
+    text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
+
+    query.delete_message()
+    dialog(update, text=text)
+    # query.edit_message_text(text=text)
+
+    push_user_feeling(update.effective_user, query.data, update.effective_message.date)
+
+    # debugging zone
+    if DEBUG:
+        user = init_user(update.effective_user)
+        schedule = get_schedule_by_user(user, is_test=True)
+        print(schedule)
+        if schedule:
+            if len(schedule.sending_list) < DAYS_OFFSET:
+                schedule.is_on = True
+                schedule.save()
+
+
+def handle_questions(update, query):
+    global MODE
+    if query.data == 'q_1':
+        dialog(update, 'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
+                       ' \"Терапия Настроения\" и Роберта Лихи \"Свобода от тревоги\".')
+    elif query.data == 'q_2':
+        dialog(update, 'Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
+                       'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
+                       'месяц регулярных занятий')
+    elif query.data == 'q_3':
+        dialog(update, 'Для того, чтобы методы')
+    elif query.data == 'q_4':
+        dialog(update, 'Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
+                       'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
+                       'запрос очень тяжелый для тебя')
+    elif query.data == 'q_5':
+        dialog(update, 'Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.')
+    elif query.data == 'q_6':
+        dialog(update, 'Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
+                       ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
+                       'Наш разговор совершенно конфиденциален')
+        MODE = "WAITING FOR INITIAL REASON"
+
+
 def text_processing(update: Update, context: CallbackContext):
+    global MODE
+    user = init_user(update.effective_user)
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
         pass
     elif update.message.text == VALUES['menu_change_focus']:
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
-        user_help(update, context)
+        help_bot(update, context)
+    elif MODE == "WAITING FOR NAME":
+        chosen_name = update.message.text
+        push_user_chosen_name(user, chosen_name)
+        ask_user_pronoun(update, context)
+        MODE = "NAME RECEIVED"
+    elif MODE == "WAITING FOR INITIAL REASON":
+        reason = update.message.text
+        push_user_initial_reason(user, reason)
+        MODE = "INITIAL REASON RECEIVED"
     else:
+        push_user_chosen_name(user, ' ')
         engine_callback(update, context)
 
 
-def user_help(update: Update, context: CallbackContext) -> None:
+def help_bot(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     set_last_usage(user)
     # TODO сделать справку
@@ -175,9 +261,7 @@ def resume_survey(updater, user) -> None:
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    update.effective_user.send_message(
-        "Расскажи, как прошел твой день?", reply_markup=mood_keyboard()
-    )
+    dialog(update, text='Расскажи, как прошел твой день?', reply_markup=mood_keyboard())
 
 
 # def engine_callback(update, context: CallbackContext) -> int:
@@ -190,14 +274,17 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.message.reply_text('Всего хорошего.')
+
+    dialog(update, text='Всего хорошего.')
+
     return ConversationHandler.END
 
 
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.effective_user.send_message('Выберете новый фокус:', reply_markup=focus_keyboard())
+
+    dialog(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
@@ -209,40 +296,106 @@ def send_audio_answer(update: Update, context: CallbackContext):
     if audio:
         update.effective_user.send_voice(voice=audio.content)
         # push_bot_answer(update.update_id, answer=audio.content, text=text)
-        clear_audio_cache()
+        clear_audio_cache()  # only for testing
     else:
         error(update, context)
 
 
-def main(token, mode):
+def dialog(update: Update, text: str, reply_markup=None) -> None:
+    mode = get_user_mode(update.effective_user)
+    if mode:
+        audio = bot_answer_audio(text)
+
+        if audio:
+            update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
+            clear_audio_cache()
+        else:
+            update.message.reply_text('Error!')
+
+    else:
+        update.effective_user.send_message(text=text, reply_markup=reply_markup)
+
+
+def change_mode(update: Update, context: CallbackContext):
+    change_user_mode(update.effective_user)
+    mode = get_user_mode(update.effective_user)
+    if mode:
+        update.message.reply_text(
+            'Режим общения изменен. Текущий режим: голосовые сообщения'
+        )
+    else:
+        update.message.reply_text(
+            'Режим общения изменен. Текущий режим: текстовые сообщения'
+        )
+
+
+def ask_user_pronoun(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    update.message.reply_text(
+        f'Приятно познакомиться, {get_user_chosen_name(user)}! Удобно будет на ты или лучше на Вы?',
+        reply_markup=pronoun_keyboard()
+    )
+    ask_user_conversation_mode(update, context)
+
+
+def ask_user_conversation_mode(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        'Как бы ты хотел получать мои реплики - в виде текста или голоса?',
+        reply_markup=conversation_mode_keyboard()
+    )
+
+
+def change_pronoun(update: Update, context: CallbackContext):
+    change_user_pronoun(update.effective_user)
+    pronoun = get_user_pronoun(update.effective_user)
+    if pronoun:
+        update.message.reply_text(
+            'Режим общения изменен. Текущий режим: общение на \"Вы\"'
+        )
+    else:
+        update.message.reply_text(
+            'Режим общения изменен. Текущий режим: общение на \"Ты\"'
+        )
+
+
+def ask_start_questions(update, context):
+    dialog(update,
+        'Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
+          'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
+          'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
+          'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
+          'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?'
+          , reply_markup=questions_keyboard())
+
+
+
+def main(token):
     init_logger()
 
     updater = Updater(token, use_context=True)
-    if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer))
 
-    elif mode == "text":
-        updater.dispatcher.add_handler(CommandHandler('start', start))
-        updater.dispatcher.add_handler(CommandHandler('user_help', user_help))
-        updater.dispatcher.add_handler(CommandHandler('stats', stats))
-        updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-        updater.dispatcher.add_handler(
-            CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
-        )
-        updater.dispatcher.add_handler(
-            CommandHandler(
-                'get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours
-            )
-        )
-        updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+    updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('help', help_bot))
+    updater.dispatcher.add_handler(CommandHandler('stats', stats))
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+    updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
+    updater.dispatcher.add_handler(CommandHandler('change_pronoun', change_pronoun))
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
+    )
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours)
+    )
+    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
-        updater.dispatcher.add_handler(CallbackQueryHandler(button))
-        updater.dispatcher.add_handler(
-            MessageHandler(Filters.text & ~Filters.command, text_processing)
-        )
+    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+
     updater.start_polling()
-    # updater.idle()
+
+
+# updater.idle()
 
 
 class Worker(threading.Thread):
@@ -261,7 +414,7 @@ class Worker(threading.Thread):
     def process(token_):
         auth_in_db(username=sys.argv[2], password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1], sys.argv[4])
+            main(sys.argv[1])
         else:
             my_cron.main(sys.argv[1])
 
