@@ -19,9 +19,10 @@ from script_engine import Engine
 from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
 
-DAYS_OFFSET = 7
-DEBUG = True
+from config import DEBUG_MODE, DIALOG_MODE
 
+DAYS_OFFSET = 7
+TEXT_MODE, VOICE_MODE, DEBUG_ON, DEBUG_OFF = "text", "voice", "true", "false"
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
 
@@ -32,17 +33,18 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
-           reply_markup=menu_kyeboard())
+    dialog_wrapper(update, text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+                   reply_markup=menu_kyeboard())
 
-    dialog(update, text='В какое время тебе удобно подводить итоги дня?',
-           reply_markup=daily_schedule_keyboard())
+    dialog_wrapper(update, text='В какое время тебе удобно подводить итоги дня?',
+                   reply_markup=daily_schedule_keyboard())
 
 
 def ask_focus(update: Update) -> None:
-    dialog(update, text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+    dialog_wrapper(update,
+                   text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
                         'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
-           reply_markup=focus_keyboard())
+                   reply_markup=focus_keyboard())
 
 
 # def button(update: Update, context: CallbackContext) -> int:
@@ -59,17 +61,19 @@ def button(update: Update, context: CallbackContext) -> str:
         text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
 
         query.delete_message()
-        dialog(update, text=text)
+        dialog_wrapper(update, text=text)
         # query.edit_message_text(text=text)
 
         ask_focus(update)
         push_user_schedule(update.effective_user, query.data, update.effective_message.date)
+
     elif query.data.startswith('f_'):
         # User entered week focus
         set_user_ready_flag(update.effective_user, True)
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
 
         return engine_callback(update, context)
+
     elif query.data.startswith('r_') and (
             last_message == 'Привет! Пришло время подводить итоги. Давай?' or "Продолжить прохождение опроса?"):
         if query.data == 'r_yes':
@@ -85,13 +89,13 @@ def button(update: Update, context: CallbackContext) -> str:
         text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
 
         query.delete_message()
-        dialog(update, text=text)
+        dialog_wrapper(update, text=text)
         # query.edit_message_text(text=text)
 
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
         # debugging zone
-        if DEBUG:
+        if DEBUG_MODE:
             user = init_user(update.effective_user)
             schedule = get_schedule_by_user(user, is_test=True)
             print(schedule)
@@ -150,7 +154,7 @@ def resume_survey(updater, user) -> None:
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    dialog(update, text='Расскажи, как прошел твой день?', reply_markup=mood_keyboard())
+    dialog_wrapper(update, text='Расскажи, как прошел твой день?', reply_markup=mood_keyboard())
 
 
 # def engine_callback(update, context: CallbackContext) -> int:
@@ -163,8 +167,7 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-
-    dialog(update, text='Всего хорошего.')
+    dialog_wrapper(update, text='Всего хорошего.')
 
     return ConversationHandler.END
 
@@ -173,7 +176,7 @@ def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
+    dialog_wrapper(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
@@ -190,20 +193,35 @@ def send_audio_answer(update: Update, context: CallbackContext):
         error(update, context)
 
 
-dialog_mode = os.environ.get('DIALOG_MODE')
+def dialog_wrapper(update: Update, text: str, reply_markup=None) -> None:
 
+    if DIALOG_MODE == VOICE_MODE:
 
-def dialog(update: Update, text: str, reply_markup=None) -> None:
-    if dialog_mode == 'voice':
-        audio = bot_answer_audio(text)
+        try:
+            audio = bot_answer_audio(text)
 
-        if audio:
+        except Exception as er:
+            if DEBUG_MODE == DEBUG_ON:
+                raise er
+            elif DEBUG_MODE == DEBUG_OFF:
+                update.message.reply_text(f'Ошибка в синтезе речи, попробуйте позже.')
+
+        else:
             update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
             clear_audio_cache()
-        else:
-            update.message.reply_text(f'Error!')
 
-    elif dialog_mode == 'text':
+        # audio = bot_answer_audio(text)
+        #
+        # if audio:
+        #     update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
+        #     clear_audio_cache()
+        # else:
+        #     if DEBUG_MODE == DEBUG_ON:
+        #         pass
+        #     elif DEBUG_MODE == DEBUG_OFF:
+        #         update.message.reply_text(f'Ошибка в синтезе речи, попробуйте позже.')
+
+    elif DIALOG_MODE == TEXT_MODE:
         update.effective_user.send_message(text=text, reply_markup=reply_markup)
 
 
