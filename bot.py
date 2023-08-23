@@ -36,7 +36,8 @@ from db import (
     get_user_chosen_name,
     push_user_mode,
     push_user_initial_reason,
-    get_user_initial_reason, get_user_initial_reason_flag, set_user_initial_reason_flag,
+    get_user_initial_reason_flag,
+    set_user_initial_reason_flag,
 )
 from keyboard import (
     mood_keyboard,
