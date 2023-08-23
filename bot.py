@@ -69,7 +69,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
     global MODE
     MODE = "WAITING FOR NAME"
-    
+
     dialog_wrapper(update, text='Здравствуйте! Я бот-психолог. Как можно обращаться к вам?')
 
 
