@@ -38,6 +38,7 @@ class User(MongoModel):
     is_bot = fields.BooleanField()
     language_code = fields.CharField()
     initial_reason = fields.CharField()
+    initial_reason_flag = fields.BooleanField()  # True - ready to set initial_reason
     focuses = fields.ListField(fields.DictField())
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
@@ -132,6 +133,8 @@ def init_user(user) -> User:
             is_bot=user.is_bot,
             username=user.username,
             chosen_name = ' ',
+            initial_reason = ' ',
+            initial_reason_flag = False,
             language_code=user.language_code,
         ).save()
 
@@ -365,6 +368,16 @@ def set_user_ready_flag(user, flag):
     db_user.ready_flag = flag
     db_user.save()
 
+
+def set_user_initial_reason_flag(user, flag):
+    db_user = init_user(user)
+    db_user.initial_reason_flag = flag
+    db_user.save()
+
+
+def get_user_initial_reason_flag(user):
+    db_user = init_user(user)
+    return db_user.initial_reason_flag
 
 def set_schedule_is_on_flag(schedule, flag):
     schedule.is_on = flag
