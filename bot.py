@@ -34,7 +34,9 @@ from db import (
     change_user_pronoun,
     get_user_pronoun,
     get_user_chosen_name,
-    push_user_mode, push_user_initial_reason,
+    push_user_mode,
+    push_user_initial_reason,
+    get_user_initial_reason, get_user_initial_reason_flag, set_user_initial_reason_flag,
 )
 from keyboard import (
     mood_keyboard,
@@ -57,8 +59,6 @@ from env_config import (DEBUG_MODE,
 DAYS_OFFSET = 7
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
-MODE = ""  # "WAITING FOR NAME" / "NAME RECEIVED" / "WAITING FOR INITIAL REASON" / "INITIAL REASON RECEIVED"
-
 
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
@@ -69,7 +69,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
     global MODE
     MODE = "WAITING FOR NAME"
-
+    
     dialog_wrapper(update, text='Здравствуйте! Я бот-психолог. Как можно обращаться к вам?')
 
 
@@ -105,7 +105,7 @@ def button(update: Update, context: CallbackContext) -> str:
     elif query.data.startswith('c_'):
         handle_conversation_mode(update, context, user, query)
     elif query.data.startswith('q_'):
-        handle_questions(update, query)
+        handle_questions(update, user, query)
     return ''
 
 
@@ -175,8 +175,7 @@ def handle_mood(update, query):
                 schedule.save()
 
 
-def handle_questions(update, query):
-    global MODE
+def handle_questions(update, user, query):
     if query.data == 'q_1':
         dialog(update, 'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
                        ' \"Терапия Настроения\" и Роберта Лихи \"Свобода от тревоги\".')
@@ -196,11 +195,9 @@ def handle_questions(update, query):
         dialog(update, 'Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
                        ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
                        'Наш разговор совершенно конфиденциален')
-        MODE = "WAITING FOR INITIAL REASON"
-
+        set_user_initial_reason_flag(user, True)
 
 def text_processing(update: Update, context: CallbackContext):
-    global MODE
     user = init_user(update.effective_user)
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
@@ -209,17 +206,15 @@ def text_processing(update: Update, context: CallbackContext):
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
         help_bot(update, context)
-    elif MODE == "WAITING FOR NAME":
+    elif get_user_chosen_name(user) == ' ':
         chosen_name = update.message.text
         push_user_chosen_name(user, chosen_name)
         ask_user_pronoun(update, context)
-        MODE = "NAME RECEIVED"
-    elif MODE == "WAITING FOR INITIAL REASON":
+    elif get_user_initial_reason_flag(user):
         reason = update.message.text
         push_user_initial_reason(user, reason)
-        MODE = "INITIAL REASON RECEIVED"
+        set_user_initial_reason_flag(user, False)
     else:
-        push_user_chosen_name(user, ' ')
         engine_callback(update, context)
 
 
