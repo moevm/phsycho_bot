@@ -1,6 +1,5 @@
 import os
 import requests
-import time
 
 from config import SPEAKER, LANGUAGE, SAMPLE_RATE
 

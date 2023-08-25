@@ -1,8 +1,8 @@
 import copy
 import json
-import logging
-import pytz
 import datetime
+
+import pytz
 from telegram import Update
 from telegram.ext import CallbackContext
 from db import init_user, get_survey_progress, init_survey_progress, get_user_answer
@@ -33,7 +33,9 @@ class Step:  # класс для работы с текущим шагом
     def __init__(self, update, survey_progress, focus):
         self.update = update
         self.survey_progress = survey_progress
-        self.step_info = Script(Parser("tree_example.json").parse()).get_script(focus)[survey_progress.survey_step]
+        self.step_info = Script(Parser("tree_example.json").parse()).get_script(focus)[
+            survey_progress.survey_step
+        ]
 
     def processing_options(self):
         next_step = None
@@ -44,15 +46,22 @@ class Step:  # класс для работы с текущим шагом
                 # self.update.effective_user.send_message(text=option['text'], )
 
             elif option['type'] == 'get_user_answer':
-                answer = get_user_answer(init_user(self.update.effective_user), self.step_info['script_name'],
-                                         option['step'])
+                answer = get_user_answer(
+                  init_user(self.update.effective_user), 
+                  self.step_info['script_name'],
+                  option['step']
+                )
 
                 dialog_wrapper(self.update, text=answer)
                 # self.update.effective_user.send_message(answer)
 
             elif option['type'] == 'inline_keyboard':
 
-                dialog_wrapper(self.update, text=option['text'], reply_markup=yes_no_keyboard())
+                dialog_wrapper(
+                  self.update, 
+                  text=option['text'], 
+                  reply_markup=yes_no_keyboard()
+                )
                 # self.update.effective_user.send_message(text=option['text'],
                 #                                         reply_markup=yes_no_keyboard())
 
@@ -68,9 +77,11 @@ class Step:  # класс для работы с текущим шагом
                             self.update.effective_user.send_voice(voice=stream)
 
                     elif option['message']['type'] == 'inline_keyboard':
-
-                        dialog_wrapper(self.update, text=option["message"]["text"],
-                                       reply_markup=yes_no_keyboard())
+                        dialog_wrapper(
+                          self.update, 
+                          text=option["message"]["text"],
+                          reply_markup=yes_no_keyboard()
+                        )
                         # self.update.effective_user.send_message(text=option["message"]["text"],
                         #                                         reply_markup=yes_no_keyboard())
 
@@ -82,9 +93,9 @@ class Step:  # класс для работы с текущим шагом
         return next_step
 
     def execute(self) -> str:
-        next = self.processing_options()
-        if next is not None:
-            self.survey_progress.survey_next = next
+        survey_next = self.processing_options()
+        if survey_next is not None:
+            self.survey_progress.survey_next = survey_next
         self.survey_progress.time_send_question = pytz.utc.localize(datetime.datetime.utcnow())
         self.survey_progress.need_answer = self.step_info['need_answer']
         self.survey_progress.save()
@@ -103,9 +114,12 @@ class Engine:  # класс движка
         step_number = self.survey_progress.survey_step
         if self.update.callback_query is not None:
             self.update.callback_query.delete_message()
-        if self.survey_progress.need_answer == True and self.survey_progress.user_answer == "INIT PROGRESS" and \
-                self.survey_progress.time_send_question + datetime.timedelta(days=0,
-                                                                             seconds=7200) < datetime.datetime.utcnow():
+        if (
+            self.survey_progress.need_answer
+            and self.survey_progress.user_answer == "INIT PROGRESS"
+            and self.survey_progress.time_send_question + datetime.timedelta(hours=2)
+            < datetime.datetime.utcnow()
+        ):
             step = Step(self.update, self.survey_progress, self.last_focus)
             if self.update.callback_query is not None:
                 query = self.update.callback_query
@@ -130,8 +144,11 @@ class Engine:  # класс движка
             self.survey_progress.save()
             step_number = self.survey_progress.survey_next
         # Генерация нового
-        new_step_info = Script(Parser("tree_example.json").parse()).get_script(self.last_focus)[step_number]
-        new_survey_progress = init_survey_progress(self.user, self.last_focus, self.update.update_id, step_number,
-                                                   new_step_info['next'])
+        new_step_info = Script(Parser("tree_example.json").parse()).get_script(self.last_focus)[
+            step_number
+        ]
+        new_survey_progress = init_survey_progress(
+            self.user, self.last_focus, self.update.update_id, step_number, new_step_info['next']
+        )
         next_step = Step(self.update, new_survey_progress, self.last_focus)
         return next_step
