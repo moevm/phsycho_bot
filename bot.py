@@ -351,11 +351,11 @@ def change_pronoun(update: Update, context: CallbackContext):
     pronoun = get_user_pronoun(update.effective_user)
     if pronoun:
         update.message.reply_text(
-            'Режим общения изменен. Текущий режим: общение на \"Вы\"'
+            'Режим общения изменен. Текущий режим: общение на "Вы"'
         )
     else:
         update.message.reply_text(
-            'Режим общения изменен. Текущий режим: общение на \"Ты\"'
+            'Режим общения изменен. Текущий режим: общение на "Ты"'
         )
 
 
