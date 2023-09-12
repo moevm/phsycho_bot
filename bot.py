@@ -1,7 +1,7 @@
 import sys
 import queue
 import threading
-
+import gettext
 
 from telegram import Update
 from telegram.ext import (
@@ -42,6 +42,8 @@ from script_engine import Engine
 from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
 
+_ = gettext.gettext
+
 DAYS_OFFSET = 7
 DEBUG = True
 
@@ -56,18 +58,18 @@ def start(update: Update, context: CallbackContext) -> str:
     set_last_usage(user)
 
     update.message.reply_text(
-        'Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+        _('Привет! Я бот, который поможет тебе отрефлексировать твое настроение'),
         reply_markup=menu_kyeboard(),
     )
     update.message.reply_text(
-        'В какое время тебе удобно подводить итоги дня?', reply_markup=daily_schedule_keyboard()
+        _('В какое время тебе удобно подводить итоги дня?'), reply_markup=daily_schedule_keyboard()
     )
 
 
 def ask_focus(update: Update) -> None:
     update.effective_user.send_message(
-        'Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:',
+        _('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
         reply_markup=focus_keyboard(),
     )
 
@@ -83,7 +85,7 @@ def button(update: Update, context: CallbackContext) -> str:
     last_message = query.message.text
     if query.data.startswith('s_'):
         # User entered schedule
-        text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
+        text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
         query.edit_message_text(text=text)
         ask_focus(update)
         push_user_schedule(update.effective_user, query.data, update.effective_message.date)
@@ -95,19 +97,19 @@ def button(update: Update, context: CallbackContext) -> str:
 
     elif query.data.startswith('r_') and (
         last_message
-        in ['Привет! Пришло время подводить итоги. Давай?', 'Продолжить прохождение опроса?']
+        in [_('Привет! Пришло время подводить итоги. Давай?'),_('Продолжить прохождение опроса?')]
     ):
         if query.data == 'r_yes':
             return engine_callback(update, context)
         if query.data == 'r_1h':
-            text = 'Понял тебя. Спрошу через час'
+            text = _('Понял тебя. Спрошу через час')
             query.edit_message_text(text=text)
             set_user_ready_flag(update.effective_user, True)
 
     elif query.data.startswith('m_'):
         # User entered mood
         set_user_ready_flag(update.effective_user, True)
-        text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
+        text = _('Ты указал итогом дня ') + VALUES[query.data] + _('. Спасибо!')
         query.edit_message_text(text=text)
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
@@ -165,18 +167,18 @@ def ask_ready(updater, schedule):
     set_schedule_asked_today(schedule)
     updater.bot.send_message(
         schedule.user.id,
-        "Привет! Пришло время подводить итоги. Давай?",
+        _("Привет! Пришло время подводить итоги. Давай?"),
         reply_markup=ready_keyboard(),
     )
 
 
 def resume_survey(updater, user) -> None:
-    updater.bot.send_message(user, "Продолжить прохождение опроса?", reply_markup=ready_keyboard())
+    updater.bot.send_message(user, _("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
     update.effective_user.send_message(
-        "Расскажи, как прошел твой день?", reply_markup=mood_keyboard()
+        _("Расскажи, как прошел твой день?"), reply_markup=mood_keyboard()
     )
 
 
@@ -190,18 +192,18 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.message.reply_text('Всего хорошего.')
+    update.message.reply_text(_('Всего хорошего.'))
     return ConversationHandler.END
 
 
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    update.effective_user.send_message('Выберете новый фокус:', reply_markup=focus_keyboard())
+    update.effective_user.send_message(_('Выбери новый фокус:'), reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-    update.effective_user.send_message("Уже обрабатываю твоё сообщение")
+    update.effective_user.send_message(_("Уже обрабатываю твоё сообщение"))
 
     text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
     audio = bot_answer_audio(text)

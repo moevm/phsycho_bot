@@ -1,0 +1,77 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-09-12 12:27+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: bot.py:67
+msgid "Привет! Я бот, который поможет тебе отрефлексировать твое настроение"
+msgstr ""
+
+#: bot.py:71
+msgid "В какое время тебе удобно подводить итоги дня?"
+msgstr ""
+
+#: bot.py:77
+msgid ""
+"Подведение итогов дня поможет исследовать определенные сложности и паттерны "
+"твоего поведения. Каждую неделю можно выбирать разные фокусы или один и тот "
+"же. Выбрать фокус этой недели:"
+msgstr ""
+
+#: bot.py:94
+msgid "Ты выбрал"
+msgstr ""
+
+#: bot.py:94
+msgid "в качестве времени для рассылки. Спасибо!"
+msgstr ""
+
+#: bot.py:106 bot.py:176
+msgid "Привет! Пришло время подводить итоги. Давай?"
+msgstr ""
+
+#: bot.py:106 bot.py:182
+msgid "Продолжить прохождение опроса?"
+msgstr ""
+
+#: bot.py:111
+msgid "Понял тебя. Спрошу через час"
+msgstr ""
+
+#: bot.py:118
+msgid "Ты указал итогом дня"
+msgstr ""
+
+#: bot.py:118
+msgid ". Спасибо!"
+msgstr ""
+
+#: bot.py:187
+msgid "Расскажи, как прошел твой день?"
+msgstr ""
+
+#: bot.py:201
+msgid "Всего хорошего."
+msgstr ""
+
+#: bot.py:208
+msgid "Выбери новый фокус:"
+msgstr ""
+
+#: bot.py:212
+msgid "Уже обрабатываю твоё сообщение"
+msgstr ""
