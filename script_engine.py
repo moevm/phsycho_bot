@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from db import init_user, get_survey_progress, init_survey_progress, get_user_answer
 from keyboard import yes_no_keyboard
-from bot import dialog_wrapper
+from wrapper import dialog_wrapper
 
 
 class Script:  # класс для хранения дерева

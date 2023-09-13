@@ -39,12 +39,13 @@ from keyboard import (
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
+from wrapper import dialog_wrapper
 from silero_module import bot_answer_audio, clear_audio_cache
 
-from config import DEBUG_MODE, DIALOG_MODE
+from config import (DEBUG_MODE,
+                    DEBUG_ON, DEBUG_OFF)
 
 DAYS_OFFSET = 7
-TEXT_MODE, VOICE_MODE, DEBUG_ON, DEBUG_OFF = "text", "voice", "true", "false"
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
 
@@ -126,7 +127,7 @@ def button(update: Update, context: CallbackContext) -> str:
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
         # debugging zone
-        if DEBUG_MODE:
+        if DEBUG_MODE == DEBUG_ON:
             user = init_user(update.effective_user)
             schedule = get_schedule_by_user(user, is_test=True)
             print(schedule)
@@ -234,38 +235,6 @@ def send_audio_answer(update: Update, context: CallbackContext):
         clear_audio_cache()  # only for testing 
     else:
         error(update, context)
-
-
-def dialog_wrapper(update: Update, text: str, reply_markup=None) -> None:
-
-    if DIALOG_MODE == VOICE_MODE:
-
-        try:
-            audio = bot_answer_audio(text)
-
-        except Exception as er:
-            if DEBUG_MODE == DEBUG_ON:
-                raise er
-            elif DEBUG_MODE == DEBUG_OFF:
-                update.message.reply_text(f'Ошибка в синтезе речи, попробуйте позже.')
-
-        else:
-            update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
-            clear_audio_cache()
-
-        # audio = bot_answer_audio(text)
-        #
-        # if audio:
-        #     update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
-        #     clear_audio_cache()
-        # else:
-        #     if DEBUG_MODE == DEBUG_ON:
-        #         pass
-        #     elif DEBUG_MODE == DEBUG_OFF:
-        #         update.message.reply_text(f'Ошибка в синтезе речи, попробуйте позже.')
-
-    elif DIALOG_MODE == TEXT_MODE:
-        update.effective_user.send_message(text=text, reply_markup=reply_markup)
 
 
 def main(token, mode):

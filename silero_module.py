@@ -5,21 +5,10 @@ from config import SPEAKER, LANGUAGE, SAMPLE_RATE
 
 
 class VoiceSettings:
-    link = 'http://silero-tts-service:9898'
+    link = 'http://silero-tts-service:989'
     speaker = SPEAKER
     language = LANGUAGE
     sample_rate = SAMPLE_RATE
-
-
-# def bot_answer_audio(bot_text):
-#
-#     request_params = {'VOICE': VoiceSettings.speaker, 'INPUT_TEXT': bot_text}
-#     try:
-#         answer = requests.get(VoiceSettings.link + '/process', params=request_params)
-#     except requests.exceptions.RequestException:
-#         return None
-#
-#     return answer
 
 
 def bot_answer_audio(bot_text):
