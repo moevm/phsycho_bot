@@ -47,9 +47,9 @@ class Step:  # класс для работы с текущим шагом
 
             elif option['type'] == 'get_user_answer':
                 answer = get_user_answer(
-                  init_user(self.update.effective_user), 
-                  self.step_info['script_name'],
-                  option['step']
+                    init_user(self.update.effective_user),
+                    self.step_info['script_name'],
+                    option['step']
                 )
 
                 dialog_wrapper(self.update, text=answer)
@@ -58,9 +58,9 @@ class Step:  # класс для работы с текущим шагом
             elif option['type'] == 'inline_keyboard':
 
                 dialog_wrapper(
-                  self.update, 
-                  text=option['text'], 
-                  reply_markup=yes_no_keyboard()
+                    self.update,
+                    text=option['text'],
+                    reply_markup=yes_no_keyboard()
                 )
                 # self.update.effective_user.send_message(text=option['text'],
                 #                                         reply_markup=yes_no_keyboard())
@@ -78,9 +78,9 @@ class Step:  # класс для работы с текущим шагом
 
                     elif option['message']['type'] == 'inline_keyboard':
                         dialog_wrapper(
-                          self.update, 
-                          text=option["message"]["text"],
-                          reply_markup=yes_no_keyboard()
+                            self.update,
+                            text=option["message"]["text"],
+                            reply_markup=yes_no_keyboard()
                         )
                         # self.update.effective_user.send_message(text=option["message"]["text"],
                         #                                         reply_markup=yes_no_keyboard())
@@ -115,10 +115,10 @@ class Engine:  # класс движка
         if self.update.callback_query is not None:
             self.update.callback_query.delete_message()
         if (
-            self.survey_progress.need_answer
-            and self.survey_progress.user_answer == "INIT PROGRESS"
-            and self.survey_progress.time_send_question + datetime.timedelta(hours=2)
-            < datetime.datetime.utcnow()
+                self.survey_progress.need_answer
+                and self.survey_progress.user_answer == "INIT PROGRESS"
+                and self.survey_progress.time_send_question + datetime.timedelta(hours=2)
+                < datetime.datetime.utcnow()
         ):
             step = Step(self.update, self.survey_progress, self.last_focus)
             if self.update.callback_query is not None:

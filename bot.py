@@ -42,8 +42,8 @@ from voice_module import work_with_audio
 from wrapper import dialog_wrapper
 from silero_module import bot_answer_audio, clear_audio_cache
 
-from config import (DEBUG_MODE,
-                    DEBUG_ON, DEBUG_OFF)
+from env_config import (DEBUG_MODE,
+                        DEBUG_ON)
 
 DAYS_OFFSET = 7
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
@@ -57,24 +57,24 @@ def start(update: Update, context: CallbackContext) -> str:
     set_last_usage(user)
 
     dialog_wrapper(
-      update, 
-      text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
-      reply_markup=menu_kyeboard()
+        update,
+        text='Привет! Я бот, который поможет тебе отрефлексировать твое настроение',
+        reply_markup=menu_kyeboard()
     )
 
     dialog_wrapper(
-      update, 
-      text='В какое время тебе удобно подводить итоги дня?',
-      reply_markup=daily_schedule_keyboard()
+        update,
+        text='В какое время тебе удобно подводить итоги дня?',
+        reply_markup=daily_schedule_keyboard()
     )
 
 
 def ask_focus(update: Update) -> None:
     dialog_wrapper(
-      update,
-      text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-           'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
-      reply_markup=focus_keyboard()
+        update,
+        text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+             'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
+        reply_markup=focus_keyboard()
     )
 
 
@@ -105,8 +105,8 @@ def button(update: Update, context: CallbackContext) -> str:
         return engine_callback(update, context)
 
     elif query.data.startswith('r_') and (
-        last_message
-        in ['Привет! Пришло время подводить итоги. Давай?', 'Продолжить прохождение опроса?']
+            last_message
+            in ['Привет! Пришло время подводить итоги. Давай?', 'Продолжить прохождение опроса?']
     ):
         if query.data == 'r_yes':
             return engine_callback(update, context)
@@ -191,9 +191,9 @@ def resume_survey(updater, user) -> None:
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
     dialog_wrapper(
-      update, 
-      text='Расскажи, как прошел твой день?', 
-      reply_markup=mood_keyboard()
+        update,
+        text='Расскажи, как прошел твой день?',
+        reply_markup=mood_keyboard()
     )
 
 
@@ -217,9 +217,9 @@ def change_focus(update: Update, context: CallbackContext):
     set_last_usage(user)
 
     dialog_wrapper(
-      update, 
-      text='Выберете новый фокус:', 
-      reply_markup=focus_keyboard()
+        update,
+        text='Выберете новый фокус:',
+        reply_markup=focus_keyboard()
     )
 
 
@@ -232,7 +232,7 @@ def send_audio_answer(update: Update, context: CallbackContext):
     if audio:
         update.effective_user.send_voice(voice=audio.content)
         # push_bot_answer(update.update_id, answer=audio.content, text=text)
-        clear_audio_cache()  # only for testing 
+        clear_audio_cache()  # only for testing
     else:
         error(update, context)
 

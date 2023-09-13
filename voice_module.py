@@ -12,7 +12,7 @@ from bson import json_util
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
-from config import DEBUG_MODE
+from env_config import DEBUG_MODE
 
 model = whisper.load_model("base")
 
@@ -69,7 +69,7 @@ def work_with_audio(update: Update, context: CallbackContext):
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
     )
     os.remove(ogg_filename)
-    
+
     if DEBUG_MODE == "true":
         print(get_user_audio(update.effective_user))
         update.effective_user.send_message(

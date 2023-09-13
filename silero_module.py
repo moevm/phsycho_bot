@@ -1,11 +1,10 @@
-import os
 import requests
 
-from config import SPEAKER, LANGUAGE, SAMPLE_RATE
+from env_config import SPEAKER, LANGUAGE, SAMPLE_RATE
 
 
 class VoiceSettings:
-    link = 'http://silero-tts-service:989'
+    link = 'http://silero-tts-service:9898'
     speaker = SPEAKER
     language = LANGUAGE
     sample_rate = SAMPLE_RATE

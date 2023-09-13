@@ -1,8 +1,8 @@
 from telegram import Update
 from silero_module import bot_answer_audio, clear_audio_cache
 
-from config import (DEBUG_MODE, DIALOG_MODE,
-                    TEXT_MODE, VOICE_MODE, DEBUG_ON, DEBUG_OFF)
+from env_config import (DEBUG_MODE, DIALOG_MODE,
+                        TEXT_MODE, VOICE_MODE, DEBUG_ON, DEBUG_OFF)
 
 
 def dialog_wrapper(update: Update, text: str, reply_markup=None) -> None:
@@ -12,10 +12,10 @@ def dialog_wrapper(update: Update, text: str, reply_markup=None) -> None:
         try:
             audio = bot_answer_audio(text)
 
-        except Exception as er:
+        except ConnectionError as synthesis_error:
             if DEBUG_MODE == DEBUG_ON:
-                raise er
-            elif DEBUG_MODE == DEBUG_OFF:
+                raise synthesis_error
+            if DEBUG_MODE == DEBUG_OFF:
                 update.message.reply_text('Ошибка в синтезе речи, попробуйте позже.')
 
         else:
