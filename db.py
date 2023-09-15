@@ -376,3 +376,4 @@ def get_users_not_answer_last24hours():
 
 def auth_in_db(username, password):
     connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')
+    
