@@ -1,29 +1,26 @@
 import sys
-import os
 
 from telegram import Update
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    MessageHandler,
-    Filters,
-    CallbackContext,
-)
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-from silero_test import *
+from silero_test import silero_test
+
+
 def start_callback(update: Update, context: CallbackContext) -> None:
     msg = "Отправь мне сообщение"
     update.message.reply_text(msg)
 
+
 def send_audio_answer_text(update: Update, context: CallbackContext):
     audio = silero_test(handle_text(update, context))
-    with open(audio, 'rb') as f:
-        update.effective_user.send_audio(f)
+    with open(audio, 'rb') as file_:
+        update.effective_user.send_audio(file_)
+
 
 def send_audio_answer_voice(update: Update, context: CallbackContext):
     audio = silero_test()
-    with open(audio, 'rb') as f:
-        update.effective_user.send_audio(f)
+    with open(audio, 'rb') as file_:
+        update.effective_user.send_audio(file_)
 
 
 def handle_text(update: Update, context: CallbackContext):
@@ -48,7 +45,6 @@ def main(token, mode):
         dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer_text))
     elif mode == 'voice':
         dispatcher.add_handler(MessageHandler(Filters.voice, send_audio_answer_voice))
-
 
     # Start the Bot
     updater.start_polling()

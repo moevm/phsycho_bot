@@ -1,6 +1,5 @@
 import os
 import requests
-import time
 
 
 class VoiceSettings:
@@ -12,7 +11,6 @@ class VoiceSettings:
 
 
 def bot_answer_audio(bot_text):
-
     request_params = {'VOICE': VoiceSettings.speaker, 'INPUT_TEXT': bot_text}
     try:
         answer = requests.get(VoiceSettings.link + '/process', params=request_params)
