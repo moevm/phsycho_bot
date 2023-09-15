@@ -27,5 +27,11 @@ services:
     restart: unless-stopped
     env_file: .env
 
+  whisper-asr-webservice:
+    image: "onerahmet/openai-whisper-asr-webservice"
+    container_name: "whisper-asr-webservice"
+    restart: unless-stopped
+    env_file: .env
+
 volumes:
   db-data:

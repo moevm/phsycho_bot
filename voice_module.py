@@ -12,9 +12,10 @@ from bson import json_util
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
-from env_config import DEBUG_MODE
+from env_config import (DEBUG_MODE,
+                        DEBUG_ON, DEBUG_OFF)
 
-model = whisper.load_model("base")
+model = whisper.load_model("base")  # !!!!
 
 
 def audio_to_text(filename):
@@ -56,10 +57,11 @@ def work_with_audio(update: Update, context: CallbackContext):
     input_sentence = audio_to_text(no_noise_audio)
     stats_sentence = input_sentence.generate_stats()
 
-    if DEBUG_MODE == "true":
+    if DEBUG_MODE == DEBUG_ON:
         update.effective_user.send_message(input_sentence.generate_output_info())
-    elif DEBUG_MODE == "false":
+    elif DEBUG_MODE == DEBUG_OFF:
         pass
+
     push_user_survey_progress(
         update.effective_user,
         init_user(update.effective_user).focuses[-1]['focus'],
@@ -70,7 +72,7 @@ def work_with_audio(update: Update, context: CallbackContext):
     )
     os.remove(ogg_filename)
 
-    if DEBUG_MODE == "true":
+    if DEBUG_MODE == DEBUG_ON:
         print(get_user_audio(update.effective_user))
         update.effective_user.send_message(
             "ID записи с твоим аудиосообщением в базе данных: "
