@@ -3,7 +3,7 @@ from silero_module import bot_answer_audio, clear_audio_cache
 
 from env_config import (DEBUG_MODE, DIALOG_MODE,
                         TEXT_MODE, VOICE_MODE, DEBUG_ON, DEBUG_OFF)
-
+from db import get_user_mode
 
 def dialog(update: Update, text: str, reply_markup=None) -> None:
     mode = get_user_mode(update.effective_user)
