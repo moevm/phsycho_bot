@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import wave
 
 from noisereduce import reduce_noise
 from scipy.io import wavfile
@@ -34,8 +33,9 @@ def download_voice(update: Update):
     ogg_filename += f"/{downloaded_file.file_unique_id}.ogg"
     with open(ogg_filename, "wb") as voice_file:
         voice_file.write(voice_bytearray)
-    wav_filename = ogg_filename.split(".")[0]+".wav"
-    command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}" #16000 - частота дискретизации, 1 - кол-во аудиоканалов, 256К - битрейт
+    wav_filename = ogg_filename.split(".")[0] + ".wav"
+    # 16000 - частота дискретизации, 1 - кол-во аудиоканалов, 256К - битрейт
+    command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
     return (wav_filename, ogg_filename)
 
@@ -58,8 +58,18 @@ def work_with_audio(update: Update, context: CallbackContext):
         update.effective_user.send_message(input_sentence.generate_output_info())
     elif debug == "false":
         pass
-    push_user_survey_progress(update.effective_user, init_user(update.effective_user).focuses[-1]['focus'], update.update_id, user_answer=input_sentence._text, stats=stats_sentence, audio_file=open(ogg_filename, 'rb'))
+    push_user_survey_progress(
+        update.effective_user,
+        init_user(update.effective_user).focuses[-1]['focus'],
+        update.update_id,
+        user_answer=input_sentence._text,
+        stats=stats_sentence,
+        audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
+    )
     os.remove(ogg_filename)
     if debug == "true":
         print(get_user_audio(update.effective_user))
-        update.effective_user.send_message("ID записи с твоим аудиосообщением в базе данных: " + str(json.loads(json_util.dumps(get_user_audio(update.effective_user)))))
+        update.effective_user.send_message(
+            "ID записи с твоим аудиосообщением в базе данных: "
+            + str(json.loads(json_util.dumps(get_user_audio(update.effective_user))))
+        )
