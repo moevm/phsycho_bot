@@ -42,10 +42,11 @@ from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
+from wrapper import dialog
+from env_config import (DEBUG_MODE,
+                        DEBUG_ON)
 
 DAYS_OFFSET = 7
-DEBUG = True
-
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
 # MODE = True - bot receive text messages - default
@@ -100,13 +101,17 @@ def button(update: Update, context: CallbackContext) -> str:
 
         ask_focus(update)
         push_user_schedule(update.effective_user, query.data, update.effective_message.date)
+
     elif query.data.startswith('f_'):
         # User entered week focus
         set_user_ready_flag(update.effective_user, True)
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
 
         return engine_callback(update, context)
-    elif query.data.startswith('r_'):
+    elif query.data.startswith('r_') and (
+            last_message
+            in ['Привет! Пришло время подводить итоги. Давай?', 'Продолжить прохождение опроса?']
+    ):
         if query.data == 'r_yes':
             return engine_callback(update, context)
         if query.data == 'r_1h':
@@ -126,7 +131,7 @@ def button(update: Update, context: CallbackContext) -> str:
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
         # debugging zone
-        if DEBUG:
+        if DEBUG_MODE == DEBUG_ON:
             user = init_user(update.effective_user)
             schedule = get_schedule_by_user(user, is_test=True)
             print(schedule)
@@ -230,19 +235,6 @@ def send_audio_answer(update: Update, context: CallbackContext):
         error(update, context)
 
 
-def dialog(update: Update, text: str, reply_markup=None) -> None:
-    mode = get_user_mode(update.effective_user)
-    if mode:
-        audio = bot_answer_audio(text)
-
-        if audio:
-            update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
-            clear_audio_cache()
-        else:
-            update.message.reply_text('Error!')
-
-    else:
-        update.effective_user.send_message(text=text, reply_markup=reply_markup)
 
 
 def change_mode(update: Update, context: CallbackContext):

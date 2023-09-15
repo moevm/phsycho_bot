@@ -7,6 +7,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from db import init_user, get_survey_progress, init_survey_progress, get_user_answer
 from keyboard import yes_no_keyboard
+from wrapper import dialog
 
 
 class Script:  # класс для хранения дерева
@@ -40,29 +41,50 @@ class Step:  # класс для работы с текущим шагом
         next_step = None
         for option in self.step_info['options']:
             if option['type'] == 'send_message':
-                self.update.effective_user.send_message(text=option['text'])
+
+                dialog(self.update, text=option['text'], )
+                # self.update.effective_user.send_message(text=option['text'], )
+
             elif option['type'] == 'get_user_answer':
                 answer = get_user_answer(
                     init_user(self.update.effective_user),
                     self.step_info['script_name'],
-                    option['step'],
+                    option['step']
                 )
-                self.update.effective_user.send_message(answer)
+
+                dialog(self.update, text=answer)
+                # self.update.effective_user.send_message(answer)
+
             elif option['type'] == 'inline_keyboard':
-                self.update.effective_user.send_message(
-                    text=option['text'], reply_markup=yes_no_keyboard()
+
+                dialog(
+                    self.update,
+                    text=option['text'],
+                    reply_markup=yes_no_keyboard()
                 )
+                # self.update.effective_user.send_message(text=option['text'],
+                #                                         reply_markup=yes_no_keyboard())
+
             elif option['type'] == 'inline_answer' and self.update.callback_query is not None:
                 if option['answer'] == self.update.callback_query.data:
                     if option['message']['type'] == 'text':
-                        self.update.effective_user.send_message(text=option["message"]["text"])
+
+                        dialog(self.update, text=option["message"]["text"])
+                        # self.update.effective_user.send_message(text=option["message"]["text"])
+
                     elif option['message']['type'] == 'voice':
                         with open(option["message"]["source"], 'rb') as stream:
                             self.update.effective_user.send_voice(voice=stream)
+
                     elif option['message']['type'] == 'inline_keyboard':
-                        self.update.effective_user.send_message(
-                            text=option["message"]["text"], reply_markup=yes_no_keyboard()
+                        dialog(
+                            self.update,
+                            text=option["message"]["text"],
+                            reply_markup=yes_no_keyboard()
                         )
+                        # self.update.effective_user.send_message(text=option["message"]["text"],
+                        #                                         reply_markup=yes_no_keyboard())
+
                     next_step = option['next']
 
             elif option['type'] == 'send_voice':
@@ -93,10 +115,10 @@ class Engine:  # класс движка
         if self.update.callback_query is not None:
             self.update.callback_query.delete_message()
         if (
-            self.survey_progress.need_answer
-            and self.survey_progress.user_answer == "INIT PROGRESS"
-            and self.survey_progress.time_send_question + datetime.timedelta(hours=2)
-            < datetime.datetime.utcnow()
+                self.survey_progress.need_answer
+                and self.survey_progress.user_answer == "INIT PROGRESS"
+                and self.survey_progress.time_send_question + datetime.timedelta(hours=2)
+                < datetime.datetime.utcnow()
         ):
             step = Step(self.update, self.survey_progress, self.last_focus)
             if self.update.callback_query is not None:

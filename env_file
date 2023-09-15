@@ -2,6 +2,7 @@ TELEGRAM_TOKEN=PasteYourTelegramToken
 MONGO_INITDB_ROOT_USERNAME=username
 MONGO_INITDB_ROOT_PASSWORD=password
 DEBUG_MODE=SetMode(false\true)
+DIALOG_MODE=SetMode(text\voice)
 MODE=SetMode(text\voice)
 NUMBER_OF_THREADS=4
 LANGUAGE=ru
