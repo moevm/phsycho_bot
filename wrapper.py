@@ -1,14 +1,14 @@
 from telegram import Update
+
+from db import get_user_mode
 from silero_module import bot_answer_audio, clear_audio_cache
 
-from env_config import (DEBUG_MODE, DIALOG_MODE,
-                        TEXT_MODE, VOICE_MODE, DEBUG_ON, DEBUG_OFF)
+from env_config import (DEBUG_MODE, DEBUG_ON, DEBUG_OFF)
 
 
 def dialog_wrapper(update: Update, text: str, reply_markup=None) -> None:
-
-    if DIALOG_MODE == VOICE_MODE:
-
+    mode = get_user_mode(update.effective_user)
+    if mode:
         try:
             audio = bot_answer_audio(text)
 
@@ -22,5 +22,5 @@ def dialog_wrapper(update: Update, text: str, reply_markup=None) -> None:
             update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
             clear_audio_cache()
 
-    elif DIALOG_MODE == TEXT_MODE:
+    else:
         update.effective_user.send_message(text=text, reply_markup=reply_markup)

@@ -70,7 +70,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
 
 def ask_focus(update: Update) -> None:
-    dialog(
+    dialog_wrapper(
         update,
         text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
                'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
@@ -138,7 +138,7 @@ def handle_pronoun(update, user, query):
         push_user_pronoun(user, False)
     elif query.data == 'p_you':
         push_user_pronoun(user, True)
-    dialog(update, text='Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun')
+    dialog_wrapper(update, text='Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun')
 
 
 def handle_conversation_mode(update, context, user, query):
@@ -146,7 +146,7 @@ def handle_conversation_mode(update, context, user, query):
         push_user_mode(user, False)
     elif query.data == 'c_voice':
         push_user_mode(user, True)
-    dialog(update, text='Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode')
+    dialog_wrapper(update, text='Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode')
     ask_start_questions(update, context)
 
 def handle_mood(update, query):
@@ -155,7 +155,7 @@ def handle_mood(update, query):
     text = f'Ты указал итогом дня "{VALUES[query.data]}". Спасибо!'
 
     query.delete_message()
-    dialog(update, text=text)
+    dialog_wrapper(update, text=text)
     # query.edit_message_text(text=text)
 
     push_user_feeling(update.effective_user, query.data, update.effective_message.date)
@@ -174,22 +174,22 @@ def handle_mood(update, query):
 
 def handle_questions(update, user, query):
     if query.data == 'q_1':
-        dialog(update, 'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
+        dialog_wrapper(update, 'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
                        ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".')
     elif query.data == 'q_2':
-        dialog(update, 'Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
+        dialog_wrapper(update, 'Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
                        'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
                        'месяц регулярных занятий')
     elif query.data == 'q_3':
-        dialog(update, 'Для того, чтобы методы')
+        dialog_wrapper(update, 'Для того, чтобы методы')
     elif query.data == 'q_4':
-        dialog(update, 'Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
+        dialog_wrapper(update, 'Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
                        'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
                        'запрос очень тяжелый для тебя')
     elif query.data == 'q_5':
-        dialog(update, 'Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.')
+        dialog_wrapper(update, 'Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.')
     elif query.data == 'q_6':
-        dialog(update, 'Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
+        dialog_wrapper(update, 'Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
                        ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
                        'Наш разговор совершенно конфиденциален')
         set_user_initial_reason_flag(user, True)
@@ -269,7 +269,7 @@ def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, text='Всего хорошего.')
+    dialog_wrapper(update, text='Всего хорошего.')
 
     return ConversationHandler.END
 
@@ -278,7 +278,7 @@ def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
+    dialog_wrapper(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
@@ -293,21 +293,6 @@ def send_audio_answer(update: Update, context: CallbackContext):
         clear_audio_cache()  # only for testing
     else:
         error(update, context)
-
-
-def dialog(update: Update, text: str, reply_markup=None) -> None:
-    mode = get_user_mode(update.effective_user)
-    if mode:
-        audio = bot_answer_audio(text)
-
-        if audio:
-            update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
-            clear_audio_cache()
-        else:
-            update.message.reply_text('Error!')
-
-    else:
-        update.effective_user.send_message(text=text, reply_markup=reply_markup)
 
 
 def change_mode(update: Update, context: CallbackContext):
@@ -353,7 +338,7 @@ def change_pronoun(update: Update, context: CallbackContext):
 
 
 def ask_start_questions(update, context):
-    dialog(update,
+    dialog_wrapper(update,
         'Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
           'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
           'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
