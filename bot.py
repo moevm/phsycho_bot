@@ -66,10 +66,6 @@ def start(update: Update, context: CallbackContext) -> str:
 
     user = init_user(update.effective_user)
     set_last_usage(user)
-
-    global MODE
-    MODE = "WAITING FOR NAME"
-
     dialog_wrapper(update, text='Здравствуйте! Я бот-психолог. Как можно обращаться к вам?')
 
 
@@ -165,7 +161,8 @@ def handle_mood(update, query):
     push_user_feeling(update.effective_user, query.data, update.effective_message.date)
 
     # debugging zone
-    if DEBUG:
+    # debugging zone
+    if DEBUG_MODE == DEBUG_ON:
         user = init_user(update.effective_user)
         schedule = get_schedule_by_user(user, is_test=True)
         print(schedule)
