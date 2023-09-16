@@ -45,6 +45,7 @@ from keyboard import (
     ready_keyboard,
     VALUES,
     pronoun_keyboard,
+    menu_keyboard,
     conversation_mode_keyboard,
     questions_keyboard,
 )
