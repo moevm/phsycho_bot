@@ -51,13 +51,12 @@ from keyboard import (
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
+from wrapper import dialog_wrapper
 from silero_module import bot_answer_audio, clear_audio_cache
-
+from env_config import (DEBUG_MODE,
+                        DEBUG_ON)
 DAYS_OFFSET = 7
-DEBUG = True
-
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
-
 
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
