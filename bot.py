@@ -45,20 +45,17 @@ from keyboard import (
     ready_keyboard,
     VALUES,
     pronoun_keyboard,
-    menu_keyboard,
     conversation_mode_keyboard,
     questions_keyboard,
 )
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
-from wrapper import dialog_wrapper
 from silero_module import bot_answer_audio, clear_audio_cache
 
-from env_config import (DEBUG_MODE,
-                        DEBUG_ON)
-
 DAYS_OFFSET = 7
+DEBUG = True
+
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
 
@@ -76,7 +73,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
 
 def ask_focus(update: Update) -> None:
-    dialog_wrapper(
+    dialog(
         update,
         text='Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
                'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбери фокус этой недели:',
@@ -273,7 +270,8 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    dialog_wrapper(update, text='Всего хорошего.')
+
+    dialog(update, text='Всего хорошего.')
 
     return ConversationHandler.END
 
@@ -282,11 +280,7 @@ def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog_wrapper(
-        update,
-        text='Выберете новый фокус:',
-        reply_markup=focus_keyboard()
-    )
+    dialog(update, text='Выберете новый фокус:', reply_markup=focus_keyboard())
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
