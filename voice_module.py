@@ -12,6 +12,8 @@ from bson import json_util
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
+from env_config import DEBUG_MODE
+
 model = whisper.load_model("base")
 
 
@@ -53,10 +55,10 @@ def work_with_audio(update: Update, context: CallbackContext):
     no_noise_audio = noise_reduce(wav_filename)
     input_sentence = audio_to_text(no_noise_audio)
     stats_sentence = input_sentence.generate_stats()
-    debug = os.environ.get("DEBUG_MODE")
-    if debug == "true":
+
+    if DEBUG_MODE == "true":
         update.effective_user.send_message(input_sentence.generate_output_info())
-    elif debug == "false":
+    elif DEBUG_MODE == "false":
         pass
     push_user_survey_progress(
         update.effective_user,
@@ -67,7 +69,8 @@ def work_with_audio(update: Update, context: CallbackContext):
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
     )
     os.remove(ogg_filename)
-    if debug == "true":
+
+    if DEBUG_MODE == "true":
         print(get_user_audio(update.effective_user))
         update.effective_user.send_message(
             "ID записи с твоим аудиосообщением в базе данных: "
