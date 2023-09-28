@@ -37,6 +37,9 @@ from keyboard import (
     menu_kyeboard,
     VALUES,
 )
+from env_config import (DEBUG_MODE,
+                        DEBUG_ON)
+
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
@@ -46,10 +49,7 @@ from silero_module import bot_answer_audio, clear_audio_cache
 _ = gettext.gettext
 
 DAYS_OFFSET = 7
-from env_config import (DEBUG_MODE,
-                        DEBUG_ON)
 
-DAYS_OFFSET = 7
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
 
