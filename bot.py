@@ -91,6 +91,8 @@ def button(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
+    last_message = query.message.text
+
     if query.data.startswith('s_'):
         # User entered schedule
         text = f'Ты выбрал {VALUES[query.data]} в качестве времени для рассылки. Спасибо!'
