@@ -1,0 +1,81 @@
+# Russian translations for PACKAGE package.
+# Copyright (C) 2023 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#  <elizavetaa40@gmail.com>, 2023.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-09-12 12:27+0300\n"
+"PO-Revision-Date: 2023-09-30 00:10+0300\n"
+"Last-Translator:  <elizavetaa40@gmail.com>\n"
+"Language-Team: Russian <gnu@d07.ru>\n"
+"Language: ru_official\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: bot.py:67
+msgid "Привет! Я бот, который поможет тебе отрефлексировать твое настроение"
+msgstr "Здравствуйте! Я бот, который поможет Вам отрефлексировать настроение"
+
+#: bot.py:71
+msgid "В какое время тебе удобно подводить итоги дня?"
+msgstr "В какое время Вам удобно подводить итоги дня?"
+
+#: bot.py:77
+msgid ""
+"Подведение итогов дня поможет исследовать определенные сложности и паттерны "
+"твоего поведения. Каждую неделю можно выбирать разные фокусы или один и тот "
+"же. Выбрать фокус этой недели:"
+msgstr ""
+"Подведение итогов дня поможет исследовать определенные сложности и паттерны "
+"Вашего поведения. Каждую неделю можно выбирать разные фокусы или один и тот "
+"же. Выбрать фокус этой недели:"
+
+#: bot.py:94
+msgid "Ты выбрал"
+msgstr "Вы выбрали"
+
+#: bot.py:94
+msgid "в качестве времени для рассылки. Спасибо!"
+msgstr "в качестве времени для рассылки. Спасибо!"
+
+#: bot.py:106 bot.py:176
+msgid "Привет! Пришло время подводить итоги. Давай?"
+msgstr "Здравствуйте! Пришло время подводить итоги. Давайте?"
+
+#: bot.py:106 bot.py:182
+msgid "Продолжить прохождение опроса?"
+msgstr "Продолжить прохождение опроса?"
+
+#: bot.py:111
+msgid "Понял тебя. Спрошу через час"
+msgstr "Понял Вас. Спрошу через час"
+
+#: bot.py:118
+msgid "Ты указал итогом дня"
+msgstr "Вы указали итогом дня"
+
+#: bot.py:118
+msgid ". Спасибо!"
+msgstr ". Спасибо!"
+
+#: bot.py:187
+msgid "Расскажи, как прошел твой день?"
+msgstr "Расскажите, как прошел Ваш день?"
+
+#: bot.py:201
+msgid "Всего хорошего."
+msgstr "Всего хорошего."
+
+#: bot.py:208
+msgid "Выбери новый фокус:"
+msgstr "Выберите новый фокус:"
+
+#: bot.py:212
+msgid "Уже обрабатываю твоё сообщение"
+msgstr "Уже обрабатываю Ваше сообщение"
