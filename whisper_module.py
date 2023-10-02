@@ -9,16 +9,18 @@ class WhisperSettings:
     asr_model = ASR_MODEL
 
 
-def audio_to_text(file, output: str = 'txt'):
+def get_att_whisper(filename, output: str = 'json'):
     """
-     file: BinaryIO
-        The audio file like object
+     filename: str
+        audio file name
 
     output characteristics
         possible return object types:
             "txt", "vtt", "srt", "tsv", "json"
     """
-    request_params = {'audio_file': file, 'output': output, 'word_timestamps': True}
-    result = requests.get(WhisperSettings.link + '/asr', params=request_params)
-    return result
+
+    file = {'file': open(filename, 'rb')}
+
+    request_params = {'task': 'transcribe', 'audio_file': file, 'output': output}
+    return requests.get(WhisperSettings.link + '/asr', params=request_params)
 

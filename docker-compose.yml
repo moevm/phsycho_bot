@@ -28,7 +28,7 @@ services:
     env_file: .env
 
   whisper-asr-webservice:
-    image: "onerahmet/openai-whisper-asr-webservice"
+    image: "onerahmet/openai-whisper-asr-webservice:v1.2.0"
     container_name: "whisper-asr-webservice"
     restart: unless-stopped
     env_file: .env
