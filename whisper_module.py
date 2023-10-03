@@ -19,8 +19,10 @@ def get_att_whisper(filename, output: str = 'json'):
             "txt", "vtt", "srt", "tsv", "json"
     """
 
-    file = {'file': open(filename, 'rb')}
+    with open(filename, "rb") as file:
+        file_dict = {filename: file}
 
-    request_params = {'task': 'transcribe', 'audio_file': file, 'output': output}
-    return requests.get(WhisperSettings.link + '/asr', params=request_params)
+    request_params = {'audio_file': file_dict, 'output': output}
+    response = requests.post(WhisperSettings.link + '/asr', data=request_params)
 
+    return response
