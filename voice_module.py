@@ -17,15 +17,14 @@ from env_config import (DEBUG_MODE,
 
 
 def audio_to_text(filename):
-    response = get_att_whisper(filename, 'txt')
+    response = get_att_whisper(filename)
 
     if response.status_code == 200:
-        transcription = filename.split('.')[0] + '.json'
-        result_json = json.dumps(transcription)
-        recognized_data = json.loads(result_json)
 
-        input_sentence = RecognizedSentence(recognized_data)
+        input_sentence = RecognizedSentence(response.json())
         return input_sentence
+
+    return None
 
 
 def download_voice(update: Update):

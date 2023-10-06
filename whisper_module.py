@@ -9,7 +9,7 @@ class WhisperSettings:
     asr_model = ASR_MODEL
 
 
-def get_att_whisper(filename, output: str = 'json'):
+def get_att_whisper(filename):
     """
      filename: str
         audio file name
@@ -19,8 +19,11 @@ def get_att_whisper(filename, output: str = 'json'):
             "txt", "vtt", "srt", "tsv", "json"
     """
 
-    file = {'audio_file': (filename, open(filename, 'rb'))}
-    data = {'task': 'transcribe', 'output': output, 'word_timestamps': 'true'}
-    response = requests.post(WhisperSettings.link + '/asr', data=data, files=file)
+    with open(filename, 'rb') as f_byte:
+        file = {'audio_file': (filename, f_byte)}
+
+    response = requests.post(WhisperSettings.link +
+                             '/asr?task=transcribe&encode=false&output=json&word_timestamps=true',
+                             files=file)
 
     return response
