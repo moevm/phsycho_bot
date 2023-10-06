@@ -17,17 +17,15 @@ from env_config import (DEBUG_MODE,
 
 
 def audio_to_text(filename):
-    response = get_att_whisper(filename)
-    print(response.text)
+    response = get_att_whisper(filename, 'txt')
 
-    file = open(filename.split('.')[0] + '.json')
+    if response.status_code == 200:
+        transcription = filename.split('.')[0] + '.json'
+        result_json = json.dumps(transcription)
+        recognized_data = json.loads(result_json)
 
-    transcription = filename.split('.')[0] + '.json'
-    result_json = json.dumps(transcription)
-    recognized_data = json.loads(result_json)
-
-    input_sentence = RecognizedSentence(recognized_data)
-    return input_sentence
+        input_sentence = RecognizedSentence(recognized_data)
+        return input_sentence
 
 
 def download_voice(update: Update):
@@ -77,6 +75,9 @@ def work_with_audio(update: Update, context: CallbackContext):
 
     if DEBUG_MODE == DEBUG_ON:
         update.effective_user.send_message(input_sentence.generate_output_info())
+
+    elif DEBUG_MODE == DEBUG_OFF:
+        pass
 
     push_user_survey_progress(
         update.effective_user,
