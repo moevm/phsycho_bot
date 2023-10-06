@@ -22,8 +22,8 @@ def get_att_whisper(filename):
     with open(filename, 'rb') as f_byte:
         file = {'audio_file': (filename, f_byte)}
 
-    response = requests.post(WhisperSettings.link +
-                             '/asr?task=transcribe&encode=false&output=json&word_timestamps=true',
-                             files=file)
+        response = requests.post(WhisperSettings.link +
+                                 '/asr?task=transcribe&encode=false&output=json&word_timestamps=true',
+                                 files=file)
 
     return response
