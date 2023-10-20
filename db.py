@@ -41,6 +41,7 @@ class User(MongoModel):
     username = fields.CharField(blank=True)
     first_name = fields.CharField()
     last_name = fields.CharField()
+    is_admin = fields.BooleanField()
     is_bot = fields.BooleanField()
     language_code = fields.CharField()
     focuses = fields.ListField(fields.DictField())
@@ -48,8 +49,11 @@ class User(MongoModel):
     ready_flag = fields.BooleanField()
     last_usage = fields.DateTimeField()
 
+    # def __str__(self):
+    #     return f'{self.id} | {self.first_name} | {self.last_name}'
+
     def __str__(self):
-        return f'{self.id} | {self.first_name} | {self.last_name}'
+        return f'{self.id} | {self.is_admin} | {self.first_name} | {self.last_name}'
 
 
 class Schedule(MongoModel):
