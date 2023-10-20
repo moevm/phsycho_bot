@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y ffmpeg="7:5.1.3-1" && apt-get install -
 ENV RUVERSION 0.22
 WORKDIR /bot
 
-RUN pip3 install git+https://github.com/openai/whisper.git
 COPY ./requirements.txt /bot/
 RUN pip3 install -r requirements.txt
 
