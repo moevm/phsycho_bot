@@ -27,6 +27,7 @@ from db import (
     set_last_usage,
     get_users_not_answer_last24hours,
     get_users_not_finish_survey,
+    get_user_word_statistics,
 )
 from keyboard import (
     daily_schedule_keyboard,
@@ -147,6 +148,11 @@ def text_processing(update: Update, context: CallbackContext):
     elif update.message.text == VALUES['menu_help']:
         user_help(update, context)
     else:
+        # example of using get_user_word_statistics()
+        user = init_user(update.effective_user)
+        answers_statistics = str(get_user_word_statistics(user.id))
+        update.effective_user.send_message(answers_statistics)
+
         engine_callback(update, context)
 
 
