@@ -48,10 +48,7 @@ from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
-from wrapper import dialog
-from env_config import (DEBUG_MODE,
-                        DEBUG_ON)
-
+from wrapper import dialog_wrapper
 
 _ = gettext.gettext
 
@@ -67,13 +64,13 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog(
+    dialog_wrapper(
         update,
         text=_('Привет! Я бот, который поможет тебе отрефлексировать твое настроение'),
         reply_markup=menu_kyeboard()
     )
 
-    dialog(
+    dialog_wrapper(
         update,
         text=_('В какое время тебе удобно подводить итоги дня?'),
         reply_markup=daily_schedule_keyboard()
@@ -81,7 +78,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
 
 def ask_focus(update: Update) -> None:
-    dialog(
+    dialog_wrapper(
         update,
         text= _('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
         'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
@@ -104,7 +101,7 @@ def button(update: Update, context: CallbackContext) -> str:
         text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
 
         query.delete_message()
-        dialog(update, text=text)
+        dialog_wrapper(update, text=text)
         # query.edit_message_text(text=text)
 
         ask_focus(update)
@@ -133,7 +130,7 @@ def button(update: Update, context: CallbackContext) -> str:
         text = _('Ты указал итогом дня ') + VALUES[query.data] + _('. Спасибо!')
 
         query.delete_message()
-        dialog(update, text=text)
+        dialog_wrapper(update, text=text)
         # query.edit_message_text(text=text)
 
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
