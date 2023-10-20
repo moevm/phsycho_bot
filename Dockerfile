@@ -2,7 +2,7 @@ FROM python:3.10
 
 
 
-RUN apt-get update && apt-get install -y ffmpeg && apt-get install -y espeak
+RUN apt-get update && apt-get install -y ffmpeg="7:5.1.3-1" && apt-get install -y espeak="1.48.15+dfsg-3"
 
 ENV RUVERSION 0.22
 WORKDIR /bot
@@ -16,4 +16,4 @@ COPY . /bot/
 
 ARG TELEGRAM_TOKEN
 
-CMD python ./bot.py ${TELEGRAM_TOKEN} ${MONGO_INITDB_ROOT_USERNAME} ${MONGO_INITDB_ROOT_PASSWORD} ${MODE}
+CMD python ./bot.py ${TELEGRAM_TOKEN} ${MONGO_INITDB_ROOT_USERNAME} ${MONGO_INITDB_ROOT_PASSWORD}

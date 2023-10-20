@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from db import init_user, get_survey_progress, init_survey_progress, get_user_answer
 from keyboard import yes_no_keyboard
-from wrapper import dialog_wrapper
+from wrapper import dialog
 
 
 class Script:  # класс для хранения дерева
@@ -42,7 +42,7 @@ class Step:  # класс для работы с текущим шагом
         for option in self.step_info['options']:
             if option['type'] == 'send_message':
 
-                dialog_wrapper(self.update, text=option['text'], )
+                dialog(self.update, text=option['text'], )
                 # self.update.effective_user.send_message(text=option['text'], )
 
             elif option['type'] == 'get_user_answer':
@@ -52,12 +52,12 @@ class Step:  # класс для работы с текущим шагом
                     option['step']
                 )
 
-                dialog_wrapper(self.update, text=answer)
+                dialog(self.update, text=answer)
                 # self.update.effective_user.send_message(answer)
 
             elif option['type'] == 'inline_keyboard':
 
-                dialog_wrapper(
+                dialog(
                     self.update,
                     text=option['text'],
                     reply_markup=yes_no_keyboard()
@@ -69,7 +69,7 @@ class Step:  # класс для работы с текущим шагом
                 if option['answer'] == self.update.callback_query.data:
                     if option['message']['type'] == 'text':
 
-                        dialog_wrapper(self.update, text=option["message"]["text"])
+                        dialog(self.update, text=option["message"]["text"])
                         # self.update.effective_user.send_message(text=option["message"]["text"])
 
                     elif option['message']['type'] == 'voice':
@@ -77,7 +77,7 @@ class Step:  # класс для работы с текущим шагом
                             self.update.effective_user.send_voice(voice=stream)
 
                     elif option['message']['type'] == 'inline_keyboard':
-                        dialog_wrapper(
+                        dialog(
                             self.update,
                             text=option["message"]["text"],
                             reply_markup=yes_no_keyboard()
