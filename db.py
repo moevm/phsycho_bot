@@ -1,6 +1,11 @@
 import datetime
 import logging
 from typing import List
+from string import punctuation
+from collections import Counter
+import nltk
+from nltk.corpus import stopwords
+from pymystem3 import Mystem
 
 import pytz
 from pymodm import connect, fields, MongoModel
@@ -166,6 +171,28 @@ def get_user_answer(user, focus, step) -> str:
         if survey_step.user.id == user.id and survey_step.survey_step == step:
             return survey_step.user_answer
     return ''
+
+
+def get_user_word_statistics(user_id, start_date=None, end_date=None):
+    nltk.download('stopwords')
+    mystem = Mystem()
+
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
+    answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+
+    tokens = mystem.lemmatize(answers.lower())
+    stop_words = set(stopwords.words('russian'))
+    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
+
+    return dict(Counter(tokens))
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
@@ -369,3 +396,4 @@ def get_users_not_answer_last24hours():
 
 def auth_in_db(username, password):
     connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')
+    
