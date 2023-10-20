@@ -29,7 +29,7 @@ from db import (
     auth_in_db,
     set_last_usage,
     get_users_not_answer_last24hours,
-    get_users_not_finish_survey,
+    get_users_not_finish_survey, get_user_word_statistics,
 )
 from keyboard import (
     daily_schedule_keyboard,
@@ -257,7 +257,7 @@ def add_admin(update: Update, *args):
     db_id, _ = args
     try:
         db_id = int(db_id)
-    except TypeError as e:
+    except TypeError:
         update.effective_user.send_message("Неверно введён id пользователя!")
 
     user = get_user(db_id)
