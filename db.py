@@ -12,6 +12,8 @@ from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
 
+from env_config import ADMIN
+
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
     return pytz.utc.localize(datetime.datetime.combine(date, time))
@@ -122,6 +124,20 @@ class BotAudioAnswer(MongoModel):
             f'{self.text_of_audio_answer=} | '
             f'{self.time_send_answer=}'
         )
+
+
+def get_user(db_id: int):
+    try:
+        return User.objects.get({'id': db_id})
+    except User.DoesNotExist:
+        return None
+
+
+def make_admin(user: User) -> None:
+    if ADMIN == user.id:
+        db_user = init_user(user)
+        db_user.is_admin = True
+        db_user.save()
 
 
 def init_user(user) -> User:

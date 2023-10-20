@@ -1,5 +1,7 @@
 from os import getenv
 
+ADMIN = int(getenv('ADMIN'))
+
 DEBUG_MODE = getenv('DEBUG_MODE')
 MODE = getenv('MODE')
 DIALOG_MODE = getenv('DIALOG_MODE')

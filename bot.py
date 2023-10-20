@@ -23,12 +23,13 @@ from db import (
     set_user_ready_flag,
     set_schedule_asked_today,
     init_user,
+    make_admin,
+    get_user,
     get_schedule_by_user,
     auth_in_db,
     set_last_usage,
     get_users_not_answer_last24hours,
     get_users_not_finish_survey,
-    get_user_word_statistics,
 )
 from keyboard import (
     daily_schedule_keyboard,
@@ -246,6 +247,27 @@ def send_audio_answer(update: Update, context: CallbackContext):
         error(update, context)
 
 
+def get_admin(update: Update):
+    make_admin(update.effective_user)
+    set_last_usage(update.effective_user)
+
+
+def add_admin(update: Update, *args):
+
+    db_id, _ = args
+    try:
+        db_id = int(db_id)
+    except TypeError as e:
+        update.effective_user.send_message("Неверно введён id пользователя!")
+
+    user = get_user(db_id)
+
+    if user:
+        make_admin(user)
+
+    set_last_usage(update.effective_user)
+
+
 def main(token, mode):
     init_logger()
 
@@ -255,6 +277,9 @@ def main(token, mode):
         updater.dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer))
 
     elif mode == "text":
+        updater.dispatcher.add_handler(CommandHandler('get_admin', get_admin))
+        updater.dispatcher.add_handler(CommandHandler('add_admin', add_admin))
+
         updater.dispatcher.add_handler(CommandHandler('start', start))
         updater.dispatcher.add_handler(CommandHandler('user_help', user_help))
         updater.dispatcher.add_handler(CommandHandler('stats', stats))
