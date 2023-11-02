@@ -74,14 +74,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
     dialog(
         update,
-        text=_('Привет! Я бот, который поможет тебе отрефлексировать твое настроение'),
-        reply_markup=menu_kyeboard()
-    )
-
-    dialog(
-        update,
-        text=_('В какое время тебе удобно подводить итоги дня?'),
-        reply_markup=daily_schedule_keyboard()
+        text=_('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?')
     )
 
 
@@ -101,7 +94,6 @@ def button(update: Update, context: CallbackContext) -> str:
 
     user = init_user(update.effective_user)
     set_last_usage(user)
-    
     if query.data.startswith('s_'):
         handle_schedule(update, query)
     elif query.data.startswith('f_'):
@@ -120,7 +112,7 @@ def button(update: Update, context: CallbackContext) -> str:
         handle_questions(update, user, query)
     return ''
 
-  
+
 def handle_schedule(update, query):
     # User entered schedule
     text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
@@ -138,7 +130,7 @@ def handle_focus(update, context, query):
     push_user_focus(update.effective_user, query.data, update.effective_message.date)
     return engine_callback(update, context)
 
-  
+
 def handle_ready(update, context, query):
     if query.data == 'r_yes':
         return engine_callback(update, context)
@@ -148,7 +140,7 @@ def handle_ready(update, context, query):
         set_user_ready_flag(update.effective_user, True)
     return ''
 
-  
+
 def handle_pronoun(update, user, query):
     if query.data == 'p_u':
         push_user_pronoun(user, False)

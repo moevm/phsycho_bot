@@ -327,7 +327,7 @@ def push_user_mode(user, mode):
     db_user.preferences.append({"voice mode": mode})
     db_user.save()
 
-    
+
 def change_user_mode(user):
     db_user = init_user(user)
     for preference in db_user.preferences:
@@ -375,7 +375,7 @@ def push_user_pronoun(user, pronoun):
     db_user.preferences.append({"pronoun": pronoun})
     db_user.save()
 
-    
+
 def get_user_audio(user):
     progress = list(SurveyProgress.objects.values().all())
     file_storage = gridfs.GridFSBucket(_get_db())
