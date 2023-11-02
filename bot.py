@@ -125,8 +125,8 @@ def handle_schedule(update, query):
     # User entered schedule
     text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
 
-        query.delete_message()
-        dialog(update, text=text)
+    query.delete_message()
+    dialog(update, text=text)
     # query.edit_message_text(text=text)
     ask_focus(update)
     push_user_schedule(update.effective_user, query.data, update.effective_message.date)
