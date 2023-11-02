@@ -6,36 +6,40 @@ from noisereduce import reduce_noise
 from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
-import whisper
 from bson import json_util
 
+from whisper_module import get_att_whisper
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
-from env_config import DEBUG_MODE
-
-model = whisper.load_model("base")
+from env_config import (DEBUG_MODE,
+                        DEBUG_ON, DEBUG_OFF)
 
 
 def audio_to_text(filename):
-    transcription = model.transcribe(filename, word_timestamps=True)
-    result_json = json.dumps(transcription)
+    response = get_att_whisper(filename)
 
-    recognized_data = json.loads(result_json)
-    input_sentence = RecognizedSentence(recognized_data)
-    return input_sentence
+    if response.status_code == 200:
+
+        input_sentence = RecognizedSentence(response.json())
+        return input_sentence
+
+    return None
 
 
 def download_voice(update: Update):
     downloaded_file = update.message.voice.get_file()
     voice_bytearray = downloaded_file.download_as_bytearray()
+
     ogg_filename = os.path.join('user_voices', f'user_{update.message.chat.id}')
     if not os.path.exists(ogg_filename):
         os.makedirs(ogg_filename)
     ogg_filename += f"/{downloaded_file.file_unique_id}.ogg"
+
     with open(ogg_filename, "wb") as voice_file:
         voice_file.write(voice_bytearray)
     wav_filename = ogg_filename.split(".")[0] + ".wav"
+
     # 16000 - частота дискретизации, 1 - кол-во аудиоканалов, 256К - битрейт
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
@@ -43,6 +47,13 @@ def download_voice(update: Update):
 
 
 def noise_reduce(input_audio):
+    """
+         input_audio: str
+            audio file name (*.wav)
+
+        output: str
+            audio without noise file name (*_nonoise.wav)
+    """
     rate, data = wavfile.read(input_audio)
     date_noise_reduce = reduce_noise(y=data, sr=rate)
     output_audio_without_noise = input_audio.split('.')[0] + "_nonoise.wav"
@@ -53,13 +64,20 @@ def noise_reduce(input_audio):
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename, ogg_filename = download_voice(update)
     no_noise_audio = noise_reduce(wav_filename)
-    input_sentence = audio_to_text(no_noise_audio)
+
+    try:
+        input_sentence = audio_to_text(no_noise_audio)
+    except IOError as e:
+        raise e
+
     stats_sentence = input_sentence.generate_stats()
 
-    if DEBUG_MODE == "true":
+    if DEBUG_MODE == DEBUG_ON:
         update.effective_user.send_message(input_sentence.generate_output_info())
-    elif DEBUG_MODE == "false":
+
+    elif DEBUG_MODE == DEBUG_OFF:
         pass
+
     push_user_survey_progress(
         update.effective_user,
         init_user(update.effective_user).focuses[-1]['focus'],
@@ -70,7 +88,7 @@ def work_with_audio(update: Update, context: CallbackContext):
     )
     os.remove(ogg_filename)
 
-    if DEBUG_MODE == "true":
+    if DEBUG_MODE == DEBUG_ON:
         print(get_user_audio(update.effective_user))
         update.effective_user.send_message(
             "ID записи с твоим аудиосообщением в базе данных: "

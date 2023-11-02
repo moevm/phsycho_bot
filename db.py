@@ -1,6 +1,11 @@
 import datetime
 import logging
 from typing import List
+from string import punctuation
+from collections import Counter
+import nltk
+from nltk.corpus import stopwords
+from pymystem3 import Mystem
 
 import pytz
 from pymodm import connect, fields, MongoModel
@@ -44,6 +49,7 @@ class User(MongoModel):
     ready_flag = fields.BooleanField()
     last_usage = fields.DateTimeField()
     preferences = fields.ListField(fields.DictField())  # [{"voice mode": False - text mode}, {"pronoun": True - Вы}]
+
 
     def __str__(self):
         return f'{self.id} | {self.first_name} | {self.last_name}'
@@ -174,6 +180,28 @@ def get_user_answer(user, focus, step) -> str:
     return ''
 
 
+def get_user_word_statistics(user_id, start_date=None, end_date=None):
+    nltk.download('stopwords')
+    mystem = Mystem()
+
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
+    answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+
+    tokens = mystem.lemmatize(answers.lower())
+    stop_words = set(stopwords.words('russian'))
+    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
+
+    return dict(Counter(tokens))
+
+
 def get_survey_progress(user, focus) -> SurveyProgress:
     list_survey_progress = SurveyProgress.objects.raw({'survey_id': focus})
     filtered_survey = []
@@ -299,6 +327,7 @@ def push_user_mode(user, mode):
     db_user.preferences.append({"voice mode": mode})
     db_user.save()
 
+    
 def change_user_mode(user):
     db_user = init_user(user)
     for preference in db_user.preferences:
@@ -346,6 +375,7 @@ def push_user_pronoun(user, pronoun):
     db_user.preferences.append({"pronoun": pronoun})
     db_user.save()
 
+    
 def get_user_audio(user):
     progress = list(SurveyProgress.objects.values().all())
     file_storage = gridfs.GridFSBucket(_get_db())
