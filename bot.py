@@ -48,7 +48,7 @@ from keyboard import (
     VALUES,
     pronoun_keyboard,
     conversation_mode_keyboard,
-    questions_keyboard,
+    questions_keyboard, menu_keyboard,
 )
 from env_config import (DEBUG_MODE,
                         DEBUG_ON)
@@ -65,6 +65,7 @@ DAYS_OFFSET = 7
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
 
+
 # def start(update: Update, context: CallbackContext) -> int:
 def start(update: Update, context: CallbackContext) -> str:
     """Send a message when the command /start is issued."""
@@ -74,15 +75,16 @@ def start(update: Update, context: CallbackContext) -> str:
 
     dialog(
         update,
-        text=_('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?')
+        text=_('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
+        reply_markup=menu_keyboard()
     )
 
 
 def ask_focus(update: Update) -> None:
     dialog(
         update,
-        text= _('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-        'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
+        text=_('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+               'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
         reply_markup=focus_keyboard()
     )
 
@@ -157,6 +159,7 @@ def handle_conversation_mode(update, context, user, query):
     dialog(update, text=_('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
     ask_start_questions(update, context)
 
+
 def handle_mood(update, query):
     # User entered mood
     set_user_ready_flag(update.effective_user, True)
@@ -181,25 +184,26 @@ def handle_mood(update, query):
 
 def handle_questions(update, user, query):
     if query.data == 'q_1':
-        dialog(update, text = _('Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
-                       ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".'))
+        dialog(update, text=_('Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
+                              ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".'))
     elif query.data == 'q_2':
-        dialog(update, text = _('Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
-                       'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
-                       'месяц регулярных занятий'))
+        dialog(update, text=_('Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
+                              'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
+                              'месяц регулярных занятий'))
     elif query.data == 'q_3':
-        dialog(update, text = _('Для того, чтобы методы'))
+        dialog(update, text=_('Для того, чтобы методы'))
     elif query.data == 'q_4':
-        dialog(update, text = _('Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
-                       'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
-                       'запрос очень тяжелый для тебя'))
+        dialog(update, text=_('Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
+                              'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
+                              'запрос очень тяжелый для тебя'))
     elif query.data == 'q_5':
-        dialog(update, text = _('Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.'))
+        dialog(update, text=_('Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.'))
     elif query.data == 'q_6':
-        dialog(update, text = _('Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
-                       ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
-                       'Наш разговор совершенно конфиденциален'))
+        dialog(update, text=_('Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
+                              ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
+                              'Наш разговор совершенно конфиденциален'))
         set_user_initial_reason_flag(user, True)
+
 
 def text_processing(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
@@ -210,6 +214,10 @@ def text_processing(update: Update, context: CallbackContext):
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
         help_bot(update, context)
+    elif update.message.text == VALUES['change_pronoun']:
+        change_pronoun(update, context)
+    elif update.message.text == VALUES['change_mode']:
+        change_mode(update, context)
     elif get_user_chosen_name(user) == ' ':
         chosen_name = update.message.text
         push_user_chosen_name(user, chosen_name)
@@ -269,10 +277,9 @@ def resume_survey(updater, user) -> None:
 def ask_feelings(update: Update, context: CallbackContext) -> None:
     dialog(
         update,
-        text= _("Расскажи, как прошел твой день?"),
+        text=_("Расскажи, как прошел твой день?"),
         reply_markup=mood_keyboard()
     )
-
 
 
 # def engine_callback(update, context: CallbackContext) -> int:
@@ -300,7 +307,6 @@ def change_focus(update: Update, context: CallbackContext):
     )
 
 
-
 def send_audio_answer(update: Update, context: CallbackContext):
     update.effective_user.send_message(_("Уже обрабатываю твоё сообщение"))
 
@@ -313,6 +319,7 @@ def send_audio_answer(update: Update, context: CallbackContext):
         clear_audio_cache()  # only for testing
     else:
         error(update, context)
+
 
 def ask_user_pronoun(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
@@ -345,12 +352,13 @@ def change_pronoun(update: Update, context: CallbackContext):
 
 def ask_start_questions(update, context):
     dialog(update,
-        text = _('Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
-          'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
-          'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
-          'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
-          'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
-          , reply_markup=questions_keyboard())
+           text=_('Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
+                  'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
+                  'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
+                  'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
+                  'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
+           , reply_markup=questions_keyboard())
+
 
 def change_mode(update: Update, context: CallbackContext):
     change_user_mode(update.effective_user)

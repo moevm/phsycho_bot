@@ -26,6 +26,8 @@ VALUES = {
     'menu_change_focus': "Сменить фокус",
     'menu_share_event': "Поделиться событием",
     'menu_help': "Справка",
+    'change_pronoun': "Изменить обращение",
+    'change_mode': "Изменить режим общения",
     'p_u': "Ты",
     'p_you': "Вы",
     'c_text': "Текстовый режим",
@@ -90,7 +92,8 @@ def yes_no_keyboard() -> InlineKeyboardMarkup:
 
 
 def menu_keyboard() -> ReplyKeyboardMarkup:
-    keyboard = [[VALUES['menu_share_event']], [VALUES['menu_change_focus']], [VALUES['menu_help']]]
+    keyboard = [[VALUES['menu_share_event']], [VALUES['menu_change_focus']], [VALUES['menu_help']],
+                [VALUES['change_pronoun']], [VALUES['change_mode']]]
     return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
 
 
