@@ -332,7 +332,7 @@ def main(token):
                 ]
             },
             fallbacks=[
-                MessageHandler(Filters.voice, error_input_question)
+                MessageHandler(Filters.voice | Filters.command, error_input_question)
             ]
         )
     )
