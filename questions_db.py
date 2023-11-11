@@ -1,11 +1,9 @@
 from datetime import datetime
-import logging
-from typing import List, Union
+from typing import Union
 
-import pytz
 from pymodm import fields, MongoModel
 
-from db import User, get_datetime_with_tz
+from db import User
 
 
 class Question(MongoModel):
@@ -68,4 +66,3 @@ def init_answer(user: User, question: Question, text):
             text=text,
             date=datetime.now()
         )
-

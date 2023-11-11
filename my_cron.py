@@ -55,9 +55,6 @@ def ask_resume_survey(updater):
             resume_survey(updater, user['id'])
 
 
-def get_user(updater):
-    updater.getChatMember()
-
 def main(token):
     # init_logger()
     updater = Updater(token, use_context=True)
