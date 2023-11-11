@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List
+from typing import List, Union
 from string import punctuation
 from collections import Counter
 import nltk
@@ -11,8 +11,6 @@ import pytz
 from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
-
-from env_config import ADMIN
 
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
@@ -48,12 +46,13 @@ class User(MongoModel):
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
     last_usage = fields.DateTimeField()
+    preferences = fields.ListField(fields.DictField())  # {"voice_mode": False - text mode}
 
     # def __str__(self):
     #     return f'{self.id} | {self.first_name} | {self.last_name}'
 
     def __str__(self):
-        return f'{self.id} | {self.is_admin} | {self.first_name} | {self.last_name}'
+        return f'{self.id} | {self.language_code} | {self.first_name} | {self.last_name}'
 
 
 class Schedule(MongoModel):
@@ -130,17 +129,40 @@ class BotAudioAnswer(MongoModel):
         )
 
 
-def get_user(db_id: int):
+def get_user(user_id: int) -> Union[User, None]:
     try:
-        return User.objects.get({'id': db_id})
+        return User.objects.get({'id': user_id})
     except User.DoesNotExist:
         return None
 
 
-def make_admin(user: User) -> None:
-    if ADMIN == user.id:
-        db_user = init_user(user)
-        db_user.is_admin = True
+def create_admin(user_id: int) -> None:
+    user = get_user(user_id)
+
+    if user:
+        if not user.is_admin:
+            user.is_admin = True
+            user.save()
+
+    else:
+        User(
+            id=user_id,
+            first_name='Admin',
+            is_bot=False,
+            is_admin=True,
+            username='admin',
+            language_code='ru',
+        ).save()
+
+
+def update_info(user) -> None:
+    db_user = init_user(user)
+
+    if db_user:
+        db_user.last_name = user.last_name
+        db_user.first_name = user.first_name
+        db_user.username = user.username
+        db_user.is_bot = user.is_bot
         db_user.save()
 
 
@@ -152,8 +174,9 @@ def init_user(user) -> User:
             id=user.id,
             first_name=user.first_name,
             is_bot=user.is_bot,
+            is_admin=False,
             username=user.username,
-            language_code=user.language_code,
+            language_code='ru',
         ).save()
 
 
@@ -308,6 +331,25 @@ def get_user_feelings(user):
     return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
 
+def change_user_mode(user):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "voice_mode" in preference:
+            preference["voice_mode"] = not preference["voice_mode"]
+            break
+    else:
+        db_user.preferences.append({"voice_mode": True})
+    db_user.save()
+
+
+def get_user_mode(user):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "voice_mode" in preference:
+            return preference["voice_mode"]
+    return False
+
+
 def get_user_audio(user):
     progress = list(SurveyProgress.objects.values().all())
     file_storage = gridfs.GridFSBucket(_get_db())
@@ -396,4 +438,3 @@ def get_users_not_answer_last24hours():
 
 def auth_in_db(username, password):
     connect(f'mongodb://{username}:{password}@db:27017/{DATABASE_NAME}?authSource=admin')
-    

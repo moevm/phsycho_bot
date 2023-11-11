@@ -10,7 +10,6 @@ from telegram.ext import Updater
 from bot import ask_ready, resume_survey
 from db import get_schedule_list_for_feeling_ask, Schedule, get_users_not_finish_survey
 
-
 MINUTES_FOR_LOOP = 1
 DAYS_OFFSET = 7
 
@@ -55,6 +54,9 @@ def ask_resume_survey(updater):
         if user['time_not_finish'] > datetime.timedelta(days=0, seconds=7200):
             resume_survey(updater, user['id'])
 
+
+def get_user(updater):
+    updater.getChatMember()
 
 def main(token):
     # init_logger()
