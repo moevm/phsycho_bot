@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List, Union
+from typing import List, Optional
 from string import punctuation
 from collections import Counter
 import nltk
@@ -129,7 +129,7 @@ class BotAudioAnswer(MongoModel):
         )
 
 
-def get_user(user_id: int) -> Union[User, None]:
+def get_user(user_id: int) -> Optional[User]:
     try:
         return User.objects.get({'id': user_id})
     except User.DoesNotExist:
@@ -176,7 +176,7 @@ def init_user(user) -> User:
             is_bot=user.is_bot,
             is_admin=False,
             username=user.username,
-            language_code='ru',
+            language_code=user.language_code,
         ).save()
 
 

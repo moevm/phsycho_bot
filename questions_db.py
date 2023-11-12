@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Optional
 
 from pymodm import fields, MongoModel
 
@@ -33,18 +33,18 @@ def init_question(user: User, text):
         )
 
 
-def get_question(quest_id) -> Union[Question, None]:
+def get_question(quest_id) -> Optional[Question]:
     try:
         return Question.objects.get({'_id': quest_id})
     except Question.DoesNotExist:
         return None
 
 
-def list_questions() -> Union[list[Question], None]:
+def list_questions() -> list:
     try:
         return Question.objects.get({'answered': False})
     except Question.DoesNotExist:
-        return None
+        return []
 
 
 class Answer(MongoModel):

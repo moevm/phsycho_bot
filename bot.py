@@ -261,20 +261,21 @@ def send_audio_answer(update: Update, context: CallbackContext):
 
 def add_admin(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
-    if user.is_admin:
+    if not user.is_admin:
+        return
 
-        if len(context.args):
-            db_id = context.args[0]
+    if len(context.args):
+        db_id = context.args[0]
 
-            if db_id.isdigit() and 6 <= len(db_id) <= 10:
-                create_admin(int(db_id))
-                update.message.reply_text(f"Выданы права администратора пользователю с id: {db_id}")
-            else:
-                update.message.reply_text("Некорректно введён id пользователя!")
-
-            set_last_usage(update.effective_user)
+        if db_id.isdigit() and 6 <= len(db_id) <= 10:
+            create_admin(int(db_id))
+            update.message.reply_text(f"Выданы права администратора пользователю с id: {db_id}")
         else:
-            update.message.reply_text("Не введён id пользователя!")
+            update.message.reply_text("Некорректно введён id пользователя!")
+
+        set_last_usage(update.effective_user)
+    else:
+        update.message.reply_text("Не введён id пользователя!")
 
 
 def start_question_conversation(update: Update, context: CallbackContext):
@@ -370,11 +371,9 @@ class Worker(threading.Thread):
             token_try = self.work_queue.get()
             self.process(token_try)
 
-            # TODO переделать на получение пользователя
             if ADMIN.isdigit():
                 create_admin(int(ADMIN))
         finally:
-
             pass
 
     @staticmethod
