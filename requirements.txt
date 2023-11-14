@@ -30,3 +30,4 @@ requests==2.30.0
 torchaudio==2.0.2
 whisper==1.1.10
 python-gettext==5.0
+pyrogram==2.0.106
