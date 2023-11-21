@@ -1,0 +1,8 @@
+FROM python:3.9
+
+RUN pip install pandas scikit-learn joblib
+
+WORKDIR /app
+COPY model-text.py /app/model-text.py
+
+CMD ["python", "model-text.py"]
