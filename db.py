@@ -50,6 +50,11 @@ class User(MongoModel):
     last_usage = fields.DateTimeField()
     preferences = fields.ListField(fields.DictField())  # [{"voice mode": False - text mode}, {"pronoun": True - Вы}]
 
+    def get_last_focus(self):
+        if self.focuses and len(self.focuses) > 0:
+            return self.focuses[-1]['focus']
+
+        return 'f_no_focus'
 
     def __str__(self):
         return f'{self.id} | {self.first_name} | {self.last_name}'
@@ -435,7 +440,7 @@ def get_schedule_list_for_feeling_ask():
 def get_users_not_finish_survey():
     users = []
     for user in User.objects.raw({'focuses': {'$exists': True}}):
-        last_focus = user.focuses[-1]['focus']
+        last_focus = user.get_last_focus()
         survey_progress = get_survey_progress(user, last_focus)
         if survey_progress.need_answer:
             list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})

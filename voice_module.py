@@ -80,7 +80,7 @@ def work_with_audio(update: Update, context: CallbackContext):
 
     push_user_survey_progress(
         update.effective_user,
-        init_user(update.effective_user).focuses[-1]['focus'],
+        init_user(update.effective_user).get_last_focus(),
         update.update_id,
         user_answer=input_sentence.get_text(),
         stats=stats_sentence,

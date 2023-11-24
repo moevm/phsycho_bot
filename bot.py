@@ -206,6 +206,7 @@ def handle_questions(update, user, query):
 
 
 def text_processing(update: Update, context: CallbackContext):
+    print(f"Processing {update.message.text}")
     user = init_user(update.effective_user)
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
@@ -223,10 +224,12 @@ def text_processing(update: Update, context: CallbackContext):
         push_user_chosen_name(user, chosen_name)
         ask_user_pronoun(update, context)
     elif get_user_initial_reason_flag(user):
+        print("get_user_initial_reason_flag")
         reason = update.message.text
         push_user_initial_reason(user, reason)
         set_user_initial_reason_flag(user, False)
     else:
+        print("else block of text_processing")
         # example of using get_user_word_statistics()
         user = init_user(update.effective_user)
         answers_statistics = str(get_user_word_statistics(user.id))
