@@ -48,7 +48,9 @@ from keyboard import (
     VALUES,
     pronoun_keyboard,
     conversation_mode_keyboard,
-    questions_keyboard, menu_keyboard,
+    questions_keyboard,
+    menu_keyboard,
+    daily_schedule_keyboard,
 )
 from env_config import (DEBUG_MODE,
                         DEBUG_ON)
@@ -226,12 +228,12 @@ def text_processing(update: Update, context: CallbackContext):
         reason = update.message.text
         push_user_initial_reason(user, reason)
         set_user_initial_reason_flag(user, False)
+        dialog(
+            update,
+            text=_('В какое время тебе удобно подводить итоги дня?'),
+            reply_markup=daily_schedule_keyboard()
+        )
     else:
-        # example of using get_user_word_statistics()
-        user = init_user(update.effective_user)
-        answers_statistics = str(get_user_word_statistics(user.id))
-        update.effective_user.send_message(answers_statistics)
-
         engine_callback(update, context)
 
 
