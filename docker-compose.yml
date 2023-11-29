@@ -3,7 +3,7 @@ version: "3"
 
 services:
   db:
-    image: mongo
+    image: mongo:6.0
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -22,8 +22,14 @@ services:
       - db
 
   silero-tts-service:
-    image: "navatusein/silero-tts-service"
+    image: "navatusein/silero-tts-service:1.0.0"
     container_name: "silero-tts-service"
+    restart: unless-stopped
+    env_file: .env
+
+  whisper-asr-webservice:
+    image: "onerahmet/openai-whisper-asr-webservice:v1.2.0"
+    container_name: "whisper-asr-webservice"
     restart: unless-stopped
     env_file: .env
 

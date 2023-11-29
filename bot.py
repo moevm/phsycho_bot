@@ -28,6 +28,10 @@ from db import (
     set_last_usage,
     get_users_not_answer_last24hours,
     get_users_not_finish_survey,
+    get_user_mode,
+    change_user_mode,
+    get_user_word_statistics,
+
 )
 from keyboard import (
     daily_schedule_keyboard,
@@ -43,12 +47,11 @@ from env_config import (DEBUG_MODE,
 from logs import init_logger
 from script_engine import Engine
 from voice_module import work_with_audio
-from wrapper import dialog_wrapper
 from silero_module import bot_answer_audio, clear_audio_cache
+from wrapper import dialog
 
 # _ = gettext.gettext
 ru = gettext.translation('messages', localedir='locale', languages=['ru_official'])
-
 ru.install()
 
 _ = ru.gettext
@@ -65,13 +68,13 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
-    dialog_wrapper(
+    dialog(
         update,
         text=_('Привет! Я бот, который поможет тебе отрефлексировать твое настроение'),
         reply_markup=menu_kyeboard()
     )
 
-    dialog_wrapper(
+    dialog(
         update,
         text=_('В какое время тебе удобно подводить итоги дня?'),
         reply_markup=daily_schedule_keyboard()
@@ -79,7 +82,7 @@ def start(update: Update, context: CallbackContext) -> str:
 
 
 def ask_focus(update: Update) -> None:
-    dialog_wrapper(
+    dialog(
         update,
         text= _('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
         'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
@@ -96,12 +99,13 @@ def button(update: Update, context: CallbackContext) -> str:
     set_last_usage(user)
 
     last_message = query.message.text
+
     if query.data.startswith('s_'):
         # User entered schedule
         text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
 
         query.delete_message()
-        dialog_wrapper(update, text=text)
+        dialog(update, text=text)
         # query.edit_message_text(text=text)
 
         ask_focus(update)
@@ -111,8 +115,8 @@ def button(update: Update, context: CallbackContext) -> str:
         # User entered week focus
         set_user_ready_flag(update.effective_user, True)
         push_user_focus(update.effective_user, query.data, update.effective_message.date)
-        return engine_callback(update, context)
 
+        return engine_callback(update, context)
     elif query.data.startswith('r_') and (
             last_message
             in [_('Привет! Пришло время подводить итоги. Давай?'),_('Продолжить прохождение опроса?')]
@@ -130,7 +134,7 @@ def button(update: Update, context: CallbackContext) -> str:
         text = _('Ты указал итогом дня ') + VALUES[query.data] + _('. Спасибо!')
 
         query.delete_message()
-        dialog_wrapper(update, text=text)
+        dialog(update, text=text)
         # query.edit_message_text(text=text)
 
         push_user_feeling(update.effective_user, query.data, update.effective_message.date)
@@ -144,6 +148,7 @@ def button(update: Update, context: CallbackContext) -> str:
                 if len(schedule.sending_list) < DAYS_OFFSET:
                     schedule.is_on = True
                     schedule.save()
+
     return ''
 
 
@@ -154,12 +159,17 @@ def text_processing(update: Update, context: CallbackContext):
     elif update.message.text == VALUES['menu_change_focus']:
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
-        user_help(update, context)
+        help_bot(update, context)
     else:
+        # example of using get_user_word_statistics()
+        user = init_user(update.effective_user)
+        answers_statistics = str(get_user_word_statistics(user.id))
+        update.effective_user.send_message(answers_statistics)
+
         engine_callback(update, context)
 
 
-def user_help(update: Update, context: CallbackContext) -> None:
+def help_bot(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     set_last_usage(user)
     # TODO сделать справку
@@ -199,7 +209,7 @@ def resume_survey(updater, user) -> None:
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    dialog_wrapper(
+    dialog(
         update,
         text= _("Расскажи, как прошел твой день?"),
         reply_markup=mood_keyboard()
@@ -216,15 +226,14 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    dialog_wrapper(update, text=_('Всего хорошего.'))
-
+    dialog(update, text=_('Всего хорошего.'))
     return ConversationHandler.END
 
 
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    dialog_wrapper(
+    dialog(
         update,
         text=_('Выбери новый фокус:'),
         reply_markup=focus_keyboard()
@@ -245,35 +254,42 @@ def send_audio_answer(update: Update, context: CallbackContext):
         error(update, context)
 
 
-def main(token, mode):
+
+
+def change_mode(update: Update, context: CallbackContext):
+    change_user_mode(update.effective_user)
+    mode = get_user_mode(update.effective_user)
+    update.message.reply_text(
+        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
+    )
+
+
+def main(token):
     init_logger()
 
     updater = Updater(token, use_context=True)
-    if mode == "voice":
-        updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
-        updater.dispatcher.add_handler(MessageHandler(Filters.text, send_audio_answer))
 
-    elif mode == "text":
-        updater.dispatcher.add_handler(CommandHandler('start', start))
-        updater.dispatcher.add_handler(CommandHandler('user_help', user_help))
-        updater.dispatcher.add_handler(CommandHandler('stats', stats))
-        updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-        updater.dispatcher.add_handler(
-            CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
-        )
-        updater.dispatcher.add_handler(
-            CommandHandler(
-                'get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours
-            )
-        )
-        updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
+    updater.dispatcher.add_handler(CommandHandler('start', start))
+    updater.dispatcher.add_handler(CommandHandler('help', help_bot))
+    updater.dispatcher.add_handler(CommandHandler('stats', stats))
+    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
+    updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
+    )
+    updater.dispatcher.add_handler(
+        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours)
+    )
+    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
-        updater.dispatcher.add_handler(CallbackQueryHandler(button))
-        updater.dispatcher.add_handler(
-            MessageHandler(Filters.text & ~Filters.command, text_processing)
-        )
+    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
+
     updater.start_polling()
-    # updater.idle()
+
+
+# updater.idle()
 
 
 class Worker(threading.Thread):
@@ -292,7 +308,7 @@ class Worker(threading.Thread):
     def process(token_):
         auth_in_db(username=sys.argv[2], password=sys.argv[3])
         if token_ == 'bot':
-            main(sys.argv[1], sys.argv[4])
+            main(sys.argv[1])
         else:
             my_cron.main(sys.argv[1])
 
