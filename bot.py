@@ -39,7 +39,6 @@ from db import (
     push_user_initial_reason,
     get_user_initial_reason_flag,
     set_user_initial_reason_flag,
-    get_user_word_statistics,
 )
 from keyboard import (
     mood_keyboard,
