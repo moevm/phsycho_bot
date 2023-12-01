@@ -26,6 +26,18 @@ VALUES = {
     'menu_change_focus': "Сменить фокус",
     'menu_share_event': "Поделиться событием",
     'menu_help': "Справка",
+    'change_pronoun': "Изменить обращение",
+    'change_mode': "Изменить режим общения",
+    'p_u': "Ты",
+    'p_you': "Вы",
+    'c_text': "Текстовый режим",
+    'c_voice': "Голосовой режим",
+    'q_1': "Где можно прочитать подробнее о методах?",
+    'q_2': "Когда можно ощутить эффект от занятий?",
+    'q_3': "Сколько времени потребуется уделять?",
+    'q_4': "Как узнать, подходит ли мне работа с этим ботом , какие есть противопоказания?",
+    'q_5': "Другой вопрос (ответит психолог-консультант)",
+    'q_6': "У меня нет вопросов, хочу начать",
 }
 
 
@@ -79,6 +91,33 @@ def yes_no_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-def menu_kyeboard() -> ReplyKeyboardMarkup:
-    keyboard = [[VALUES['menu_share_event']], [VALUES['menu_change_focus']], [VALUES['menu_help']]]
+def menu_keyboard() -> ReplyKeyboardMarkup:
+    keyboard = [[VALUES['menu_share_event']], [VALUES['menu_change_focus']], [VALUES['menu_help']],
+                [VALUES['change_pronoun']], [VALUES['change_mode']]]
     return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+
+
+def pronoun_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [init_button('p_u')],
+        [init_button('p_you')],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def conversation_mode_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [init_button('c_text')],
+        [init_button('c_voice')],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def questions_keyboard() -> InlineKeyboardMarkup:
+    keyboard = [
+        [init_button('q_1')],
+        [init_button('q_2')],
+        [init_button('q_3')],
+        [init_button('q_4')],
+        [init_button('q_5')],
+        [init_button('q_6')],
+    ]
+    return InlineKeyboardMarkup(keyboard)

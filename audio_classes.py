@@ -36,3 +36,6 @@ class RecognizedSentence:
                 for i in self._words
             ]
         )
+
+    def get_text(self):
+        return self._text
