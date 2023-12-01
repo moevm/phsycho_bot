@@ -106,7 +106,7 @@ class Engine:  # класс движка
     def __init__(self, update: Update, context: CallbackContext):
         self.update = update
         self.user = init_user(self.update.effective_user)
-        self.last_focus = self.user.focuses[-1]['focus']
+        self.last_focus = self.user.get_last_focus()
         self.survey_progress = None
 
     def get_next_step(self) -> Step:
