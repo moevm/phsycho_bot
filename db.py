@@ -37,16 +37,25 @@ TIME_VALUES = {
 class User(MongoModel):
     id = fields.IntegerField()
     username = fields.CharField(blank=True)
+    chosen_name = fields.CharField()
     first_name = fields.CharField()
     last_name = fields.CharField()
     is_admin = fields.BooleanField()
     is_bot = fields.BooleanField()
     language_code = fields.CharField()
+    initial_reason = fields.CharField()
+    initial_reason_flag = fields.BooleanField()  # True - ready to set initial_reason
     focuses = fields.ListField(fields.DictField())
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
     last_usage = fields.DateTimeField()
-    preferences = fields.ListField(fields.DictField())  # {"voice_mode": False - text mode}
+    preferences = fields.ListField(fields.DictField())  # [{"voice mode": False - text mode}, {"pronoun": True - Вы}]
+
+    def get_last_focus(self):
+        if self.focuses and len(self.focuses) > 0:
+            return self.focuses[-1]['focus']
+
+        return 'f_no_focus'
 
     # def __str__(self):
     #     return f'{self.id} | {self.first_name} | {self.last_name}'
@@ -176,6 +185,9 @@ def init_user(user) -> User:
             is_bot=user.is_bot,
             is_admin=False,
             username=user.username,
+            chosen_name = ' ',
+            initial_reason = ' ',
+            initial_reason_flag = False,
             language_code=user.language_code,
         ).save()
 
@@ -269,6 +281,27 @@ def get_schedule_by_user(user, is_test=True):
     return filter_schedules[0]
 
 
+def push_user_chosen_name(user, name):
+    db_user = init_user(user)
+    db_user.chosen_name = name
+    db_user.save()
+
+
+def get_user_chosen_name(user):
+    db_user = init_user(user)
+    return db_user.chosen_name
+
+
+def get_user_initial_reason(user):
+    db_user = init_user(user)
+    return db_user.initial_reason
+
+
+def push_user_initial_reason(user, reason):
+    db_user = init_user(user)
+    db_user.initial_reason = reason
+    db_user.save()
+
 def push_user_schedule(user, schedule, date):
     # sending every day
     # TODO: param date is unused
@@ -331,23 +364,63 @@ def get_user_feelings(user):
     return f"Вы сообщали о своем состоянии {len(list(db_user.feelings))} раз"
 
 
+def push_user_mode(user, mode):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "voice mode" in preference:
+            preference["voice mode"] = mode
+            db_user.save()
+            return
+    db_user.preferences.append({"voice mode": mode})
+    db_user.save()
+
+
 def change_user_mode(user):
     db_user = init_user(user)
     for preference in db_user.preferences:
-        if "voice_mode" in preference:
-            preference["voice_mode"] = not preference["voice_mode"]
+        if "voice mode" in preference:
+            preference["voice mode"] = not preference["voice mode"]
             break
     else:
-        db_user.preferences.append({"voice_mode": True})
+        db_user.preferences.append({"voice mode": True})
     db_user.save()
 
 
 def get_user_mode(user):
     db_user = init_user(user)
     for preference in db_user.preferences:
-        if "voice_mode" in preference:
-            return preference["voice_mode"]
+        if "voice mode" in preference:
+            return preference["voice mode"]
     return False
+
+
+def change_user_pronoun(user):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "pronoun" in preference:
+            preference["pronoun"] = not preference["pronoun"]
+            break
+    else:
+        db_user.preferences.append({"pronoun": True})
+    db_user.save()
+
+
+def get_user_pronoun(user):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "pronoun" in preference:
+            return preference["pronoun"]
+    return False
+
+def push_user_pronoun(user, pronoun):
+    db_user = init_user(user)
+    for preference in db_user.preferences:
+        if "pronoun" in preference:
+            preference["pronoun"] = pronoun
+            db_user.save()
+            return
+    db_user.preferences.append({"pronoun": pronoun})
+    db_user.save()
 
 
 def get_user_audio(user):
@@ -372,6 +445,16 @@ def set_user_ready_flag(user, flag):
     db_user.ready_flag = flag
     db_user.save()
 
+
+def set_user_initial_reason_flag(user, flag):
+    db_user = init_user(user)
+    db_user.initial_reason_flag = flag
+    db_user.save()
+
+
+def get_user_initial_reason_flag(user):
+    db_user = init_user(user)
+    return db_user.initial_reason_flag
 
 def set_schedule_is_on_flag(schedule, flag):
     schedule.is_on = flag
@@ -399,7 +482,7 @@ def get_schedule_list_for_feeling_ask():
 def get_users_not_finish_survey():
     users = []
     for user in User.objects.raw({'focuses': {'$exists': True}}):
-        last_focus = user.focuses[-1]['focus']
+        last_focus = user.get_last_focus()
         survey_progress = get_survey_progress(user, last_focus)
         if survey_progress.need_answer:
             list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
