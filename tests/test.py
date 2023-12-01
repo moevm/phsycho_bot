@@ -1,5 +1,5 @@
 from time import sleep
-from create_app import *
+from create_app import app, username
 
 
 def test_start_command():
@@ -8,4 +8,3 @@ def test_start_command():
         sleep(1)
         msg = app.get_messages(username, msg.id + 1)
         assert msg.text == 'Привет! Я бот, который поможет тебе отрефлексировать твое настроение'
-
