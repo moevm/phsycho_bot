@@ -38,6 +38,7 @@ from db import (
 from questions_db import (
     init_question,
     list_questions,
+    get_question,
     init_answer,
 )
 
@@ -302,6 +303,71 @@ def error_input_question(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 
+def get_questions(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    if not user.is_admin:
+        return
+
+    questions = list_questions()
+    count_questions = len(questions)
+    pages = (count_questions // 10) + (1 if count_questions % 10 else 0)
+
+    if pages:
+        if len(context.args) and context.args[0].isdigit():
+            out_page_number = int(context.args[0])
+
+            if out_page_number > pages:
+                out_page_number = 1
+        else:
+            out_page_number = 1
+
+        page_question = map(str, questions[(out_page_number - 1) * 10: out_page_number * 10 - 1])
+        out_questions = '\n'.join(page_question)
+        update.message.reply_text(out_questions)
+
+    update.message.reply_text(f"Всего страниц: {pages}.")
+    set_last_usage(update.effective_user)
+
+
+def start_answer_conversation(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+
+    if not user.is_admin:
+        return ConversationHandler.END
+
+    if len(context.args) and context.args[0].isdigit():
+        pass
+        # question_id = int(context.args[0])
+        # TODO передать id на создания ответа
+    else:
+        update.message.reply_text("Произошла ошибка.")
+        return ConversationHandler.END
+
+    set_last_usage(user)
+    return "add_answer"
+
+
+def add_answer(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+
+    text = update.message.text
+    if len(text):
+        init_question(user, text)
+        update.message.reply_text("Вопрос успешно создан!")
+    else:
+        update.message.reply_text("Произошла ошибка.")
+
+    question_id = 1  # TODO id из начала опроса
+    question = get_question(question_id)
+    init_answer(user, question, text)
+    return ConversationHandler.END
+
+
+def error_input_answer(update: Update, context: CallbackContext):
+    update.message.reply_text("Ожидался текст.")
+    return ConversationHandler.END
+
+
 def update_user_info(update: Update, context: CallbackContext):
     update_info(update.effective_user)
     set_last_usage(update.effective_user)
@@ -322,6 +388,7 @@ def main(token):
     updater = Updater(token, use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('add_admin', add_admin))
+    updater.dispatcher.add_handler(CommandHandler('questions', get_questions))
     updater.dispatcher.add_handler(CommandHandler('update_info', update_user_info))
 
     updater.dispatcher.add_handler(
@@ -334,6 +401,20 @@ def main(token):
             },
             fallbacks=[
                 MessageHandler(Filters.voice | Filters.command, error_input_question)
+            ]
+        )
+    )
+
+    updater.dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler('add_answer', start_answer_conversation)],
+            states={
+                "add_answer": [
+                    MessageHandler(Filters.text & ~Filters.command, add_answer)
+                ]
+            },
+            fallbacks=[
+                MessageHandler(Filters.voice | Filters.command, error_input_answer)
             ]
         )
     )
