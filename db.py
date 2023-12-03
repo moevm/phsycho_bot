@@ -143,23 +143,23 @@ def init_user(user) -> User:
             first_name=user.first_name,
             is_bot=user.is_bot,
             username=user.username,
-            chosen_name = ' ',
-            initial_reason = ' ',
-            initial_reason_flag = False,
+            chosen_name=' ',
+            initial_reason=' ',
+            initial_reason_flag=False,
             language_code=user.language_code,
         ).save()
 
 
 def init_survey_progress(
-    user,
-    focus,
-    id_=0,
-    survey_step=0,
-    next_step=1,
-    need_answer=False,
-    user_answer="INIT PROGRESS",
-    stats="",
-    audio_file=None,
+        user,
+        focus,
+        id_=0,
+        survey_step=0,
+        next_step=1,
+        need_answer=False,
+        user_answer="INIT PROGRESS",
+        stats="",
+        audio_file=None,
 ) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(
@@ -260,6 +260,7 @@ def push_user_initial_reason(user, reason):
     db_user.initial_reason = reason
     db_user.save()
 
+
 def push_user_schedule(user, schedule, date):
     # sending every day
     # TODO: param date is unused
@@ -283,15 +284,15 @@ def push_user_feeling(user, feeling, date):
 
 
 def push_user_survey_progress(
-    user,
-    focus,
-    id_=0,
-    survey_step=0,
-    _=1,
-    need_answer=False,
-    user_answer="INIT PROGRESS",
-    stats="",
-    audio_file=None,
+        user,
+        focus,
+        id_=0,
+        survey_step=0,
+        _=1,
+        need_answer=False,
+        user_answer="INIT PROGRESS",
+        stats="",
+        audio_file=None,
 ):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
@@ -370,6 +371,7 @@ def get_user_pronoun(user):
             return preference["pronoun"]
     return False
 
+
 def push_user_pronoun(user, pronoun):
     db_user = init_user(user)
     for preference in db_user.preferences:
@@ -413,6 +415,7 @@ def set_user_initial_reason_flag(user, flag):
 def get_user_initial_reason_flag(user):
     db_user = init_user(user)
     return db_user.initial_reason_flag
+
 
 def set_schedule_is_on_flag(schedule, flag):
     schedule.is_on = flag
@@ -471,7 +474,7 @@ def get_users_not_answer_last24hours():
     users = []
     for user in User.objects.all():
         if user.last_usage is None or pytz.utc.localize(user.last_usage) < pytz.utc.localize(
-            datetime.datetime.utcnow()
+                datetime.datetime.utcnow()
         ) - datetime.timedelta(days=1):
             users.append({'id': user.id, 'username': user.username})
     return users
