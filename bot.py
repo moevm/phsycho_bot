@@ -60,12 +60,20 @@ from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
 from wrapper import dialog
 
-translation = gettext.translation('messages', localedir='locale', languages=['ru_official'])
-translation.install()
-
 DAYS_OFFSET = 7
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
+
+
+def set_translation(user):
+    pronoun = get_user_pronoun(user)
+    if pronoun:
+        current_translation = gettext.translation('messages', localedir='locale', languages=['ru_official'])
+        current_translation.install()
+    else:
+        current_translation = gettext.translation('messages', localedir='locale', languages=['ru'])
+        current_translation.install()
+    return current_translation
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -75,6 +83,8 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
+    translation = set_translation(user)
+
     dialog(
         update,
         text=translation.gettext('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
@@ -83,6 +93,8 @@ def start(update: Update, context: CallbackContext) -> str:
 
 
 def ask_focus(update: Update) -> None:
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     dialog(
         update,
         text=translation.gettext(
@@ -119,6 +131,8 @@ def button(update: Update, context: CallbackContext) -> str:
 
 
 def handle_schedule(update, query):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     # User entered schedule
     text = translation.gettext('Ты выбрал ') + VALUES[query.data] + translation.gettext(
         ' в качестве времени для рассылки. Спасибо!')
@@ -138,6 +152,8 @@ def handle_focus(update, context, query):
 
 
 def handle_ready(update, context, query):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     if query.data == 'r_yes':
         return engine_callback(update, context)
     if query.data == 'r_1h':
@@ -148,6 +164,7 @@ def handle_ready(update, context, query):
 
 
 def handle_pronoun(update, user, query):
+    translation = set_translation(user)
     if query.data == 'p_u':
         push_user_pronoun(user, False)
     elif query.data == 'p_you':
@@ -157,6 +174,7 @@ def handle_pronoun(update, user, query):
 
 
 def handle_conversation_mode(update, context, user, query):
+    translation = set_translation(user)
     if query.data == 'c_text':
         push_user_mode(user, False)
     elif query.data == 'c_voice':
@@ -168,6 +186,8 @@ def handle_conversation_mode(update, context, user, query):
 
 def handle_mood(update, query):
     # User entered mood
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     set_user_ready_flag(update.effective_user, True)
     text = translation.gettext('Ты указал итогом дня ') + VALUES[query.data] + translation.gettext('. Спасибо!')
 
@@ -189,6 +209,7 @@ def handle_mood(update, query):
 
 
 def handle_questions(update, user, query):
+    translation = set_translation(user)
     if query.data == 'q_1':
         dialog(update, text=translation.gettext(
             'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
@@ -219,6 +240,7 @@ def handle_questions(update, user, query):
 def text_processing(update: Update, context: CallbackContext):
     print(f"Processing {update.message.text}")
     user = init_user(update.effective_user)
+    translation = set_translation(user)
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
         pass
@@ -273,6 +295,8 @@ def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
 
 
 def ask_ready(updater, schedule):
+    user = schedule.user
+    translation = set_translation(user)
     # set_schedule_is_on_flag(schedule, False)
     set_schedule_asked_today(schedule)
     updater.bot.send_message(
@@ -283,10 +307,13 @@ def ask_ready(updater, schedule):
 
 
 def resume_survey(updater, user) -> None:
+    translation = set_translation(user)
     updater.bot.send_message(user, translation.gettext("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     dialog(
         update,
         text=translation.gettext("Расскажи, как прошел твой день?"),
@@ -304,6 +331,7 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
+    translation = set_translation(user)
     dialog(update, text=translation.gettext('Всего хорошего.'))
     return ConversationHandler.END
 
@@ -311,6 +339,7 @@ def cancel(update: Update, context: CallbackContext):
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
+    translation = set_translation(user)
     dialog(
         update,
         text=translation.gettext('Выбери новый фокус:'),
@@ -319,6 +348,8 @@ def change_focus(update: Update, context: CallbackContext):
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     update.effective_user.send_message(translation.gettext("Уже обрабатываю твоё сообщение"))
 
     text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
@@ -343,30 +374,27 @@ def ask_user_pronoun(update: Update, context: CallbackContext):
 
 def ask_user_conversation_mode(update: Update, context: CallbackContext):
     update.message.reply_text(
-        'Как бы ты хотел получать мои реплики - в виде текста или голоса?',
+        'Как бы Вы хотели получать мои реплики - в виде текста или голоса?',
         reply_markup=conversation_mode_keyboard()
     )
 
 
 def change_pronoun(update: Update, context: CallbackContext):
-    global translation
     change_user_pronoun(update.effective_user)
     pronoun = get_user_pronoun(update.effective_user)
     if pronoun:
-        translation = gettext.translation('messages', localedir='locale', languages=['ru_official'])
-        translation.install()
         update.message.reply_text(
             'Режим общения изменен. Текущий режим: общение на "Вы"'
         )
     else:
-        translation = gettext.translation('messages', localedir='locale', languages=['ru'])
-        translation.install()
         update.message.reply_text(
             'Режим общения изменен. Текущий режим: общение на "Ты"'
         )
 
 
 def ask_start_questions(update, context):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     dialog(update,
            text=translation.gettext(
                'Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
