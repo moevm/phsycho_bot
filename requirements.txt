@@ -24,7 +24,6 @@ schedule==1.1.0
 pymongo==3.11.3
 pymodm==0.4.3
 pymystem3==0.2.0
-cPython==0.0.6
 noisereduce==2.0.1
 requests==2.30.0
 torchaudio==2.0.2
