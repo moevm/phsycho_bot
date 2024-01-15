@@ -60,11 +60,20 @@ from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
 from wrapper import dialog
 
-_ = gettext.gettext
-
 DAYS_OFFSET = 7
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
+
+
+def set_translation(user):
+    pronoun = get_user_pronoun(user)
+    if pronoun:
+        current_translation = gettext.translation('messages', localedir='locale', languages=['ru_official'])
+        current_translation.install()
+    else:
+        current_translation = gettext.translation('messages', localedir='locale', languages=['ru'])
+        current_translation.install()
+    return current_translation
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -74,18 +83,23 @@ def start(update: Update, context: CallbackContext) -> str:
     user = init_user(update.effective_user)
     set_last_usage(user)
 
+    translation = set_translation(user)
+
     dialog(
         update,
-        text=_('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
+        text=translation.gettext('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
         reply_markup=menu_keyboard()
     )
 
 
 def ask_focus(update: Update) -> None:
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     dialog(
         update,
-        text=_('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-               'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
+        text=translation.gettext(
+            'Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+            'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
         reply_markup=focus_keyboard()
     )
 
@@ -117,8 +131,11 @@ def button(update: Update, context: CallbackContext) -> str:
 
 
 def handle_schedule(update, query):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     # User entered schedule
-    text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
+    text = translation.gettext('Ты выбрал ') + VALUES[query.data] + translation.gettext(
+        ' в качестве времени для рассылки. Спасибо!')
 
     query.delete_message()
     dialog(update, text=text)
@@ -135,36 +152,44 @@ def handle_focus(update, context, query):
 
 
 def handle_ready(update, context, query):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     if query.data == 'r_yes':
         return engine_callback(update, context)
     if query.data == 'r_1h':
-        text = _('Понял тебя. Спрошу через час')
+        text = translation.gettext('Понял тебя. Спрошу через час')
         query.edit_message_text(text=text)
         set_user_ready_flag(update.effective_user, True)
     return ''
 
 
 def handle_pronoun(update, user, query):
+    translation = set_translation(user)
     if query.data == 'p_u':
         push_user_pronoun(user, False)
     elif query.data == 'p_you':
         push_user_pronoun(user, True)
-    dialog(update, text=_('Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun'))
+    dialog(update,
+           text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun'))
 
 
 def handle_conversation_mode(update, context, user, query):
+    translation = set_translation(user)
     if query.data == 'c_text':
         push_user_mode(user, False)
     elif query.data == 'c_voice':
         push_user_mode(user, True)
-    dialog(update, text=_('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
+    dialog(update,
+           text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
     ask_start_questions(update, context)
 
 
 def handle_mood(update, query):
     # User entered mood
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     set_user_ready_flag(update.effective_user, True)
-    text = _('Ты указал итогом дня ') + VALUES[query.data] + _('. Спасибо!')
+    text = translation.gettext('Ты указал итогом дня ') + VALUES[query.data] + translation.gettext('. Спасибо!')
 
     query.delete_message()
     dialog(update, text=text)
@@ -184,31 +209,38 @@ def handle_mood(update, query):
 
 
 def handle_questions(update, user, query):
+    translation = set_translation(user)
     if query.data == 'q_1':
-        dialog(update, text=_('Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
-                              ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".'))
+        dialog(update, text=translation.gettext(
+            'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
+            ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".'))
     elif query.data == 'q_2':
-        dialog(update, text=_('Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
-                              'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
-                              'месяц регулярных занятий'))
+        dialog(update, text=translation.gettext(
+            'Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
+            'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
+            'месяц регулярных занятий'))
     elif query.data == 'q_3':
-        dialog(update, text=_('Для того, чтобы методы'))
+        dialog(update, text=translation.gettext('Для того, чтобы методы'))
     elif query.data == 'q_4':
-        dialog(update, text=_('Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
-                              'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
-                              'запрос очень тяжелый для тебя'))
+        dialog(update, text=translation.gettext(
+            'Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
+            'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
+            'запрос очень тяжелый для тебя'))
     elif query.data == 'q_5':
-        dialog(update, text=_('Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.'))
+        dialog(update, text=translation.gettext(
+            'Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.'))
     elif query.data == 'q_6':
-        dialog(update, text=_('Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
-                              ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
-                              'Наш разговор совершенно конфиденциален'))
+        dialog(update, text=translation.gettext(
+            'Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
+            ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
+            'Наш разговор совершенно конфиденциален'))
         set_user_initial_reason_flag(user, True)
 
 
 def text_processing(update: Update, context: CallbackContext):
     print(f"Processing {update.message.text}")
     user = init_user(update.effective_user)
+    translation = set_translation(user)
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
         pass
@@ -225,13 +257,12 @@ def text_processing(update: Update, context: CallbackContext):
         push_user_chosen_name(user, chosen_name)
         ask_user_pronoun(update, context)
     elif get_user_initial_reason_flag(user):
-        print("get_user_initial_reason_flag")
         reason = update.message.text
         push_user_initial_reason(user, reason)
         set_user_initial_reason_flag(user, False)
         dialog(
             update,
-            text=_('В какое время тебе удобно подводить итоги дня?'),
+            text=translation.gettext('В какое время тебе удобно подводить итоги дня?'),
             reply_markup=daily_schedule_keyboard()
         )
     else:
@@ -264,23 +295,28 @@ def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
 
 
 def ask_ready(updater, schedule):
+    user = schedule.user
+    translation = set_translation(user)
     # set_schedule_is_on_flag(schedule, False)
     set_schedule_asked_today(schedule)
     updater.bot.send_message(
         schedule.user.id,
-        _("Привет! Пришло время подводить итоги. Давай?"),
+        translation.gettext("Привет! Пришло время подводить итоги. Давай?"),
         reply_markup=ready_keyboard(),
     )
 
 
 def resume_survey(updater, user) -> None:
-    updater.bot.send_message(user, _("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
+    translation = set_translation(user)
+    updater.bot.send_message(user, translation.gettext("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     dialog(
         update,
-        text=_("Расскажи, как прошел твой день?"),
+        text=translation.gettext("Расскажи, как прошел твой день?"),
         reply_markup=mood_keyboard()
     )
 
@@ -295,23 +331,26 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    dialog(update, text=_('Всего хорошего.'))
+    translation = set_translation(user)
+    dialog(update, text=translation.gettext('Всего хорошего.'))
     return ConversationHandler.END
 
 
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-
+    translation = set_translation(user)
     dialog(
         update,
-        text=_('Выбери новый фокус:'),
+        text=translation.gettext('Выбери новый фокус:'),
         reply_markup=focus_keyboard()
     )
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-    update.effective_user.send_message(_("Уже обрабатываю твоё сообщение"))
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
+    update.effective_user.send_message(translation.gettext("Уже обрабатываю твоё сообщение"))
 
     text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
     audio = bot_answer_audio(text)
@@ -335,7 +374,7 @@ def ask_user_pronoun(update: Update, context: CallbackContext):
 
 def ask_user_conversation_mode(update: Update, context: CallbackContext):
     update.message.reply_text(
-        'Как бы ты хотел получать мои реплики - в виде текста или голоса?',
+        'Как бы Вы хотели получать мои реплики - в виде текста или голоса?',
         reply_markup=conversation_mode_keyboard()
     )
 
@@ -354,12 +393,15 @@ def change_pronoun(update: Update, context: CallbackContext):
 
 
 def ask_start_questions(update, context):
+    user = init_user(update.effective_user)
+    translation = set_translation(user)
     dialog(update,
-           text=_('Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
-                  'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
-                  'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
-                  'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
-                  'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
+           text=translation.gettext(
+               'Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
+               'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
+               'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
+               'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
+               'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
            , reply_markup=questions_keyboard())
 
 
