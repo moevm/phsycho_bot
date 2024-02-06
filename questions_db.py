@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pymodm import connect, fields, MongoModel, ObjectId
+from pymodm import fields, MongoModel
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 
 from db import User
 
@@ -31,9 +32,11 @@ def init_question(user: User, text):
         ).save()
 
 
-def get_question(quest_id) -> Optional[Question]:
+def get_question(quest_id: str) -> Optional[Question]:
     try:
         return Question.objects.get({'_id': ObjectId(quest_id)})
+    except InvalidId:
+        return None
     except Question.DoesNotExist:
         return None
 
@@ -45,8 +48,7 @@ def list_questions() -> list:
     return list(queries.aggregate({'$sort': {'date': -1}}))
 
 
-def select_question(user_id) -> None:
-    question = get_question(user_id)
+def select_question(user_id, question) -> None:
     if question:
         question.select = user_id
         question.save()
@@ -67,6 +69,7 @@ def get_selected(user_id) -> Optional[Question]:
 
 
 class Answer(MongoModel):
+    question_id = fields.CharField()
     user_id = fields.IntegerField()
     username = fields.CharField()
     text = fields.CharField()
@@ -76,7 +79,7 @@ class Answer(MongoModel):
 def init_answer(question_id, text):
     if text:
         Answer(
-            id=question_id,
+            question_id=question_id,
             text=text,
             date=datetime.now()
         ).save()
@@ -89,15 +92,15 @@ def init_answer(question_id, text):
 
 def get_answer(quest_id) -> Optional[Answer]:
     try:
-        return Answer.objects.get({'id': quest_id})
+        return Answer.objects.get({'question_id': quest_id})
     except Answer.DoesNotExist:
         return None
 
 
 def dict_to_str_question(quest_dict: dict) -> str:
-    return (f'question_id: {quest_dict["_id"]} \nusername: {quest_dict["username"]} '
-            f'\nquestion: {quest_dict["text"]} \n{quest_dict["date"].strftime("%m/%d/%Y, %H:%M:%S")}')
+    return (f'_id: {quest_dict["_id"]} \nСпрашивает: {quest_dict["username"]} '
+            f'\nВопрос: {quest_dict["text"]} \n{quest_dict["date"].strftime("%m/%d/%Y, %H:%M:%S")}')
 
 
-def dict_to_str_answer(answer_dict: dict) -> str:
-    return f'question: {answer_dict["text"]} \n{answer_dict["date"].strftime("%m/%d/%Y, %H:%M:%S")}'
+def to_str_answer(answer) -> str:
+    return f'Ответ: {answer.text} \n{answer.date.strftime("%m/%d/%Y, %H:%M:%S")}'
