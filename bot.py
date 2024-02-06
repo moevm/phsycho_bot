@@ -2,6 +2,7 @@ import sys
 import queue
 import threading
 import gettext
+import re
 
 from telegram import Update
 from telegram.ext import (
@@ -48,6 +49,12 @@ from questions_db import (
     list_questions,
     get_question,
     init_answer,
+    dict_to_str_question,
+    dict_to_str_answer,
+    get_answer,
+    get_selected,
+    select_question,
+    unselect_question
 )
 
 from keyboard import (
@@ -115,7 +122,6 @@ def button(update: Update, context: CallbackContext) -> str:
         return handle_ready(update, context, query)
     elif query.data.startswith('m_'):
         handle_mood(update, query)
-
     elif query.data.startswith('p_'):
         handle_pronoun(update, user, query)
     elif query.data.startswith('c_'):
@@ -394,12 +400,30 @@ def get_questions(update: Update, context: CallbackContext):
         else:
             out_page_number = 1
 
-        page_question = map(str, questions[(out_page_number - 1) * 10: out_page_number * 10 - 1])
-        out_questions = '\n'.join(page_question)
+        page_questions = questions[(out_page_number - 1) * 10: out_page_number * 10 - 1]
+        out_questions = '\n\n'.join([dict_to_str_question(elem) for elem in page_questions])
+        update.message.reply_text(str(page_questions))
         update.message.reply_text(out_questions)
 
     update.message.reply_text(f"Всего страниц: {pages}.")
     set_last_usage(update.effective_user)
+
+
+def get_answer_with_id(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    if not user.is_admin:
+        return
+
+    if len(context.args):
+        answer_id = context.args[0]
+    else:
+        update.message.reply_text("Произошла ошибка.")
+        return
+
+    answer = get_answer(answer_id)
+    if not answer:
+        return
+    update.message.reply_text(dict_to_str_answer(answer))
 
 
 def start_answer_conversation(update: Update, context: CallbackContext):
@@ -408,43 +432,52 @@ def start_answer_conversation(update: Update, context: CallbackContext):
     if not user.is_admin:
         return ConversationHandler.END
 
-    if len(context.args) and context.args[0].isdigit():
-        pass
-        # question_id = int(context.args[0])
-        # TODO передать id на создания ответа
-    else:
-        update.message.reply_text("Произошла ошибка.")
-        return ConversationHandler.END
+    update.message.reply_text("Введите идентификатор вопроса:")
 
     set_last_usage(user)
+    return "get_answer_id"
+
+
+def get_answer_id(update: Update, context: CallbackContext):
+    text = update.message.text
+    question = get_question(text)
+    if not question:
+        update.message.reply_text("Произошла ошибка. Не существует вопроса с таким идентификатором.")
+        return ConversationHandler.END
+
+    user = init_user(update.effective_user)
+    select_question(user.id)
+
+    update.message.reply_text(f"Выбранный вопрос: ", question.text)
+    update.message.reply_text("Введите ответ:")
     return "add_answer"
 
 
 def add_answer(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
-
     text = update.message.text
-    if len(text):
-        init_question(user, text)
-        update.message.reply_text("Вопрос успешно создан!")
-    else:
-        update.message.reply_text("Произошла ошибка.")
 
-    question_id = 1  # TODO id из начала опроса
-    question = get_question(question_id)
-    init_answer(user, question, text)
-    return ConversationHandler.END
+    selected_question = get_selected(user.id)
+    if not selected_question:
+        update.message.reply_text("Произошла ошибка. Где-то утерян идентификатор для select вопроса.")
+        return ConversationHandler.END
+
+    if text:
+        init_answer(selected_question.get_id(), text)
+        update.message.reply_text("Ответ успешно создан!")
 
 
 def error_input_answer(update: Update, context: CallbackContext):
-    update.message.reply_text("Ожидался текст.")
+    user = init_user(update.effective_user)
+    unselect_question(user.id)
+    update.message.reply_text("Произошла ошибка.")
     return ConversationHandler.END
 
 
 def update_user_info(update: Update, context: CallbackContext):
     update_info(update.effective_user)
     set_last_usage(update.effective_user)
-    update.message.reply_text("Данные успешно обновлены.")
+    # update.message.reply_text("Данные успешно обновлены.")
 
 
 def ask_user_pronoun(update: Update, context: CallbackContext):
@@ -502,6 +535,7 @@ def main(token):
     updater.dispatcher.add_handler(CommandHandler('add_admin', add_admin))
     updater.dispatcher.add_handler(CommandHandler('questions', get_questions))
     updater.dispatcher.add_handler(CommandHandler('update_info', update_user_info))
+    # updater.dispatcher.add_handler(CommandHandler('get_answer_with_id', get_answer_with_id))
 
     updater.dispatcher.add_handler(
         ConversationHandler(
@@ -521,6 +555,9 @@ def main(token):
         ConversationHandler(
             entry_points=[CommandHandler('add_answer', start_answer_conversation)],
             states={
+                "get_answer_id": [
+                    MessageHandler(Filters.text & ~Filters.command, get_answer_id)
+                ],
                 "add_answer": [
                     MessageHandler(Filters.text & ~Filters.command, add_answer)
                 ]
