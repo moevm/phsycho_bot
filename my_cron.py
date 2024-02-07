@@ -10,7 +10,6 @@ from telegram.ext import Updater
 from bot import ask_ready, resume_survey
 from db import get_schedule_list_for_feeling_ask, Schedule, get_users_not_finish_survey
 
-
 MINUTES_FOR_LOOP = 1
 DAYS_OFFSET = 7
 

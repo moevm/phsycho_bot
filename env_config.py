@@ -1,5 +1,7 @@
 from os import getenv
 
+ADMIN = getenv('ADMIN')
+
 DEBUG_MODE = getenv('DEBUG_MODE')
 LANGUAGE = getenv('LANGUAGE')
 SAMPLE_RATE = getenv('SAMPLE_RATE')

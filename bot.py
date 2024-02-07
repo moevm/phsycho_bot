@@ -2,6 +2,7 @@ import sys
 import queue
 import threading
 import gettext
+from math import ceil
 
 from telegram import Update
 from telegram.ext import (
@@ -23,6 +24,8 @@ from db import (
     set_user_ready_flag,
     set_schedule_asked_today,
     init_user,
+    create_admin,
+    update_info,
     get_schedule_by_user,
     auth_in_db,
     set_last_usage,
@@ -40,6 +43,20 @@ from db import (
     get_user_initial_reason_flag,
     set_user_initial_reason_flag,
 )
+
+from questions_db import (
+    init_question,
+    list_questions,
+    get_question,
+    init_answer,
+    dict_to_str_question,
+    to_str_answer,
+    get_answer,
+    get_selected,
+    select_question,
+    unselect_question
+)
+
 from keyboard import (
     mood_keyboard,
     focus_keyboard,
@@ -51,8 +68,7 @@ from keyboard import (
     menu_keyboard,
     daily_schedule_keyboard,
 )
-from env_config import (DEBUG_MODE,
-                        DEBUG_ON)
+from env_config import DEBUG_MODE, DEBUG_ON, ADMIN
 
 from logs import init_logger
 from script_engine import Engine
@@ -60,20 +76,11 @@ from voice_module import work_with_audio
 from silero_module import bot_answer_audio, clear_audio_cache
 from wrapper import dialog
 
+_ = gettext.gettext
+
 DAYS_OFFSET = 7
 
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
-
-
-def set_translation(user):
-    pronoun = get_user_pronoun(user)
-    if pronoun:
-        current_translation = gettext.translation('messages', localedir='locale', languages=['ru_official'])
-        current_translation.install()
-    else:
-        current_translation = gettext.translation('messages', localedir='locale', languages=['ru'])
-        current_translation.install()
-    return current_translation
 
 
 # def start(update: Update, context: CallbackContext) -> int:
@@ -81,25 +88,21 @@ def start(update: Update, context: CallbackContext) -> str:
     """Send a message when the command /start is issued."""
 
     user = init_user(update.effective_user)
+    update_user_info(update, context)
     set_last_usage(user)
-
-    translation = set_translation(user)
 
     dialog(
         update,
-        text=translation.gettext('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
+        text=_('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
         reply_markup=menu_keyboard()
     )
 
 
 def ask_focus(update: Update) -> None:
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
     dialog(
         update,
-        text=translation.gettext(
-            'Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
-            'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
+        text=_('Подведение итогов дня поможет исследовать определенные сложности и паттерны твоего поведения. '
+               'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
         reply_markup=focus_keyboard()
     )
 
@@ -117,10 +120,8 @@ def button(update: Update, context: CallbackContext) -> str:
         return handle_focus(update, context, query)
     elif query.data.startswith('r_'):
         return handle_ready(update, context, query)
-
     elif query.data.startswith('m_'):
         handle_mood(update, query)
-
     elif query.data.startswith('p_'):
         handle_pronoun(update, user, query)
     elif query.data.startswith('c_'):
@@ -131,11 +132,8 @@ def button(update: Update, context: CallbackContext) -> str:
 
 
 def handle_schedule(update, query):
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
     # User entered schedule
-    text = translation.gettext('Ты выбрал ') + VALUES[query.data] + translation.gettext(
-        ' в качестве времени для рассылки. Спасибо!')
+    text = _('Ты выбрал ') + VALUES[query.data] + _(' в качестве времени для рассылки. Спасибо!')
 
     query.delete_message()
     dialog(update, text=text)
@@ -152,44 +150,36 @@ def handle_focus(update, context, query):
 
 
 def handle_ready(update, context, query):
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
     if query.data == 'r_yes':
         return engine_callback(update, context)
     if query.data == 'r_1h':
-        text = translation.gettext('Понял тебя. Спрошу через час')
+        text = _('Понял тебя. Спрошу через час')
         query.edit_message_text(text=text)
         set_user_ready_flag(update.effective_user, True)
     return ''
 
 
 def handle_pronoun(update, user, query):
-    translation = set_translation(user)
     if query.data == 'p_u':
         push_user_pronoun(user, False)
     elif query.data == 'p_you':
         push_user_pronoun(user, True)
-    dialog(update,
-           text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun'))
+    dialog(update, text=_('Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun'))
 
 
 def handle_conversation_mode(update, context, user, query):
-    translation = set_translation(user)
     if query.data == 'c_text':
         push_user_mode(user, False)
     elif query.data == 'c_voice':
         push_user_mode(user, True)
-    dialog(update,
-           text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
+    dialog(update, text=_('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
     ask_start_questions(update, context)
 
 
 def handle_mood(update, query):
     # User entered mood
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
     set_user_ready_flag(update.effective_user, True)
-    text = translation.gettext('Ты указал итогом дня ') + VALUES[query.data] + translation.gettext('. Спасибо!')
+    text = _('Ты указал итогом дня ') + VALUES[query.data] + _('. Спасибо!')
 
     query.delete_message()
     dialog(update, text=text)
@@ -209,38 +199,31 @@ def handle_mood(update, query):
 
 
 def handle_questions(update, user, query):
-    translation = set_translation(user)
     if query.data == 'q_1':
-        dialog(update, text=translation.gettext(
-            'Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
-            ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".'))
+        dialog(update, text=_('Если тебе интересно, то подробнее о методе можно прочитать в книгах Девид Бернса'
+                              ' "Терапия Настроения" и Роберта Лихи "Свобода от тревоги".'))
     elif query.data == 'q_2':
-        dialog(update, text=translation.gettext(
-            'Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
-            'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
-            'месяц регулярных занятий'))
+        dialog(update, text=_('Методы психотерапии действуют на всех индивидуально и мне сложно прогнозировать '
+                              'эффективность, однако, согласно исследованиям эффект может наблюдаются уже через '
+                              'месяц регулярных занятий'))
     elif query.data == 'q_3':
-        dialog(update, text=translation.gettext('Для того, чтобы методы'))
+        dialog(update, text=_('Для того, чтобы методы'))
     elif query.data == 'q_4':
-        dialog(update, text=translation.gettext(
-            'Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
-            'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
-            'запрос очень тяжелый для тебя'))
+        dialog(update, text=_('Предлагаемые мной упражнения и практики не являются глубинной работой и играют '
+                              'роль как вспомогательное средство. Я не рекомендую данных метод для случаев, когда '
+                              'запрос очень тяжелый для тебя'))
     elif query.data == 'q_5':
-        dialog(update, text=translation.gettext(
-            'Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.'))
+        dialog(update, text=_('Я передам твой вопрос нашему психологу-консультанту и в ближайшее время пришлю ответ.'))
     elif query.data == 'q_6':
-        dialog(update, text=translation.gettext(
-            'Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
-            ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
-            'Наш разговор совершенно конфиденциален'))
+        dialog(update, text=_('Если у тебя нет вопросов, мы можем начать. Расскажи, пожалуйста, максимально подробно,'
+                              ' почему ты решил_а обратиться ко мне сегодня, о чем бы тебе хотелось поговорить? '
+                              'Наш разговор совершенно конфиденциален'))
         set_user_initial_reason_flag(user, True)
 
 
 def text_processing(update: Update, context: CallbackContext):
     print(f"Processing {update.message.text}")
     user = init_user(update.effective_user)
-    translation = set_translation(user)
     if update.message.text == VALUES['menu_share_event']:
         # TODO обработка выбора "поделиться событием"
         pass
@@ -262,7 +245,7 @@ def text_processing(update: Update, context: CallbackContext):
         set_user_initial_reason_flag(user, False)
         dialog(
             update,
-            text=translation.gettext('В какое время тебе удобно подводить итоги дня?'),
+            text=_('В какое время тебе удобно подводить итоги дня?'),
             reply_markup=daily_schedule_keyboard()
         )
     else:
@@ -295,28 +278,23 @@ def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
 
 
 def ask_ready(updater, schedule):
-    user = schedule.user
-    translation = set_translation(user)
     # set_schedule_is_on_flag(schedule, False)
     set_schedule_asked_today(schedule)
     updater.bot.send_message(
         schedule.user.id,
-        translation.gettext("Привет! Пришло время подводить итоги. Давай?"),
+        _("Привет! Пришло время подводить итоги. Давай?"),
         reply_markup=ready_keyboard(),
     )
 
 
 def resume_survey(updater, user) -> None:
-    translation = set_translation(user)
-    updater.bot.send_message(user, translation.gettext("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
+    updater.bot.send_message(user, _("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
 
 
 def ask_feelings(update: Update, context: CallbackContext) -> None:
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
     dialog(
         update,
-        text=translation.gettext("Расскажи, как прошел твой день?"),
+        text=_("Расскажи, как прошел твой день?"),
         reply_markup=mood_keyboard()
     )
 
@@ -331,26 +309,23 @@ def engine_callback(update, context: CallbackContext) -> str:
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    translation = set_translation(user)
-    dialog(update, text=translation.gettext('Всего хорошего.'))
+    dialog(update, text=_('Всего хорошего.'))
     return ConversationHandler.END
 
 
 def change_focus(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
-    translation = set_translation(user)
+
     dialog(
         update,
-        text=translation.gettext('Выбери новый фокус:'),
+        text=_('Выбери новый фокус:'),
         reply_markup=focus_keyboard()
     )
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
-    update.effective_user.send_message(translation.gettext("Уже обрабатываю твоё сообщение"))
+    update.effective_user.send_message(_("Уже обрабатываю твоё сообщение"))
 
     text = update.message.text  # 'Спасибо, что поделился своими переживаниями'
     audio = bot_answer_audio(text)
@@ -361,6 +336,150 @@ def send_audio_answer(update: Update, context: CallbackContext):
         clear_audio_cache()  # only for testing
     else:
         error(update, context)
+
+
+def add_admin(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    if not user.is_admin:
+        return
+
+    if not context.args:
+        update.message.reply_text("Не введён id пользователя!")
+        return
+
+    set_last_usage(update.effective_user)
+    db_id = context.args[0]
+
+    if not (db_id.isdigit() and 6 <= len(db_id) <= 10):
+        update.message.reply_text("Некорректно введён id пользователя!")
+        return
+
+    create_admin(int(db_id))
+    update.message.reply_text(f"Выданы права администратора пользователю с id: {db_id}")
+
+
+def start_question_conversation(update: Update, context: CallbackContext):
+    update.message.reply_text("Введите вопрос:")
+    user = init_user(update.effective_user)
+    set_last_usage(user)
+    return "add_question"
+
+
+def add_question(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+
+    text = update.message.text
+    if len(text):
+        init_question(user, text)
+        update.message.reply_text("Вопрос успешно создан!")
+    else:
+        update.message.reply_text("Некорректно задан вопрос.")
+    return ConversationHandler.END
+
+
+def error_input_question(update: Update, context: CallbackContext):
+    update.message.reply_text("Ожидался текст.")
+    return ConversationHandler.END
+
+
+def get_questions(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    if not user.is_admin:
+        return
+
+    questions = list_questions()
+    count_questions = len(questions)
+    pages = ceil(count_questions / 10)
+
+    update.message.reply_text(f"Всего страниц: {pages}.")
+    set_last_usage(update.effective_user)
+
+    if not pages:
+        return
+
+    if len(context.args) and context.args[0].isdigit():
+        out_page_number = int(context.args[0])
+
+        if out_page_number > pages:
+            out_page_number = 1
+    else:
+        out_page_number = 1
+
+    page_questions = questions[(out_page_number - 1) * 10: out_page_number * 10 - 1]
+    out_questions = '\n\n'.join([dict_to_str_question(elem) for elem in page_questions])
+    update.message.reply_text(out_questions)
+
+
+def get_answer_with_id(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    if not user.is_admin:
+        return
+
+    if len(context.args):
+        answer_id = context.args[0]
+    else:
+        update.message.reply_text("Произошла ошибка.")
+        return
+
+    answer = get_answer(answer_id)
+    if not answer:
+        return
+    update.message.reply_text(to_str_answer(answer))
+
+
+def start_answer_conversation(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+
+    if not user.is_admin:
+        return ConversationHandler.END
+
+    update.message.reply_text("Введите идентификатор вопроса:")
+
+    set_last_usage(user)
+    return "get_answer_id"
+
+
+def get_answer_id(update: Update, context: CallbackContext):
+    text = update.message.text
+    question = get_question(text)
+    if not question:
+        update.message.reply_text("Произошла ошибка. Не существует вопроса с таким идентификатором.")
+        return ConversationHandler.END
+
+    user = init_user(update.effective_user)
+    select_question(user.id, question)
+
+    update.message.reply_text(f'Выбранный вопрос: "{question.text}"')
+    update.message.reply_text("Введите ответ:")
+    return "add_answer"
+
+
+def add_answer(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    text = update.message.text
+
+    selected_question = get_selected(user.id)
+    if not selected_question:
+        update.message.reply_text("Произошла ошибка. Где-то утерян идентификатор для select вопроса.")
+        return ConversationHandler.END
+
+    if text:
+        init_answer(selected_question.get_id(), text)
+        update.message.reply_text("Ответ успешно создан!")
+    return ConversationHandler.END
+
+
+def error_input_answer(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+    unselect_question(user.id)
+    update.message.reply_text("Произошла ошибка.")
+    return ConversationHandler.END
+
+
+def update_user_info(update: Update, context: CallbackContext):
+    update_info(update.effective_user)
+    set_last_usage(update.effective_user)
+    # update.message.reply_text("Данные успешно обновлены.")
 
 
 def ask_user_pronoun(update: Update, context: CallbackContext):
@@ -374,7 +493,7 @@ def ask_user_pronoun(update: Update, context: CallbackContext):
 
 def ask_user_conversation_mode(update: Update, context: CallbackContext):
     update.message.reply_text(
-        'Как бы Вы хотели получать мои реплики - в виде текста или голоса?',
+        'Как бы ты хотел получать мои реплики - в виде текста или голоса?',
         reply_markup=conversation_mode_keyboard()
     )
 
@@ -393,15 +512,12 @@ def change_pronoun(update: Update, context: CallbackContext):
 
 
 def ask_start_questions(update, context):
-    user = init_user(update.effective_user)
-    translation = set_translation(user)
     dialog(update,
-           text=translation.gettext(
-               'Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
-               'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
-               'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
-               'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
-               'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
+           text=_('Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение построено '
+                  'на базе психологической методики под названием "когнитивно-поведенческая терапия" или КПТ. '
+                  'Эта методика является одним из современных направлений в психологии и имеет множество клинических '
+                  'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
+                  'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
            , reply_markup=questions_keyboard())
 
 
@@ -417,6 +533,42 @@ def main(token):
     init_logger()
 
     updater = Updater(token, use_context=True)
+
+    updater.dispatcher.add_handler(CommandHandler('add_admin', add_admin))
+    updater.dispatcher.add_handler(CommandHandler('questions', get_questions))
+    updater.dispatcher.add_handler(CommandHandler('update_info', update_user_info))
+    updater.dispatcher.add_handler(CommandHandler('get_answer_with_id', get_answer_with_id))
+
+    updater.dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler('add_question', start_question_conversation)],
+            states={
+                "add_question": [
+                    MessageHandler(Filters.text & ~Filters.command, add_question)
+                ]
+            },
+            fallbacks=[
+                MessageHandler(Filters.voice | Filters.command, error_input_question)
+            ]
+        )
+    )
+
+    updater.dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler('add_answer', start_answer_conversation)],
+            states={
+                "get_answer_id": [
+                    MessageHandler(Filters.text & ~Filters.command, get_answer_id)
+                ],
+                "add_answer": [
+                    MessageHandler(Filters.text & ~Filters.command, add_answer)
+                ]
+            },
+            fallbacks=[
+                MessageHandler(Filters.voice | Filters.command, error_input_answer)
+            ]
+        )
+    )
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('help', help_bot))
@@ -452,6 +604,9 @@ class Worker(threading.Thread):
         try:
             token_try = self.work_queue.get()
             self.process(token_try)
+
+            if ADMIN.isdigit():
+                create_admin(int(ADMIN))
         finally:
             pass
 

@@ -73,3 +73,4 @@ max-module-lines=1000
 max-args=9
 max-branches=12
 max-returns=6
+max-attributes=9
