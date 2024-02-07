@@ -2,6 +2,7 @@ import sys
 import queue
 import threading
 import gettext
+from math import ceil
 
 from telegram import Update
 from telegram.ext import (
@@ -239,7 +240,6 @@ def text_processing(update: Update, context: CallbackContext):
         push_user_chosen_name(user, chosen_name)
         ask_user_pronoun(update, context)
     elif get_user_initial_reason_flag(user):
-        print("get_user_initial_reason_flag")
         reason = update.message.text
         push_user_initial_reason(user, reason)
         set_user_initial_reason_flag(user, False)
@@ -343,18 +343,19 @@ def add_admin(update: Update, context: CallbackContext):
     if not user.is_admin:
         return
 
-    if len(context.args):
-        db_id = context.args[0]
-
-        if db_id.isdigit() and 6 <= len(db_id) <= 10:
-            create_admin(int(db_id))
-            update.message.reply_text(f"Выданы права администратора пользователю с id: {db_id}")
-        else:
-            update.message.reply_text("Некорректно введён id пользователя!")
-
-        set_last_usage(update.effective_user)
-    else:
+    if not context.args:
         update.message.reply_text("Не введён id пользователя!")
+        return
+
+    set_last_usage(update.effective_user)
+    db_id = context.args[0]
+
+    if not (db_id.isdigit() and 6 <= len(db_id) <= 10):
+        update.message.reply_text("Некорректно введён id пользователя!")
+        return
+
+    create_admin(int(db_id))
+    update.message.reply_text(f"Выданы права администратора пользователю с id: {db_id}")
 
 
 def start_question_conversation(update: Update, context: CallbackContext):
@@ -372,7 +373,7 @@ def add_question(update: Update, context: CallbackContext):
         init_question(user, text)
         update.message.reply_text("Вопрос успешно создан!")
     else:
-        update.message.reply_text("Произошла ошибка.")
+        update.message.reply_text("Некорректно задан вопрос.")
     return ConversationHandler.END
 
 
@@ -388,23 +389,25 @@ def get_questions(update: Update, context: CallbackContext):
 
     questions = list_questions()
     count_questions = len(questions)
-    pages = (count_questions // 10) + (1 if count_questions % 10 else 0)
-
-    if pages:
-        if len(context.args) and context.args[0].isdigit():
-            out_page_number = int(context.args[0])
-
-            if out_page_number > pages:
-                out_page_number = 1
-        else:
-            out_page_number = 1
-
-        page_questions = questions[(out_page_number - 1) * 10: out_page_number * 10 - 1]
-        out_questions = '\n\n'.join([dict_to_str_question(elem) for elem in page_questions])
-        update.message.reply_text(out_questions)
+    pages = ceil(count_questions / 10)
 
     update.message.reply_text(f"Всего страниц: {pages}.")
     set_last_usage(update.effective_user)
+
+    if not pages:
+        return
+
+    if len(context.args) and context.args[0].isdigit():
+        out_page_number = int(context.args[0])
+
+        if out_page_number > pages:
+            out_page_number = 1
+    else:
+        out_page_number = 1
+
+    page_questions = questions[(out_page_number - 1) * 10: out_page_number * 10 - 1]
+    out_questions = '\n\n'.join([dict_to_str_question(elem) for elem in page_questions])
+    update.message.reply_text(out_questions)
 
 
 def get_answer_with_id(update: Update, context: CallbackContext):

@@ -167,12 +167,14 @@ def create_admin(user_id: int) -> None:
 def update_info(user) -> None:
     db_user = init_user(user)
 
-    if db_user:
-        db_user.last_name = user.last_name
-        db_user.first_name = user.first_name
-        db_user.username = user.username
-        db_user.is_bot = user.is_bot
-        db_user.save()
+    if not db_user:
+        return
+
+    db_user.last_name = user.last_name
+    db_user.first_name = user.first_name
+    db_user.username = user.username
+    db_user.is_bot = user.is_bot
+    db_user.save()
 
 
 def init_user(user) -> User:

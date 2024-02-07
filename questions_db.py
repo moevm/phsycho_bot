@@ -21,23 +21,20 @@ class Question(MongoModel):
 
 
 def init_question(user: User, text):
-    if text:
-        Question(
-            user_id=user.id,
-            username=user.username,
-            text=text,
-            answered=False,
-            date=datetime.now(),
-            select=-1
-        ).save()
+    Question(
+        user_id=user.id,
+        username=user.username,
+        text=text,
+        answered=False,
+        date=datetime.now(),
+        select=-1
+    ).save()
 
 
 def get_question(quest_id: str) -> Optional[Question]:
     try:
         return Question.objects.get({'_id': ObjectId(quest_id)})
-    except InvalidId:
-        return None
-    except Question.DoesNotExist:
+    except (InvalidId, Question.DoesNotExist):
         return None
 
 
@@ -77,17 +74,19 @@ class Answer(MongoModel):
 
 
 def init_answer(question_id, text):
-    if text:
-        Answer(
-            question_id=question_id,
-            text=text,
-            date=datetime.now()
-        ).save()
+    if not text:
+        return
 
-        question = get_question(question_id)
-        question.answered = True
-        question.select = -1
-        question.save()
+    Answer(
+        question_id=question_id,
+        text=text,
+        date=datetime.now()
+    ).save()
+
+    question = get_question(question_id)
+    question.answered = True
+    question.select = -1
+    question.save()
 
 
 def get_answer(quest_id) -> Optional[Answer]:
