@@ -1,3 +1,5 @@
 #! /bin/bash
 
-pytest test.py -s --disable-warnings
+pytest test.py
+echo Pytest exited $?
+#pytest test.py -s --disable-warnings

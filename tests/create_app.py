@@ -7,5 +7,7 @@ def get_app_info():
     return app_variables
 
 
-api_id, api_hash, username = get_app_info()
-app = Client("my_account", api_id, api_hash)
+def create_app():
+    api_id, api_hash, username = get_app_info()
+    app = Client("my_account", api_id, api_hash)
+    return app, username
