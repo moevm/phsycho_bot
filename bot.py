@@ -242,8 +242,9 @@ def text_processing(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     translation = set_translation(user)
     if update.message.text == VALUES['menu_share_event']:
-        # TODO обработка выбора "поделиться событием"
-        pass
+        set_user_ready_flag(update.effective_user, True)
+        push_user_focus(update.effective_user, "share_event", update.effective_message.date)
+        engine_callback(update, context)
     elif update.message.text == VALUES['menu_change_focus']:
         change_focus(update, context)
     elif update.message.text == VALUES['menu_help']:
