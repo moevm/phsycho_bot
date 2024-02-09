@@ -25,7 +25,7 @@ pymongo==3.11.3
 pymodm==0.4.3
 pymystem3==0.2.0
 noisereduce==2.0.1
-requests==2.30.0
+requests==2.31.0
 torchaudio==2.0.2
 whisper==1.1.10
 python-gettext==5.0
