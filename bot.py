@@ -164,11 +164,11 @@ def handle_ready(update, context, query):
 
 
 def handle_pronoun(update, user, query):
-    translation = set_translation(user)
     if query.data == 'p_u':
         push_user_pronoun(user, False)
     elif query.data == 'p_you':
         push_user_pronoun(user, True)
+    translation = set_translation(user)
     dialog(update,
            text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun'))
 
