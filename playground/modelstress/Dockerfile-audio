@@ -1,0 +1,8 @@
+FROM python:3.9
+
+RUN pip install tensorflow numpy librosa scikit-learn keras matplotlib resampy
+
+WORKDIR /app
+COPY model-audio.py /app/model-audio.py
+
+CMD ["python", "model-audio.py"]
