@@ -95,7 +95,7 @@ def test_change_pronoun():
         sleep(1)
         msg = app.get_messages(username, msg.id + 1)
         assert (msg.text == 'Режим общения изменен. Текущий режим: общение на "Вы"'
-                or 'Режим общения изменен. Текущий режим: общение на "Ты"')
+                or msg.text == 'Режим общения изменен. Текущий режим: общение на "Ты"')
 
         pronoun1 = msg.text.split()[-1]
         msg = app.send_message(username, '/change_pronoun')
@@ -108,10 +108,10 @@ def test_change_pronoun():
 def test_change_mode():
     with app:
         msg = app.send_message(username, '/change_mode')
-        sleep(1)
+        sleep(3)
         msg = app.get_messages(username, msg.id + 1)
         if msg.text:
             msg = app.send_message(username, '/change_mode')
-            sleep(1)
+            sleep(3)
             msg = app.get_messages(username, msg.id + 1)
         assert msg.media == pyrogram.enums.MessageMediaType.VOICE
