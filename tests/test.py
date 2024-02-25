@@ -6,6 +6,12 @@ app, username = create_app()
 
 def test_start_command():
     with app:
+        msg = app.send_message(username, '/change_mode')
+        sleep(5)
+        msg = app.get_messages(username, msg.id + 1)
+        if not msg.text:
+            app.send_message(username, '/change_mode')
+            sleep(1)
         msg = app.send_message(username, '/start')
         sleep(1)
         msg = app.get_messages(username, msg.id + 1)
@@ -108,10 +114,10 @@ def test_change_pronoun():
 def test_change_mode():
     with app:
         msg = app.send_message(username, '/change_mode')
-        sleep(3)
+        sleep(5)
         msg = app.get_messages(username, msg.id + 1)
         if msg.text:
             msg = app.send_message(username, '/change_mode')
-            sleep(3)
+            sleep(5)
             msg = app.get_messages(username, msg.id + 1)
         assert msg.media == pyrogram.enums.MessageMediaType.VOICE
