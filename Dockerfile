@@ -8,7 +8,7 @@ ENV RUVERSION 0.22
 WORKDIR /bot
 
 COPY ./requirements.txt /bot/
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir --default-timeout=100 -r requirements.txt
 
 COPY . /bot/
 
