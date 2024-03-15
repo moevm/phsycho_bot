@@ -5,7 +5,7 @@ import sys
 
 from pymodm import connect
 
-from src.databases import User, init_user, init_survey_progress
+from src.databases.db import User, init_user, init_survey_progress
 from src.script_engine import Script, Parser, Step
 
 
