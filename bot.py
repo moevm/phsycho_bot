@@ -14,6 +14,7 @@ from telegram.ext import (
     Filters,
 )
 
+import kafka.kafka_consumer
 import my_cron
 from db import (
     push_user_feeling,
@@ -408,9 +409,10 @@ def ask_start_questions(update, context):
 def change_mode(update: Update, context: CallbackContext):
     change_user_mode(update.effective_user)
     mode = get_user_mode(update.effective_user)
-    update.message.reply_text(
-        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
-    )
+    if mode:
+        dialog(update, text='Режим общения изменен. Текущий режим: "голосовые сообщения"')
+    else:
+        dialog(update, text='Режим общения изменен. Текущий режим: "текстовые сообщения"')
 
 
 def main(token):
@@ -460,12 +462,14 @@ class Worker(threading.Thread):
         auth_in_db(username=sys.argv[2], password=sys.argv[3])
         if token_ == 'bot':
             main(sys.argv[1])
+        elif token_ == 'kafka':
+            kafka.kafka_consumer.main()
         else:
             my_cron.main(sys.argv[1])
 
 
 if __name__ == '__main__':
-    tokens = ['bot', 'schedule']
+    tokens = ['bot', 'schedule', 'kafka']
     work_queue = queue.Queue()
     for token in tokens:
         work_queue.put(token)
