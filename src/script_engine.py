@@ -5,9 +5,16 @@ import datetime
 import pytz
 from telegram import Update
 from telegram.ext import CallbackContext
-from db import init_user, get_survey_progress, init_survey_progress, get_user_answer
+
+from src.databases.db import (
+    init_user,
+    get_survey_progress,
+    init_survey_progress,
+    get_user_answer
+)
+
 from keyboard import yes_no_keyboard
-from wrapper import dialog
+from utilities import dialog
 
 
 class Script:  # класс для хранения дерева
@@ -33,7 +40,7 @@ class Step:  # класс для работы с текущим шагом
     def __init__(self, update, survey_progress, focus):
         self.update = update
         self.survey_progress = survey_progress
-        self.step_info = Script(Parser("tree_example.json").parse()).get_script(focus)[
+        self.step_info = Script(Parser("../tree_example.json").parse()).get_script(focus)[
             survey_progress.survey_step
         ]
 
@@ -144,7 +151,7 @@ class Engine:  # класс движка
             self.survey_progress.save()
             step_number = self.survey_progress.survey_next
         # Генерация нового
-        new_step_info = Script(Parser("tree_example.json").parse()).get_script(self.last_focus)[
+        new_step_info = Script(Parser("../tree_example.json").parse()).get_script(self.last_focus)[
             step_number
         ]
         new_survey_progress = init_survey_progress(

@@ -5,8 +5,8 @@ import sys
 
 from pymodm import connect
 
-from db import User, init_user, init_survey_progress
-from script_engine import Script, Parser, Step
+from src.databases import User, init_user, init_survey_progress
+from src.script_engine import Script, Parser, Step
 
 
 class TestScript(unittest.TestCase):

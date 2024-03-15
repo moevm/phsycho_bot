@@ -1,46 +1,28 @@
-import sys
-import queue
-import threading
-import gettext
-
 from telegram import Update
 from telegram.ext import (
-    Updater,
-    CommandHandler,
-    CallbackQueryHandler,
     CallbackContext,
-    ConversationHandler,
-    MessageHandler,
-    Filters,
+    ConversationHandler
 )
 
-import my_cron
-from db import (
-    push_user_feeling,
-    push_user_focus,
-    push_user_schedule,
-    get_user_feelings,
-    set_user_ready_flag,
-    set_schedule_asked_today,
+from src.databases.db import (
     init_user,
-    get_schedule_by_user,
-    auth_in_db,
     set_last_usage,
-    get_users_not_answer_last24hours,
-    get_users_not_finish_survey,
-    get_user_mode,
-    change_user_mode,
-    push_user_chosen_name,
+    push_user_schedule,
+    set_user_ready_flag,
+    push_user_focus,
     push_user_pronoun,
-    change_user_pronoun,
-    get_user_pronoun,
-    get_user_chosen_name,
     push_user_mode,
-    push_user_initial_reason,
-    get_user_initial_reason_flag,
+    push_user_feeling,
+    get_schedule_by_user,
     set_user_initial_reason_flag,
+    get_user_chosen_name,
+    push_user_chosen_name,
+    get_user_initial_reason_flag,
+    push_user_initial_reason,
+    set_schedule_asked_today
 )
-from keyboard import (
+
+from src.keyboard import (
     mood_keyboard,
     focus_keyboard,
     ready_keyboard,
@@ -48,48 +30,35 @@ from keyboard import (
     pronoun_keyboard,
     conversation_mode_keyboard,
     questions_keyboard,
-    menu_keyboard,
     daily_schedule_keyboard,
 )
-from env_config import (DEBUG_MODE,
-                        DEBUG_ON)
 
-from logs import init_logger
-from script_engine import Engine
-from voice_module import work_with_audio
-from silero_module import bot_answer_audio, clear_audio_cache
-from wrapper import dialog
+from src.modules.tts_module.silero_module import (
+    clear_audio_cache,
+    bot_answer_audio
+)
+
+from src.utilities import (
+    set_translation,
+    dialog
+)
+
+from src.env_config import (
+    DEBUG_MODE,
+    DEBUG_ON
+)
+
+from src.commands.user_commands import (
+    change_focus,
+    change_mode,
+    change_pronoun,
+    help_bot
+)
+
+from src.script_engine import Engine
 
 DAYS_OFFSET = 7
-
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"
-
-
-def set_translation(user):
-    pronoun = get_user_pronoun(user)
-    if pronoun:
-        current_translation = gettext.translation('messages', localedir='locale', languages=['ru_official'])
-        current_translation.install()
-    else:
-        current_translation = gettext.translation('messages', localedir='locale', languages=['ru'])
-        current_translation.install()
-    return current_translation
-
-
-# def start(update: Update, context: CallbackContext) -> int:
-def start(update: Update, context: CallbackContext) -> str:
-    """Send a message when the command /start is issued."""
-
-    user = init_user(update.effective_user)
-    set_last_usage(user)
-
-    translation = set_translation(user)
-
-    dialog(
-        update,
-        text=translation.gettext('Здравствуйте! Я бот-психолог. Как можно обращаться к вам?'),
-        reply_markup=menu_keyboard()
-    )
 
 
 def ask_focus(update: Update) -> None:
@@ -102,32 +71,6 @@ def ask_focus(update: Update) -> None:
             'Каждую неделю можно выбирать разные фокусы или один и тот же. Выбрать фокус этой недели:'),
         reply_markup=focus_keyboard()
     )
-
-
-# def button(update: Update, context: CallbackContext) -> int:
-def button(update: Update, context: CallbackContext) -> str:
-    query = update.callback_query
-    query.answer()
-
-    user = init_user(update.effective_user)
-    set_last_usage(user)
-    if query.data.startswith('s_'):
-        handle_schedule(update, query)
-    elif query.data.startswith('f_'):
-        return handle_focus(update, context, query)
-    elif query.data.startswith('r_'):
-        return handle_ready(update, context, query)
-
-    elif query.data.startswith('m_'):
-        handle_mood(update, query)
-
-    elif query.data.startswith('p_'):
-        handle_pronoun(update, user, query)
-    elif query.data.startswith('c_'):
-        handle_conversation_mode(update, context, user, query)
-    elif query.data.startswith('q_'):
-        handle_questions(update, user, query)
-    return ''
 
 
 def handle_schedule(update, query):
@@ -237,6 +180,39 @@ def handle_questions(update, user, query):
         set_user_initial_reason_flag(user, True)
 
 
+# def engine_callback(update, context: CallbackContext) -> int:
+def engine_callback(update, context: CallbackContext) -> str:
+    engine = Engine(update, context)
+    current_step = engine.get_next_step()
+    current_step.execute()
+
+
+# def button(update: Update, context: CallbackContext) -> int:
+def button(update: Update, context: CallbackContext) -> str:
+    query = update.callback_query
+    query.answer()
+
+    user = init_user(update.effective_user)
+    set_last_usage(user)
+    if query.data.startswith('s_'):
+        handle_schedule(update, query)
+    elif query.data.startswith('f_'):
+        return handle_focus(update, context, query)
+    elif query.data.startswith('r_'):
+        return handle_ready(update, context, query)
+
+    elif query.data.startswith('m_'):
+        handle_mood(update, query)
+
+    elif query.data.startswith('p_'):
+        handle_pronoun(update, user, query)
+    elif query.data.startswith('c_'):
+        handle_conversation_mode(update, context, user, query)
+    elif query.data.startswith('q_'):
+        handle_questions(update, user, query)
+    return ''
+
+
 def text_processing(update: Update, context: CallbackContext):
     print(f"Processing {update.message.text}")
     user = init_user(update.effective_user)
@@ -269,29 +245,8 @@ def text_processing(update: Update, context: CallbackContext):
         engine_callback(update, context)
 
 
-def help_bot(update: Update, context: CallbackContext) -> None:
-    user = init_user(update.effective_user)
-    set_last_usage(user)
-    # TODO сделать справку
-    update.message.reply_text('Help!')
-
-
-def stats(update: Update, context: CallbackContext) -> None:
-    user = init_user(update.effective_user)
-    set_last_usage(user)
-    update.message.reply_text(get_user_feelings(update.effective_user))
-
-
-def debug_get_users_not_answer_last24hours(update: Update, context: CallbackContext):
-    update.message.reply_text('\n'.join(str(item) for item in get_users_not_answer_last24hours()))
-
-
 def error(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Error!')
-
-
-def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
-    update.message.reply_text('\n'.join(str(item) for item in get_users_not_finish_survey()))
 
 
 def ask_ready(updater, schedule):
@@ -321,30 +276,12 @@ def ask_feelings(update: Update, context: CallbackContext) -> None:
     )
 
 
-# def engine_callback(update, context: CallbackContext) -> int:
-def engine_callback(update, context: CallbackContext) -> str:
-    engine = Engine(update, context)
-    current_step = engine.get_next_step()
-    current_step.execute()
-
-
 def cancel(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     set_last_usage(user)
     translation = set_translation(user)
     dialog(update, text=translation.gettext('Всего хорошего.'))
     return ConversationHandler.END
-
-
-def change_focus(update: Update, context: CallbackContext):
-    user = init_user(update.effective_user)
-    set_last_usage(user)
-    translation = set_translation(user)
-    dialog(
-        update,
-        text=translation.gettext('Выбери новый фокус:'),
-        reply_markup=focus_keyboard()
-    )
 
 
 def send_audio_answer(update: Update, context: CallbackContext):
@@ -379,19 +316,6 @@ def ask_user_conversation_mode(update: Update, context: CallbackContext):
     )
 
 
-def change_pronoun(update: Update, context: CallbackContext):
-    change_user_pronoun(update.effective_user)
-    pronoun = get_user_pronoun(update.effective_user)
-    if pronoun:
-        update.message.reply_text(
-            'Режим общения изменен. Текущий режим: общение на "Вы"'
-        )
-    else:
-        update.message.reply_text(
-            'Режим общения изменен. Текущий режим: общение на "Ты"'
-        )
-
-
 def ask_start_questions(update, context):
     user = init_user(update.effective_user)
     translation = set_translation(user)
@@ -403,72 +327,3 @@ def ask_start_questions(update, context):
                'подтверждений эффективности . Я буду выполнять с тобой несколько упражнений в зависимости от твоего '
                'запроса, помогу отследить твое состояние, а также мысли и чувства. Есть ли какие-то вопросы?')
            , reply_markup=questions_keyboard())
-
-
-def change_mode(update: Update, context: CallbackContext):
-    change_user_mode(update.effective_user)
-    mode = get_user_mode(update.effective_user)
-    update.message.reply_text(
-        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
-    )
-
-
-def main(token):
-    init_logger()
-
-    updater = Updater(token, use_context=True)
-
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help_bot))
-    updater.dispatcher.add_handler(CommandHandler('stats', stats))
-    updater.dispatcher.add_handler(CommandHandler('change_focus', change_focus))
-    updater.dispatcher.add_handler(CommandHandler('change_mode', change_mode))
-    updater.dispatcher.add_handler(CommandHandler('change_pronoun', change_pronoun))
-
-    updater.dispatcher.add_handler(
-        CommandHandler('get_users_not_finish_survey', debug_get_users_not_finish_survey)
-    )
-    updater.dispatcher.add_handler(
-        CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours)
-    )
-    updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
-
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
-    updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
-    updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
-
-    updater.start_polling()
-
-
-# updater.idle()
-
-
-class Worker(threading.Thread):
-    def __init__(self, tokens_queue):
-        super().__init__()
-        self.work_queue = tokens_queue
-
-    def run(self):
-        try:
-            token_try = self.work_queue.get()
-            self.process(token_try)
-        finally:
-            pass
-
-    @staticmethod
-    def process(token_):
-        auth_in_db(username=sys.argv[2], password=sys.argv[3])
-        if token_ == 'bot':
-            main(sys.argv[1])
-        else:
-            my_cron.main(sys.argv[1])
-
-
-if __name__ == '__main__':
-    tokens = ['bot', 'schedule']
-    work_queue = queue.Queue()
-    for token in tokens:
-        work_queue.put(token)
-    for i in range(len(tokens)):
-        worker = Worker(work_queue)
-        worker.start()

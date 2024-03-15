@@ -1,4 +1,9 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup
+)
+
 
 VALUES = {
     's_18': "18:00 - 19:00",
