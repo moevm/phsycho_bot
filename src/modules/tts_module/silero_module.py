@@ -1,6 +1,6 @@
 import requests
 
-from env_config import SPEAKER, LANGUAGE, SAMPLE_RATE
+from src.env_config import SPEAKER, LANGUAGE, SAMPLE_RATE
 
 
 class VoiceSettings:

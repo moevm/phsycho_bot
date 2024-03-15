@@ -1,6 +1,6 @@
 import requests
 
-from env_config import ASR_ENGINE, ASR_MODEL
+from src.env_config import ASR_ENGINE, ASR_MODEL
 
 
 class WhisperSettings:
