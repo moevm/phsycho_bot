@@ -16,9 +16,11 @@
 
 Пример файла app_variables.txt
 
+```
 api_id=777777
 api_hash=2ea3e61e3a4940ea3e61e3a494
 username=my_demo_bot
+```
 
 # Запуск тестов
 
