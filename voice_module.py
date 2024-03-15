@@ -7,6 +7,8 @@ from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
 from bson import json_util
+import json
+
 
 from whisper_module import get_att_whisper
 from audio_classes import RecognizedSentence
@@ -14,9 +16,18 @@ from db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
                         DEBUG_ON, DEBUG_OFF)
+from kafka.kafka_producer import produce_message
 
 
-def audio_to_text(filename):
+def audio_to_text(update, filename):
+    message = {
+        'id': update.effective_user.id,
+        'username': update.effective_user.username,
+        'first_name': update.effective_user.first_name,
+        'last_name': update.effective_user.last_name,
+        'filename': filename
+    }
+    produce_message('stt', json.dumps(message))
     response = get_att_whisper(filename)
 
     if response.status_code == 200:
@@ -66,7 +77,7 @@ def work_with_audio(update: Update, context: CallbackContext):
     no_noise_audio = noise_reduce(wav_filename)
 
     try:
-        input_sentence = audio_to_text(no_noise_audio)
+        input_sentence = audio_to_text(update, no_noise_audio)
     except IOError as e:
         raise e
 

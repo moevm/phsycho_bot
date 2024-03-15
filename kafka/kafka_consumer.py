@@ -24,4 +24,5 @@ def main():
 
         print("Connected to Topic: {} and Partition : {}".format(message.topic(), message.partition()))
         print("Received Message : {} with Offset : {}".format(message.value().decode('utf-8'), message.offset()))
+
         # time.sleep(2.5)
