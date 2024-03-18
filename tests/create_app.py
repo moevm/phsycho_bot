@@ -20,7 +20,7 @@ def get_app_info():
 
 def create_app():
     api_id, api_hash, username = get_app_info()
-    app = Client("my_account", api_id, api_hash)
+    app = Client("my_account", api_id, api_hash, workdir="./")
     return app, username
 
-print(get_app_info())
+#print(get_app_info())
