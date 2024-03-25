@@ -1,4 +1,4 @@
 #! /bin/bash
 
-pytest test.py
+pytest -s test.py
 echo Pytest exited $?
