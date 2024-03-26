@@ -20,11 +20,5 @@ def get_app_info():
 
 def create_app():
     api_id, api_hash, username = get_app_info()
-    app = Client("my_account", api_id, api_hash, in_memory=True)
+    app = Client("my_account", api_id, api_hash, workdir="./", in_memory=True)
     return app, username
-
-
-# print(get_app_info())
-
-if __name__ == "__main__":
-    create_app()
