@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import requests
 
 from noisereduce import reduce_noise
 from scipy.io import wavfile
@@ -9,7 +10,6 @@ from telegram.ext import CallbackContext
 from bson import json_util
 import json
 
-
 from whisper_module import get_att_whisper
 from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
@@ -17,25 +17,6 @@ from db import push_user_survey_progress, init_user, get_user_audio
 from env_config import (DEBUG_MODE,
                         DEBUG_ON, DEBUG_OFF)
 from kafka.kafka_producer import produce_message
-
-
-def audio_to_text(update, filename):
-    message = {
-        'id': update.effective_user.id,
-        'username': update.effective_user.username,
-        'first_name': update.effective_user.first_name,
-        'last_name': update.effective_user.last_name,
-        'filename': filename
-    }
-    produce_message('stt', json.dumps(message))
-    response = get_att_whisper(filename)
-
-    if response.status_code == 200:
-
-        input_sentence = RecognizedSentence(response.json())
-        return input_sentence
-
-    return None
 
 
 def download_voice(update: Update):
@@ -75,24 +56,47 @@ def noise_reduce(input_audio):
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename, ogg_filename = download_voice(update)
     no_noise_audio = noise_reduce(wav_filename)
+    message = {
+        'user': update.effective_user.to_dict(),
+        'update_id': update.update_id,
+        'token': context.bot.token,
+        'filename': no_noise_audio,
+        'ogg_filename': ogg_filename
+    }
+    produce_message('stt', json.dumps(message))
 
-    try:
-        input_sentence = audio_to_text(update, no_noise_audio)
-    except IOError as e:
-        raise e
+
+def audio_to_text(token, filename, ogg_filename, update_id, user):
+    response = get_att_whisper(filename)
+
+    if response.status_code == 200:
+        input_sentence = RecognizedSentence(response.json())
+    else:
+        return
+
+    url = f'https://api.telegram.org/bot{token}/sendMessage'
+    data = {
+        'chat_id': user.id,
+        'text': input_sentence.generate_output_info()
+    }
 
     stats_sentence = input_sentence.generate_stats()
 
     if DEBUG_MODE == DEBUG_ON:
-        update.effective_user.send_message(input_sentence.generate_output_info())
+        response = requests.post(url, json=data)
+
+        if response.status_code == 200:
+            print('Request send successfully')
+        else:
+            print('Error sending request')
 
     elif DEBUG_MODE == DEBUG_OFF:
         pass
 
     push_user_survey_progress(
-        update.effective_user,
-        init_user(update.effective_user).get_last_focus(),
-        update.update_id,
+        user,
+        init_user(user).get_last_focus(),
+        update_id,
         user_answer=input_sentence.get_text(),
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
@@ -100,8 +104,8 @@ def work_with_audio(update: Update, context: CallbackContext):
     os.remove(ogg_filename)
 
     if DEBUG_MODE == DEBUG_ON:
-        print(get_user_audio(update.effective_user))
-        update.effective_user.send_message(
+        print(get_user_audio(user))
+        user.effective_user.send_message(
             "ID записи с твоим аудиосообщением в базе данных: "
-            + str(json.loads(json_util.dumps(get_user_audio(update.effective_user))))
+            + str(json.loads(json_util.dumps(get_user_audio(user))))
         )
