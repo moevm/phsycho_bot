@@ -8,7 +8,6 @@ from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
 from bson import json_util
-import json
 
 from whisper_module import get_att_whisper
 from audio_classes import RecognizedSentence
