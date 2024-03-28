@@ -1,17 +1,18 @@
 from confluent_kafka import Producer
 from uuid import uuid4
 
-
 conf = {
     'bootstrap.servers': 'kafka:29092'
 }
 
+
 def delivery_report(errmsg, msg):
     if errmsg is not None:
-        print("Delivery failed for Message: {} : {}".format(msg.key(), errmsg))
+        print(f'Delivery failed for Message: {msg.key()} : {errmsg}')
         return
-    print('Message: {} successfully produced to Topic: {} Partition: [{}] at offset {}'.format(
-        msg.key(), msg.topic(), msg.partition(), msg.offset()))
+    print(f'Message: {msg.key()} successfully produced to Topic:'
+          f' {msg.topic()} Partition: [{msg.partition()}] at offset {msg.offset()}')
+
 
 def produce_message(topic, message):
     producer = Producer(conf)
@@ -21,4 +22,3 @@ def produce_message(topic, message):
         producer.flush()
     except Exception as ex:
         print("Exception happened :", ex)
-
