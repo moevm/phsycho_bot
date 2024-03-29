@@ -408,9 +408,10 @@ def ask_start_questions(update, context):
 def change_mode(update: Update, context: CallbackContext):
     change_user_mode(update.effective_user)
     mode = get_user_mode(update.effective_user)
-    update.message.reply_text(
-        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
-    )
+    if mode:
+        dialog(update, text='Режим общения изменен. Текущий режим: "голосовые сообщения"')
+    else:
+        dialog(update, text='Режим общения изменен. Текущий режим: "текстовые сообщения"')
 
 
 def main(token):
