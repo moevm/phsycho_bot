@@ -1,15 +1,11 @@
+import os
+
 from confluent_kafka import Consumer
 from telegram import User, Bot, Update
 import json
 
+from kafka import kafka_operations
 from voice_module import audio_to_text
-
-conf = {
-    'bootstrap.servers': 'kafka:29092',
-    'group.id': 'Psycho-bot',
-    'auto.offset.reset': 'earliest',
-    'enable.auto.commit': True,
-}
 
 
 def process_stt_message(message_info):
@@ -20,6 +16,8 @@ def process_stt_message(message_info):
 
 
 def main():
+    print(os.getcwd(), os.listdir())
+    conf = kafka_operations.load_conf('kafka/consumer_conf.json')
     consumer = Consumer(conf)
     consumer.subscribe(['stt'])
 

@@ -1,9 +1,7 @@
 from confluent_kafka import Producer
 from uuid import uuid4
 
-conf = {
-    'bootstrap.servers': 'kafka:29092'
-}
+from kafka import kafka_operations
 
 
 def delivery_report(errmsg, msg):
@@ -15,6 +13,7 @@ def delivery_report(errmsg, msg):
 
 
 def produce_message(topic, message):
+    conf = kafka_operations.load_conf('kafka/producer_conf.json')
     producer = Producer(conf)
     producer.poll(0)
     try:
