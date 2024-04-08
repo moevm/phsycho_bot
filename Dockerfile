@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y ffmpeg="7:5.1.4-0+deb12u1" && apt-get i
 ENV RUVERSION 0.22
 WORKDIR /bot
 
-COPY src/requirements.txt /bot/src/
+COPY src/requirements.txt src/
 RUN pip3 install -r src/requirements.txt
 
 COPY . /bot/

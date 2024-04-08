@@ -10,26 +10,29 @@ from telegram.ext import (
     Filters,
 )
 
-from src.databases.db import (
+from databases.db import (
     auth_in_db
 )
 
-from src.modules.stt_module.voice_module import (
+from modules.stt_module.voice_module import (
     work_with_audio
 )
 
-from src.commands.user_commands import (
+from commands.user_commands import (
     start,
     help_bot,
     stats,
     change_focus,
     change_mode,
-    change_pronoun,
-    debug_get_users_not_finish_survey,
-    debug_get_users_not_answer_last24hours
+    change_pronoun
 )
 
-from src.commands.handlers import (
+from commands.admin_commands import (
+    debug_get_users_not_answer_last24hours,
+    debug_get_users_not_finish_survey
+)
+
+from commands.handlers import (
     cancel,
     button,
     text_processing

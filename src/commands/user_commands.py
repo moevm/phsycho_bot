@@ -3,24 +3,22 @@ from telegram.ext import (
     CallbackContext
 )
 
-from src.utilities import (
+from utilities import (
     set_translation,
     dialog
 )
 
-from src.databases.db import (
+from databases.db import (
     init_user,
     set_last_usage,
-    get_users_not_answer_last24hours,
     get_user_feelings,
-    get_users_not_finish_survey,
     change_user_pronoun,
     get_user_pronoun,
     change_user_mode,
     get_user_mode
 )
 
-from src.keyboard import (
+from keyboard import (
     menu_keyboard,
     focus_keyboard
 )
@@ -85,11 +83,3 @@ def change_pronoun(update: Update, context: CallbackContext):
         update.message.reply_text(
             'Режим общения изменен. Текущий режим: общение на "Ты"'
         )
-
-
-def debug_get_users_not_finish_survey(update: Update, context: CallbackContext):
-    update.message.reply_text('\n'.join(str(item) for item in get_users_not_finish_survey()))
-
-
-def debug_get_users_not_answer_last24hours(update: Update, context: CallbackContext):
-    update.message.reply_text('\n'.join(str(item) for item in get_users_not_answer_last24hours()))

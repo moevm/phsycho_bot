@@ -4,7 +4,7 @@ from telegram.ext import (
     ConversationHandler
 )
 
-from src.databases.db import (
+from databases.db import (
     init_user,
     set_last_usage,
     push_user_schedule,
@@ -22,7 +22,7 @@ from src.databases.db import (
     set_schedule_asked_today
 )
 
-from src.keyboard import (
+from keyboard import (
     mood_keyboard,
     focus_keyboard,
     ready_keyboard,
@@ -33,29 +33,29 @@ from src.keyboard import (
     daily_schedule_keyboard,
 )
 
-from src.modules.tts_module.silero_module import (
+from modules.tts_module.silero_module import (
     clear_audio_cache,
     bot_answer_audio
 )
 
-from src.utilities import (
+from utilities import (
     set_translation,
     dialog
 )
 
-from src.env_config import (
+from env_config import (
     DEBUG_MODE,
     DEBUG_ON
 )
 
-from src.commands.user_commands import (
+from commands.user_commands import (
     change_focus,
     change_mode,
     change_pronoun,
     help_bot
 )
 
-from src.script_engine import Engine
+from script_engine import Engine
 
 DAYS_OFFSET = 7
 PREPARE, TYPING, SELECT_YES_NO, MENU = "PREPARE", "TYPING", "SELECT_YES_NO", "MENU"

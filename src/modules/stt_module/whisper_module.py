@@ -1,6 +1,6 @@
 import requests
 
-from src.env_config import ASR_ENGINE, ASR_MODEL
+from env_config import ASR_ENGINE, ASR_MODEL
 
 
 class WhisperSettings:
@@ -9,7 +9,7 @@ class WhisperSettings:
     asr_model = ASR_MODEL
 
 
-def get_att_whisper(filename):
+def get_att_whisper(filename: str) -> requests.Response:
     """
      filename: str
         audio file name

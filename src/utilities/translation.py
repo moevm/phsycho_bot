@@ -1,6 +1,6 @@
 import gettext
 
-from src.databases.db import (
+from databases.db import (
     get_user_pronoun
 )
 

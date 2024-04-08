@@ -1,17 +1,17 @@
 from telegram import Update
 
-from src.modules.tts_module.silero_module import (
+from modules.tts_module.silero_module import (
     bot_answer_audio,
     clear_audio_cache
 )
 
-from src.env_config import (
+from env_config import (
     DEBUG_MODE,
     DEBUG_ON,
     DEBUG_OFF
 )
 
-from src.databases.db import get_user_mode
+from databases.db import get_user_mode
 
 
 def dialog(update: Update, text: str, reply_markup=None) -> None:

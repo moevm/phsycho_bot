@@ -1,7 +1,7 @@
-from translation import (
+from utilities.translation import (
     set_translation
 )
 
-from wrapper import (
+from utilities.wrapper import (
     dialog
 )
