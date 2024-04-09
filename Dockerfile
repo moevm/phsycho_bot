@@ -9,6 +9,9 @@ WORKDIR /bot
 COPY src/requirements.txt src/
 RUN pip3 install -r src/requirements.txt
 
+# COPY tests/requirements.txt tests/
+# RUN pip3 install -r tests/requirements.txt
+
 COPY . /bot/
 
 
