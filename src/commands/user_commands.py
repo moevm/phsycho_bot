@@ -67,8 +67,9 @@ def change_focus(update: Update, context: CallbackContext):
 def change_mode(update: Update, context: CallbackContext):
     change_user_mode(update.effective_user)
     mode = get_user_mode(update.effective_user)
-    update.message.reply_text(
-        f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
+    dialog(
+        update,
+        text=f'Режим общения изменен. Текущий режим: {"текстовые сообщения" if not mode else "голосовые сообщения"}'
     )
 
 
