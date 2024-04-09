@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# WORKDIR
+cd ..
+
 DB_ADDRESS='mongodb://127.0.0.1:27017/test_db'
 
 # drop test db

@@ -13,7 +13,7 @@ services:
       - "127.0.0.1:27018:27017"
 
   bot:
-    container_name: "phsycho-bot"
+    container_name: "bot"
     build:
       context: .
       dockerfile: Dockerfile

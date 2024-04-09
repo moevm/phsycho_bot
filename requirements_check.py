@@ -1,4 +1,3 @@
-import os
 import sys
 
 NECESSARY_PACKAGES: dict[str, str] = {
@@ -14,18 +13,24 @@ def get_requirements(*, filename: str) -> list[str]:
     :return: List of required packages
     """
 
-    requirements: list[str] = []
     try:
         with open(filename, 'r') as file:
-            requirements = file.read().splitlines()
-    finally:
+            requirements: list[str] = file.read().splitlines()
+
+    except FileNotFoundError:
+        print(f"File Not Found Error: No such file {filename}")
+        sys.exit(2)
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        sys.exit(2)
+
+    else:
         if not requirements:
             return requirements
 
         requirements = list(filter(
             lambda requirement: not (not requirement or requirement.isspace()),
             requirements))
-
         return requirements
 
 
@@ -52,8 +57,8 @@ def str_reqs(filename: str, reqs: list[str]) -> None:
 def check_duplicates(*args: list[str]) -> None:
     for arg in args:
         if len(set(arg)) != len(arg):
-            raise ValueError("Find duplicate packages!")
-
+            print("Find duplicate packages!")
+            sys.exit(2)
     return
 
 
@@ -73,21 +78,20 @@ def get_data(file_path: str, template_path: str) -> tuple[set[str], set[str]]:
 
 
 def check(*, file_path: str, template_path: str) -> None:
-
     template_reqs, current_reqs = get_data(file_path=file_path, template_path=template_path)
 
-    if template_reqs == current_reqs:
+    diff = list(template_reqs ^ current_reqs)
+
+    if not diff:
         print("Correct requirements found!")
         sys.exit(0)
-
-    diff = list(template_reqs ^ current_reqs)
 
     print(f"Conflicting requirements found: {len(diff)}")
     for req in diff:
         if req in template_reqs:
             print(f"Package `{req}` is not in the requirements list!")
         if req in current_reqs:
-            print(f"There is no point in the {req} package!")
+            print(f"There is no point in the `{req}` package!")
     sys.exit(2)
 
 

@@ -1,4 +1,4 @@
-name: PEP8 Style Guide Enforcement
+name: PEP8 Style Guide Enforcement \ Requirements check
 
 on: [push]
 
@@ -11,10 +11,14 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: "3.10"
-    - name: Installation of Pylint
+    - name: Installation of testing utilities (Pipreqs, Pylint)
       run: |
         python -m pip install --upgrade pip
-        pip install pylint
+        pip install pipreqs pylint
+    - name: Dependency check (Run Pipreqs)
+      run: |
+        pipreqs --savepath src/reqs-check.txt --mode no-pin src/
+        python requirements_check.py src/requirements.txt src/reqs-check.txt
     - name: Install Dependencies
       run: |
         pip install -r src/requirements.txt

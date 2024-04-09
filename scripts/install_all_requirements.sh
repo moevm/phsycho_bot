@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# WORKDIR
+cd ..
+
 # install dependences
 pip install -r src/requirements.txt
 pip install -r emotional_speech_recognizing/requirements.txt
