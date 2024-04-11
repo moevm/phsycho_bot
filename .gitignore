@@ -67,6 +67,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# Package utils stiff:
+src/reqs-check.txt
+
 # Sphinx documentation
 docs/_build/
 

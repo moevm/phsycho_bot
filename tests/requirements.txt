@@ -1,0 +1,2 @@
+pyrogram==2.0.106
+pytest==8.1.1
