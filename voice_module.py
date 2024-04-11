@@ -14,7 +14,7 @@ from audio_classes import RecognizedSentence
 from db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
-                        DEBUG_ON, DEBUG_OFF)
+                        DEBUG_ON, DEBUG_OFF, TOKEN)
 from kafka.kafka_producer import produce_message
 
 
@@ -58,14 +58,13 @@ def work_with_audio(update: Update, context: CallbackContext):
     message = {
         'user': update.effective_user.to_dict(),
         'update_id': update.update_id,
-        'token': context.bot.token,
         'filename': no_noise_audio,
         'ogg_filename': ogg_filename
     }
     produce_message('stt', json.dumps(message))
 
 
-def audio_to_text(token, filename, ogg_filename, update_id, user):
+def audio_to_text(filename, ogg_filename, update_id, user):
     response = get_att_whisper(filename)
 
     if response.status_code == 200:
@@ -73,7 +72,7 @@ def audio_to_text(token, filename, ogg_filename, update_id, user):
     else:
         return
 
-    url = f'https://api.telegram.org/bot{token}/sendMessage'
+    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
     data = {
         'chat_id': user.id,
         'text': input_sentence.generate_output_info()
