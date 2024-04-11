@@ -1,7 +1,10 @@
 from confluent_kafka import Producer
+from env_config import TOKEN
 from uuid import uuid4
 
 from kafka import kafka_operations
+
+conf = kafka_operations.load_conf('kafka/producer_conf.json')
 
 
 def delivery_report(errmsg, msg):
@@ -13,11 +16,10 @@ def delivery_report(errmsg, msg):
 
 
 def produce_message(topic, message):
-    conf = kafka_operations.load_conf('kafka/producer_conf.json')
     producer = Producer(conf)
     producer.poll(0)
     try:
         producer.produce(topic=topic, key=str(uuid4()), value=message, on_delivery=delivery_report)
         producer.flush()
     except Exception as ex:
-        print("Exception happened :", ex)
+        print("Producer exception happened :", ex)
