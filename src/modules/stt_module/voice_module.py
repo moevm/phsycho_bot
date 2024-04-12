@@ -1,6 +1,9 @@
 import json
 import os
 import subprocess
+import torch
+from aniemore.recognizers.voice import VoiceRecognizer
+from aniemore.models import HuggingFaceModel
 
 from noisereduce import reduce_noise
 from scipy.io import wavfile
@@ -14,6 +17,14 @@ from databases.db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
                         DEBUG_ON, DEBUG_OFF)
+
+
+def recognize_audio(file_path, model_name):
+    model = getattr(HuggingFaceModel.Voice, model_name)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    vr = VoiceRecognizer(model=model, device=device)
+    result = vr.recognize(file_path, return_single_label=False)
+    return result
 
 
 def audio_to_text(filename):
@@ -66,6 +77,7 @@ def work_with_audio(update: Update, context: CallbackContext):
 
     try:
         input_sentence = audio_to_text(no_noise_audio)
+        result = recognize_audio(no_noise_audio, 'WavLM')
     except IOError as e:
         raise e
 
@@ -73,6 +85,7 @@ def work_with_audio(update: Update, context: CallbackContext):
 
     if DEBUG_MODE == DEBUG_ON:
         update.effective_user.send_message(input_sentence.generate_output_info())
+        update.effective_user.send_message(result)
 
     elif DEBUG_MODE == DEBUG_OFF:
         pass
