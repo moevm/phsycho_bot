@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import torch
+import time
 from aniemore.recognizers.voice import VoiceRecognizer
 from aniemore.models import HuggingFaceModel
 
@@ -61,23 +62,28 @@ def noise_reduce(input_audio):
          input_audio: str
             audio file name (*.wav)
 
-        output: str
+        output: str, float
             audio without noise file name (*_nonoise.wav)
+            audio duration in seconds
     """
     rate, data = wavfile.read(input_audio)
+    duration_sec = len(data) / rate
     date_noise_reduce = reduce_noise(y=data, sr=rate)
     output_audio_without_noise = input_audio.split('.')[0] + "_nonoise.wav"
     wavfile.write(output_audio_without_noise, rate, date_noise_reduce)
-    return output_audio_without_noise
+    return output_audio_without_noise, duration_sec
 
 
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename, ogg_filename = download_voice(update)
-    no_noise_audio = noise_reduce(wav_filename)
+    no_noise_audio, audio_duration = noise_reduce(wav_filename)
 
     try:
         input_sentence = audio_to_text(no_noise_audio)
+        start_time = time.time()
         result = recognize_audio(no_noise_audio, 'WavLM')
+        elapsed_time = time.time() - start_time
+        rounded_result = {emotion: "{:.6f}".format(value) for emotion, value in result.items()}
     except IOError as e:
         raise e
 
@@ -85,7 +91,9 @@ def work_with_audio(update: Update, context: CallbackContext):
 
     if DEBUG_MODE == DEBUG_ON:
         update.effective_user.send_message(input_sentence.generate_output_info())
-        update.effective_user.send_message(result)
+        update.effective_user.send_message(f"Длительность аудио: {audio_duration:.3f} секунд\n"
+                                           f"Время распознавания: {elapsed_time:.3f} секунд\n"
+                                           f"Вероятность эмоции: {rounded_result}")
 
     elif DEBUG_MODE == DEBUG_OFF:
         pass
