@@ -3,6 +3,7 @@ version: "3"
 
 services:
   db:
+    container_name: "mongo-db"
     image: mongo:6.0
     restart: unless-stopped
     env_file: .env
@@ -12,6 +13,7 @@ services:
       - "127.0.0.1:27018:27017"
 
   bot:
+    container_name: "bot"
     build:
       context: .
       dockerfile: Dockerfile

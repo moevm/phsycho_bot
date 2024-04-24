@@ -8,9 +8,9 @@ from telegram import Update
 from telegram.ext import CallbackContext
 from bson import json_util
 
-from whisper_module import get_att_whisper
-from audio_classes import RecognizedSentence
-from db import push_user_survey_progress, init_user, get_user_audio
+from modules.stt_module.whisper_module import get_att_whisper
+from modules.stt_module.audio_classes import RecognizedSentence
+from databases.db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
                         DEBUG_ON, DEBUG_OFF)
@@ -20,7 +20,6 @@ def audio_to_text(filename):
     response = get_att_whisper(filename)
 
     if response.status_code == 200:
-
         input_sentence = RecognizedSentence(response.json())
         return input_sentence
 

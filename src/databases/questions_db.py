@@ -5,7 +5,7 @@ from pymodm import fields, MongoModel
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 
-from db import User
+from databases.db import User
 
 
 class Question(MongoModel):
@@ -96,7 +96,7 @@ def get_answer(quest_id) -> Optional[Answer]:
         return None
 
 
-def dict_to_str_question(quest_dict: dict) -> str:
+def to_str_question(quest_dict: dict) -> str:
     return (f'_id: {quest_dict["_id"]} \nСпрашивает: {quest_dict["username"]} '
             f'\nВопрос: {quest_dict["text"]} \n{quest_dict["date"].strftime("%m/%d/%Y, %H:%M:%S")}')
 

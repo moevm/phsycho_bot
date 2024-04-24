@@ -9,7 +9,7 @@ class WhisperSettings:
     asr_model = ASR_MODEL
 
 
-def get_att_whisper(filename):
+def get_att_whisper(filename: str) -> requests.Response:
     """
      filename: str
         audio file name

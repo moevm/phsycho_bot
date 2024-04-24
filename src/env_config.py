@@ -1,5 +1,6 @@
 from os import getenv
 
+TELEGRAM_TOKEN = getenv('TELEGRAM_TOKEN')
 ADMIN = getenv('ADMIN')
 
 DEBUG_MODE = getenv('DEBUG_MODE')
