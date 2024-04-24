@@ -34,6 +34,12 @@ services:
     container_name: "whisper-asr-webservice"
     restart: unless-stopped
     env_file: .env
+    environment:
+      - ASR_MODEL_PATH=/data/whisper
+    volumes:
+      - whisper-data:/data/whisper/
+
 
 volumes:
   db-data:
+  whisper-data:
