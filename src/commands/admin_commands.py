@@ -1,11 +1,11 @@
+from math import ceil
+
 from telegram import Update
 from telegram.ext import (
     CallbackContext,
     ConversationHandler,
     Updater
 )
-
-from math import ceil
 
 from databases.db import (
     get_users_not_answer_last24hours,

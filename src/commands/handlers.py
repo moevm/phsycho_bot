@@ -34,7 +34,6 @@ from keyboard import (
 )
 
 from modules.tts_module.silero_module import (
-    clear_audio_cache,
     bot_answer_audio
 )
 
