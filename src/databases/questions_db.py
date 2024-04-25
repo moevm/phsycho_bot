@@ -102,4 +102,4 @@ def to_str_question(quest_dict: dict) -> str:
 
 
 def to_str_answer(answer) -> str:
-    return f'Ответ: {answer.text} \n{answer.date.strftime("%m/%d/%Y, %H:%M:%S")}'
+    return f'Ответ: {answer.text} \n{answer.date.strftime("%d/%m/%Y, %H:%M:%S")}'
