@@ -98,7 +98,7 @@ def get_answer(quest_id) -> Optional[Answer]:
 
 def to_str_question(quest_dict: dict) -> str:
     return (f'_id: {quest_dict["_id"]} \nСпрашивает: {quest_dict["username"]} '
-            f'\nВопрос: {quest_dict["text"]} \n{quest_dict["date"].strftime("%m/%d/%Y, %H:%M:%S")}')
+            f'\nВопрос: {quest_dict["text"]} \n{quest_dict["date"].strftime("%d/%m/%Y, %H:%M:%S")}')
 
 
 def to_str_answer(answer) -> str:
