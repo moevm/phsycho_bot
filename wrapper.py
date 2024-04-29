@@ -1,4 +1,5 @@
 import json
+import ast
 
 from telegram import Update
 import requests
@@ -11,14 +12,13 @@ from db import get_user_mode
 
 
 def dialog(update: Update, text: str, reply_markup=None) -> None:
-
     mode = get_user_mode(update.effective_user)
     if mode:
         # try:
         message = {
             'user': update.effective_user.to_dict(),
             'text': text,
-            'reply_markup': None
+            'reply_markup': json.dumps(ast.literal_eval(str(reply_markup)))
         }
         produce_message('tts', json.dumps(message))
 
@@ -39,7 +39,7 @@ def send_voice(text, user, reply_markup):
                 'text': 'Ошибка в синтезе речи, попробуйте позже.'
             }
 
-            response = requests.post(url, json=data)
+            response = requests.post(url, json=data, timeout=3)
 
             if response.status_code == 200:
                 print('Request send successfully')
@@ -47,17 +47,22 @@ def send_voice(text, user, reply_markup):
                 print('Error sending request')
 
     else:
-        url = f'https://api.telegram.org/bot{TOKEN}/sendVoice'
-        data = {
-            'chat_id': user.id,
-            'voice': audio.content,
-            'reply_markup': reply_markup
+        if json.loads(reply_markup) is not None:
+            data = {
+                'reply_markup': reply_markup,
+            }
+        else:
+            data = {}
+
+        files = {
+            'voice': audio.content
         }
 
-        response = requests.post(url, json=data)
+        url = f"https://api.telegram.org/bot{TOKEN}/sendVoice?chat_id={str(user.id)}&voice="
+
+        response = requests.post(url, data=data, files=files)
 
         if response.status_code == 200:
             print('Request send successfully')
         else:
-            print('Error sending request')
-        clear_audio_cache()
+            print('Error sending request', response.status_code)
