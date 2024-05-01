@@ -1,10 +1,8 @@
-import os
-
 from confluent_kafka import Consumer
-from telegram import User, Bot, Update
+from telegram import User
 import json
 
-from kafka import kafka_operations
+from src.kafka import kafka_operations
 from voice_module import audio_to_text
 from wrapper import send_voice
 

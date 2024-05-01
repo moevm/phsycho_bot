@@ -1,8 +1,7 @@
 from confluent_kafka import Producer
-from env_config import TOKEN
 from uuid import uuid4
 
-from kafka import kafka_operations
+from src.kafka import kafka_operations
 
 conf = kafka_operations.load_conf('kafka/producer_conf.json')
 

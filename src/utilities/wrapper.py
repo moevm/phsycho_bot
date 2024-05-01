@@ -4,11 +4,19 @@ import ast
 from telegram import Update
 import requests
 
-from silero_module import bot_answer_audio, clear_audio_cache
-from kafka.kafka_producer import produce_message
 
-from env_config import (DEBUG_MODE, DEBUG_ON, DEBUG_OFF, TOKEN)
-from db import get_user_mode
+from src.kafka.kafka_producer import produce_message
+from modules.tts_module.silero_module import (
+    bot_answer_audio
+)
+
+from env_config import (
+    DEBUG_MODE,
+    DEBUG_ON,
+    DEBUG_OFF
+)
+
+from databases.db import get_user_mode
 
 
 def dialog(update: Update, text: str, reply_markup=None) -> None:
