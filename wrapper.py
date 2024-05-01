@@ -14,7 +14,6 @@ from db import get_user_mode
 def dialog(update: Update, text: str, reply_markup=None) -> None:
     mode = get_user_mode(update.effective_user)
     if mode:
-        # try:
         message = {
             'user': update.effective_user.to_dict(),
             'text': text,
@@ -41,18 +40,11 @@ def send_voice(text, user, reply_markup):
 
             response = requests.post(url, json=data, timeout=3)
 
-            if response.status_code == 200:
-                print('Request send successfully')
-            else:
-                print('Error sending request')
-
     else:
-        if json.loads(reply_markup) is not None:
-            data = {
-                'reply_markup': reply_markup,
-            }
-        else:
-            data = {}
+
+        data = {
+            'reply_markup': reply_markup,
+        } if json.loads(reply_markup) is not None else {}
 
         files = {
             'voice': audio.content
@@ -61,8 +53,3 @@ def send_voice(text, user, reply_markup):
         url = f"https://api.telegram.org/bot{TOKEN}/sendVoice?chat_id={str(user.id)}&voice="
 
         response = requests.post(url, data=data, files=files)
-
-        if response.status_code == 200:
-            print('Request send successfully')
-        else:
-            print('Error sending request', response.status_code)
