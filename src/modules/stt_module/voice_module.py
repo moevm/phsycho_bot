@@ -15,7 +15,7 @@ from databases.db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
                         DEBUG_ON, DEBUG_OFF, TOKEN)
-from src.kafka.kafka_producer import produce_message
+from kafka.kafka_producer import produce_message
 
 
 def download_voice(update: Update):
