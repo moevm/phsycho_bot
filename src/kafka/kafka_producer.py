@@ -1,9 +1,11 @@
 from confluent_kafka import Producer
 from uuid import uuid4
+import os
 
-from src.kafka import kafka_operations
+from kafka import kafka_operations
 
-conf = kafka_operations.load_conf('kafka/producer_conf.json')
+
+conf = kafka_operations.load_conf('src/kafka/producer_conf.json')
 
 
 def delivery_report(errmsg, msg):

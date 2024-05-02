@@ -5,7 +5,7 @@ from telegram import Update
 import requests
 
 
-from src.kafka.kafka_producer import produce_message
+from kafka.kafka_producer import produce_message
 from modules.tts_module.silero_module import (
     bot_answer_audio
 )
@@ -13,7 +13,8 @@ from modules.tts_module.silero_module import (
 from env_config import (
     DEBUG_MODE,
     DEBUG_ON,
-    DEBUG_OFF
+    DEBUG_OFF,
+    TOKEN
 )
 
 from databases.db import get_user_mode

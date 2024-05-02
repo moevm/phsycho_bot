@@ -2,11 +2,11 @@ from confluent_kafka import Consumer
 from telegram import User
 import json
 
-from src.kafka import kafka_operations
-from voice_module import audio_to_text
-from wrapper import send_voice
+from kafka import kafka_operations
+from modules.stt_module.voice_module import audio_to_text
+from utilities.wrapper import send_voice
 
-conf = kafka_operations.load_conf('kafka/consumer_conf.json')
+conf = kafka_operations.load_conf('src/kafka/consumer_conf.json')
 
 
 def process_stt_message(message_info):
