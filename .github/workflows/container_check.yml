@@ -10,20 +10,20 @@ jobs:
 
       - name: Create .env
         env:
-          TELEGRAM_TOKEN: abcd
+          TELEGRAM_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
         run: |
           cp env_file .env
           sed -i -e "s/PasteYourTelegramToken/${TELEGRAM_TOKEN}/g" .env
-          cat .env
 
-#      - name: Build images
-#        run: |
-#          docker compose build
-#
-#      - name: Start containers
-#        run: |
-#          docker compose up -d
-#          sleep 20
-#
-#      - name: Check containers
-#        run: |
+      - name: Build images
+        run: |
+          docker compose build
+
+      - name: Start containers
+        run: |
+          docker compose up -d
+          sleep 20
+
+      - name: Check containers
+        run: |
+          echo "Some checks needed"
