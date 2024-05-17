@@ -8,16 +8,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install utilities
-        run: |
-          sudo apt-get install sed
-
       - name: Create .env
         env:
           TELEGRAM_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
         run: |
           cp env_file .env
-          sed -i 's/PasteYourTelegramToken/$TELEGRAM_TOKEN' .env
+          sed -i.bak "s/PasteYourTelegramToken/${TELEGRAM_TOKEN}" .env
           cat .env
 
 #      - name: Build images
