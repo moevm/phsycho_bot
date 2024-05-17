@@ -1,9 +1,18 @@
 name: Container collection check
 
-on: [push]
+on:
+  push:
+    paths:
+      - 'env_file'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'src/**'
+  workflow_run:
+    workflows: [PEP8 Style Guide Enforcement \ Requirements check]
+    types: [completed]
 
 jobs:
-  build:
+  docker_check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
