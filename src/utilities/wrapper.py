@@ -1,5 +1,6 @@
 import json
 import ast
+import time
 
 from telegram import Update
 import requests
@@ -62,3 +63,4 @@ def send_voice(text, user, reply_markup):
         url = f"https://api.telegram.org/bot{TOKEN}/sendVoice?chat_id={str(user.id)}&voice="
 
         response = requests.post(url, data=data, files=files)
+    time.sleep(10)
