@@ -447,6 +447,7 @@ def get_users_not_finish_survey():
         survey_progress = get_survey_progress(user, last_focus)
         if survey_progress.need_answer:
             list_survey_progress = SurveyProgress.objects.raw({'survey_id': last_focus})
+            start_time, time_not_finish = None, None
             for i in list_survey_progress:
                 if i.user.id == user.id and i.survey_step == 0:
                     start_time = i.time_send_question
