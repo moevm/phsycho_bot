@@ -48,7 +48,9 @@ def send_voice(text, user, reply_markup):
                 'text': 'Ошибка в синтезе речи, попробуйте позже.'
             }
 
-            response = requests.post(url, json=data, timeout=3)
+            response = requests.post(url, json=data)
+            if response.status_code != 200:
+                print(f'Error sending request: {response.text}')
 
     else:
 
@@ -63,4 +65,6 @@ def send_voice(text, user, reply_markup):
         url = f"https://api.telegram.org/bot{TOKEN}/sendVoice?chat_id={str(user.id)}&voice="
 
         response = requests.post(url, data=data, files=files)
+        if response.status_code != 200:
+            print(f'Error sending request: {response.text}')
     time.sleep(10)

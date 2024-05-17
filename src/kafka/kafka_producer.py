@@ -1,6 +1,6 @@
-from confluent_kafka import Producer
 from uuid import uuid4
-import os
+from confluent_kafka import Producer, KafkaException
+
 
 from kafka import kafka_operations
 
@@ -22,5 +22,5 @@ def produce_message(topic, message):
     try:
         producer.produce(topic=topic, key=str(uuid4()), value=message, on_delivery=delivery_report)
         producer.flush()
-    except Exception as ex:
+    except KafkaException as ex:
         print("Producer exception happened :", ex)

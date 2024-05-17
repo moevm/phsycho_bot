@@ -1,6 +1,7 @@
+import json
 from confluent_kafka import Consumer
 from telegram import User
-import json
+
 
 from kafka import kafka_operations
 from modules.stt_module.voice_module import audio_to_text
@@ -32,7 +33,7 @@ def main():
         if message is None:
             continue
         if message.error():
-            print("Consumer error happened: {}".format(message.error()))
+            print(f"Consumer error happened: {message.error()}")
             continue
 
         # print("Connected to Topic: {} and Partition : {}".format(message.topic(), message.partition()))
