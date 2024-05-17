@@ -15,10 +15,13 @@ jobs:
           cp env_file .env
           sed -i -e "s/PasteYourTelegramToken/${TELEGRAM_TOKEN}/g" .env
 
-      - name: Pull and Build images
+      - name: Pull images
         run: |
-          docker compose pull -q
-          docker compose build -q
+          docker compose pull --ignore-buildable
+
+      - name: Build images
+        run: |
+          docker compose build
 
       - name: Start containers
         run: |
