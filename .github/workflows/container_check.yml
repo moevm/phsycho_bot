@@ -8,6 +8,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install utilities
+        run: |
+          sudo apt-get install sed
+
       - name: Create .env
         env:
           TELEGRAM_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
