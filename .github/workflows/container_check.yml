@@ -13,7 +13,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
         run: |
           cp env_file .env
-          sed -i -e 's/PasteYourTelegramToken/$TELEGRAM_TOKEN' .env
+          sed -i 's/PasteYourTelegramToken/$TELEGRAM_TOKEN' .env
           cat .env
 
 #      - name: Build images
