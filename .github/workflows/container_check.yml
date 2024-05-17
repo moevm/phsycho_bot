@@ -1,0 +1,29 @@
+name: Container collection check
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create .env
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
+        run: |
+          cp env_file .env
+          sed -i -e 's/PasteYourTelegramToken/$TELEGRAM_TOKEN' .env
+          cat .env
+
+#      - name: Build images
+#        run: |
+#          docker compose build
+#
+#      - name: Start containers
+#        run: |
+#          docker compose up -d
+#          sleep 20
+#
+#      - name: Check containers
+#        run: |
