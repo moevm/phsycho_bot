@@ -1,8 +1,8 @@
 import json
 import os
 import subprocess
-import torch
 import time
+import torch
 from aniemore.recognizers.voice import VoiceRecognizer
 from aniemore.models import HuggingFaceModel
 
@@ -83,7 +83,7 @@ def work_with_audio(update: Update, context: CallbackContext):
         start_time = time.time()
         result = recognize_audio(no_noise_audio, 'WavLM')
         elapsed_time = time.time() - start_time
-        rounded_result = {emotion: "{:.6f}".format(value) for emotion, value in result.items()}
+        rounded_result = {emotion: f"{value:0.6f}" for emotion, value in result.items()}
     except IOError as e:
         raise e
 
