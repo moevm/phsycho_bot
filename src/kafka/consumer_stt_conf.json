@@ -1,0 +1,6 @@
+{
+    "bootstrap.servers": "kafka:29092",
+    "group.id": "Psycho-bot-stt",
+    "auto.offset.reset": "earliest",
+    "enable.auto.commit": true
+}

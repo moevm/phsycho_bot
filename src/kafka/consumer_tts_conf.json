@@ -1,6 +1,6 @@
 {
     "bootstrap.servers": "kafka:29092",
-    "group.id": "Psycho-bot",
+    "group.id": "Psycho-bot-tts",
     "auto.offset.reset": "earliest",
     "enable.auto.commit": true
 }
