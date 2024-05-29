@@ -29,6 +29,6 @@ def main():
             print(f"Consumer error happened: {message.error()}")
             continue
 
-        print("Connected to Topic: {} and Partition : {}".format(message.topic(), message.partition()))
-        print("Received Message : {} with Offset : {}".format(message.value().decode('utf-8'), message.offset()))
+        # print("Connected to Topic: {} and Partition : {}".format(message.topic(), message.partition()))
+        # print("Received Message : {} with Offset : {}".format(message.value().decode('utf-8'), message.offset()))
         process_stt_message(message.value().decode('utf-8'))
