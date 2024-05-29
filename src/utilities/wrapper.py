@@ -15,7 +15,8 @@ from env_config import (
     DEBUG_MODE,
     DEBUG_ON,
     DEBUG_OFF,
-    TOKEN
+    TOKEN,
+    DELAY
 )
 
 from databases.db import get_user_mode
@@ -67,4 +68,4 @@ def send_voice(text, user, reply_markup):
         response = requests.post(url, data=data, files=files)
         if response.status_code != 200:
             print(f'Error sending request: {response.text}')
-    time.sleep(10)
+    time.sleep(DELAY)
