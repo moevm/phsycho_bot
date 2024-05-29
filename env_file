@@ -8,3 +8,4 @@ SAMPLE_RATE=48000
 SPEAKER=baya
 ASR_ENGINE=openai_whisper
 ASR_MODEL=base
+DELAY=15
