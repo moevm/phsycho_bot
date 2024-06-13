@@ -8,12 +8,12 @@ on:
       - 'docker-compose.yml'
       - 'src/**'
   workflow_run:
-    workflows: [PEP8 Style Guide Enforcement \ Requirements check]
-    types: [completed]
+    workflows: [ PEP8 Style Guide Enforcement & Requirements check ]
+    types: [ completed ]
 
 jobs:
   docker_check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
 
@@ -39,4 +39,12 @@ jobs:
 
       - name: Check containers
         run: |
-          echo "Some checks needed"
+          echo "Running containers <$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)> of $(docker ps -a --format "{{.ID}}" | wc -l)"
+          docker ps -a --filter "status=running" --format "{{.ID}}\t{{.Names}}"
+          if [[ "$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)" -eq "$(docker ps -a --format "{{.ID}}" | wc -l)" ]]; then
+            echo "CHECK COMPLETE"
+            exit 0
+          else
+            echo "CHECK FAILED"
+            exit 1
+          fi
