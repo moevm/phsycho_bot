@@ -39,12 +39,12 @@ jobs:
 
       - name: Check containers
         run: |
-          echo "Running containers <$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)> of $(docker ps -a --format "{{.ID}}" | wc -l)"
+          echo "Running containers <$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)> of $(docker ps -a --format "{{.ID}}" | wc -l)."
           docker ps -a --filter "status=running" --format "{{.ID}}\t{{.Names}}"
           if [[ "$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)" -eq "$(docker ps -a --format "{{.ID}}" | wc -l)" ]]; then
-            echo "CHECK COMPLETE"
+            echo -e "\nCHECK COMPLETE"
             exit 0
           else
-            echo "CHECK FAILED"
+            echo -e "\nCHECK FAILED"
             exit 1
           fi
