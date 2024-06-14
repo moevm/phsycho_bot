@@ -1,8 +1,8 @@
 import json
 
 from confluent_kafka import Consumer
-from kafka import kafka_operations
 from telegram import User
+from kafka import kafka_operations
 from utilities.wrapper import send_voice
 
 

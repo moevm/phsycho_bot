@@ -1,9 +1,9 @@
 import json
 
 from confluent_kafka import Consumer
+from telegram import User
 from kafka import kafka_operations
 from modules.stt_module.voice_module import audio_to_text
-from telegram import User
 
 
 def process_stt_message(message_info):

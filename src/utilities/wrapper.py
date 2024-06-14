@@ -1,6 +1,7 @@
 import json
 
 import requests
+from telegram import Update
 from databases.db import get_user_mode
 from env_config import (
     DEBUG_MODE,
@@ -12,7 +13,6 @@ from kafka.kafka_producer import produce_message
 from modules.tts_module.silero_module import (
     bot_answer_audio
 )
-from telegram import Update
 
 
 def dialog(update: Update, text: str, reply_markup=None) -> None:
