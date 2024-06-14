@@ -1,12 +1,9 @@
 import json
+
 from confluent_kafka import Consumer
-from telegram import User
-
-
 from kafka import kafka_operations
+from telegram import User
 from utilities.wrapper import send_voice
-
-conf = kafka_operations.load_conf('src/kafka/consumer_tts_conf.json')
 
 
 def process_tts_message(message_info):
@@ -16,6 +13,7 @@ def process_tts_message(message_info):
 
 
 def main():
+    conf = kafka_operations.load_conf('src/kafka/consumer_tts_conf.json')
     consumer = Consumer(conf)
     consumer.subscribe(['tts'])
     while True:
