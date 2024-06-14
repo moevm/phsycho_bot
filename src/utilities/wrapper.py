@@ -1,4 +1,3 @@
-import ast
 import json
 
 import requests
@@ -22,7 +21,7 @@ def dialog(update: Update, text: str, reply_markup=None) -> None:
         message = {
             'user': update.effective_user.to_dict(),
             'text': text,
-            'reply_markup': json.dumps(ast.literal_eval(str(reply_markup)))
+            'reply_markup': reply_markup.to_json() if reply_markup else None
         }
         produce_message('tts', json.dumps(message))
 
@@ -51,7 +50,7 @@ def send_voice(text, user, reply_markup):
 
         data = {
             'reply_markup': reply_markup,
-        } if json.loads(reply_markup) is not None else {}
+        } if reply_markup is not None else {}
 
         files = {
             'voice': audio.content
