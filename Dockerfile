@@ -14,6 +14,13 @@ RUN pip3 install -r src/requirements.txt
 
 COPY . /bot/
 
+ENV TZ 'Europe/Moscow'
+RUN echo $TZ > /etc/timezone && \
+    apt-get install -y tzdata && \
+    rm /etc/localtime && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
+
 
 ARG TELEGRAM_TOKEN
 

@@ -25,7 +25,6 @@ from databases.questions_db import (
     to_str_question,
     init_answer,
     get_answer,
-    to_str_answer
 )
 
 from env_config import TELEGRAM_TOKEN
@@ -95,16 +94,19 @@ def get_answer_with_id(update: Update, context: CallbackContext):
     if len(context.args):
         answer_id = context.args[0]
     else:
-        update.message.reply_text("Произошла ошибка.")
+        update.message.reply_text("Произошла ошибка в результате обработки id ответа, либо он не был получен.")
         return
 
+    question = get_question(answer_id)
     answer = get_answer(answer_id)
-    if not answer:
+    if not (question and answer):
         return
-    update.message.reply_text(to_str_answer(answer))
+    update.message.reply_text(
+        f"{str(question)}\n\n{str(answer)}"
+    )
 
 
-def answer_support_question(update: Update, context: CallbackContext):
+def start_answer_conversation(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
 
     if not user.is_admin:
@@ -161,4 +163,8 @@ def send_answer_to_user(question: Question, text: str):
         return
 
     updater = Updater(TELEGRAM_TOKEN, use_context=True)
-    updater.bot.send_message(to_user, text)
+    updater.bot.send_message(
+        to_user,
+        f"Некоторое время назад мы получили от вас вопрос:\n{question.text}\n\n"
+        f"Наш агент поддержки нашёл такой ответ:\n{text}"
+    )

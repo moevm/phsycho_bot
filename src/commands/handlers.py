@@ -122,7 +122,7 @@ def handle_conversation_mode(update, context, user, query):
     elif query.data == 'c_voice':
         push_user_mode(user, True)
     dialog(update,
-           text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
+           text=translation.gettext('Спасибо! Ты можешь изменить способ общения в любой момент командой /change_mode'))
     ask_start_questions(update, context)
 
 

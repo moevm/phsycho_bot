@@ -92,10 +92,10 @@ def change_pronoun(update: Update, context: CallbackContext):
         )
 
 
-def update_user_info(update: Update, context: CallbackContext):
+def update_user_info(update: Update, context: CallbackContext) -> None:
     update_info(update.effective_user)
     set_last_usage(update.effective_user)
-    # update.message.reply_text("Данные успешно обновлены.")
+    update.message.reply_text("Информация успешно обновлена.")
 
 
 def start_question_conversation(update: Update, context: CallbackContext):

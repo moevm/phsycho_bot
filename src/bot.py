@@ -40,7 +40,7 @@ from commands.admin_commands import (
     add_answer,
     get_support_questions,
     get_answer_with_id,
-    answer_support_question,
+    start_answer_conversation,
     get_answer_id,
     error_input_answer
 )
@@ -97,7 +97,7 @@ def main(token):
 
     updater.dispatcher.add_handler(
         ConversationHandler(
-            entry_points=[CommandHandler('answer_support_question', answer_support_question)],
+            entry_points=[CommandHandler('answer_support_question', start_answer_conversation)],
             states={
                 "get_answer_id": [
                     MessageHandler(Filters.text & ~Filters.command, get_answer_id)

@@ -19,6 +19,15 @@ class Question(MongoModel):
     def get_id(self):
         return self._id
 
+    def __str__(self):
+        return (f'_id: {self._id} \n\nСпрашивает: {self.username} '
+                f'\nВопрос: {self.text} \n{self.date.strftime("%d/%m/%Y, %H:%M:%S")}')
+
+
+def to_str_question(quest_dict: dict) -> str:
+    return (f'_id: {quest_dict["_id"]} \nСпрашивает: {quest_dict["username"]} '
+            f'\nВопрос: {quest_dict["text"]} \n{quest_dict["date"].strftime("%d/%m/%Y, %H:%M:%S")}')
+
 
 def init_question(user: User, text):
     Question(
@@ -39,6 +48,9 @@ def get_question(quest_id: str) -> Optional[Question]:
 
 
 def list_questions() -> list:
+    """
+    :return: list of questions like list[dict], not list[Question]
+    """
     queries = Question.objects.raw(
         {'answered': False}
     )
@@ -72,6 +84,9 @@ class Answer(MongoModel):
     text = fields.CharField()
     date = fields.DateTimeField()
 
+    def __str__(self):
+        return f'Ответ: {self.text} \n{self.date.strftime("%d/%m/%Y, %H:%M:%S")}'
+
 
 def init_answer(question_id, text):
     if not text:
@@ -94,12 +109,3 @@ def get_answer(quest_id) -> Optional[Answer]:
         return Answer.objects.get({'question_id': quest_id})
     except Answer.DoesNotExist:
         return None
-
-
-def to_str_question(quest_dict: dict) -> str:
-    return (f'_id: {quest_dict["_id"]} \nСпрашивает: {quest_dict["username"]} '
-            f'\nВопрос: {quest_dict["text"]} \n{quest_dict["date"].strftime("%d/%m/%Y, %H:%M:%S")}')
-
-
-def to_str_answer(answer) -> str:
-    return f'Ответ: {answer.text} \n{answer.date.strftime("%d/%m/%Y, %H:%M:%S")}'
