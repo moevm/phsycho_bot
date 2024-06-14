@@ -1,0 +1,50 @@
+name: Container collection check
+
+on:
+  push:
+    paths:
+      - 'env_file'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'src/**'
+  workflow_run:
+    workflows: [ PEP8 Style Guide Enforcement & Requirements check ]
+    types: [ completed ]
+
+jobs:
+  docker_check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create .env
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TEST_BOT_TOKEN }}
+        run: |
+          cp env_file .env
+          sed -i -e "s/PasteYourTelegramToken/${TELEGRAM_TOKEN}/g" .env
+
+      - name: Build images
+        run: |
+          docker compose build
+
+      - name: Pull images
+        run: |
+          docker compose pull --ignore-buildable
+
+      - name: Start containers
+        run: |
+          docker compose up -d
+          sleep 30
+
+      - name: Check containers
+        run: |
+          echo "Running containers <$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)> of $(docker ps -a --format "{{.ID}}" | wc -l)."
+          docker ps -a --filter "status=running" --format "{{.ID}}\t{{.Names}}"
+          if [[ "$(docker ps -a --filter "status=running" --format "{{.ID}}" | wc -l)" -eq "$(docker ps -a --format "{{.ID}}" | wc -l)" ]]; then
+            echo -e "\nCHECK COMPLETE"
+            exit 0
+          else
+            echo -e "\nCHECK FAILED"
+            exit 1
+          fi
