@@ -18,6 +18,7 @@ from utilities import dialog
 
 TREE_EXAMPLE_PATH = './tree_example.json'
 
+
 class Script:  # класс для хранения дерева
     def __init__(self, tree: dict):
         self.tree = tree

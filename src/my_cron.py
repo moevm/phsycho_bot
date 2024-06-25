@@ -18,7 +18,6 @@ from databases.db import (
     get_users_not_finish_survey
 )
 
-
 MINUTES_FOR_LOOP = 1
 DAYS_OFFSET = 7
 

@@ -1,5 +1,4 @@
 import json
-
 import requests
 from telegram import Update
 from databases.db import get_user_mode
