@@ -54,6 +54,8 @@ from commands.handlers import (
 from env_config import ADMIN
 
 import my_cron
+import kafka.consumer_tts
+import kafka.consumer_stt
 
 from logs import init_logger
 
@@ -144,12 +146,16 @@ class Worker(threading.Thread):
         auth_in_db(username=sys.argv[2], password=sys.argv[3])
         if token_ == 'bot':
             main(sys.argv[1])
+        elif token_ == 'kafka-tts':
+            kafka.consumer_tts.main()
+        elif token_ == 'kafka-stt':
+            kafka.consumer_stt.main()
         else:
             my_cron.main(sys.argv[1])
 
 
 if __name__ == '__main__':
-    tokens = ['bot', 'schedule']
+    tokens = ['bot', 'schedule', 'kafka-tts', 'kafka-stt']
     work_queue = queue.Queue()
     for token in tokens:
         work_queue.put(token)

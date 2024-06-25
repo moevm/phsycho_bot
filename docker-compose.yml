@@ -22,12 +22,17 @@ services:
     env_file: .env
     depends_on:
       - db
+      - kafka
 
   silero-tts-service:
     image: "navatusein/silero-tts-service:1.0.0"
     container_name: "silero-tts-service"
     restart: unless-stopped
     env_file: .env
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
   whisper-asr-webservice:
     image: "onerahmet/openai-whisper-asr-webservice:v1.2.0"
@@ -38,6 +43,19 @@ services:
       - ASR_MODEL_PATH=/data/whisper
     volumes:
       - whisper-data:/data/whisper/
+
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: "wurstmeister/kafka:2.13-2.8.1"
+    container_name: kafka
+    ports:
+      - "9094:9094"
+    env_file: .env
 
 
 volumes:
