@@ -2,7 +2,6 @@ from telegram import Update
 
 from modules.tts_module.silero_module import (
     bot_answer_audio,
-    clear_audio_cache
 )
 
 from env_config import (
@@ -29,7 +28,6 @@ def dialog(update: Update, text: str, reply_markup=None) -> None:
 
         else:
             update.effective_user.send_voice(voice=audio.content, reply_markup=reply_markup)
-            clear_audio_cache()
 
     else:
         update.effective_user.send_message(text=text, reply_markup=reply_markup)

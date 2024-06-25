@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import List
+from typing import List, Optional
 from string import punctuation
 from collections import Counter
 import nltk
@@ -40,6 +40,7 @@ class User(MongoModel):
     chosen_name = fields.CharField()
     first_name = fields.CharField()
     last_name = fields.CharField()
+    is_admin = fields.BooleanField()
     is_bot = fields.BooleanField()
     language_code = fields.CharField()
     initial_reason = fields.CharField()
@@ -56,8 +57,11 @@ class User(MongoModel):
 
         return 'f_no_focus'
 
+    # def __str__(self):
+    #     return f'{self.id} | {self.first_name} | {self.last_name}'
+
     def __str__(self):
-        return f'{self.id} | {self.first_name} | {self.last_name}'
+        return f'{self.id} | {self.language_code} | {self.first_name} | {self.last_name}'
 
 
 class Schedule(MongoModel):
@@ -134,6 +138,45 @@ class BotAudioAnswer(MongoModel):
         )
 
 
+def get_user(user_id: int) -> Optional[User]:
+    try:
+        return User.objects.get({'id': user_id})
+    except User.DoesNotExist:
+        return None
+
+
+def create_admin(user_id: int) -> None:
+    user = get_user(user_id)
+
+    if user:
+        if not user.is_admin:
+            user.is_admin = True
+            user.save()
+
+    else:
+        User(
+            id=user_id,
+            first_name='Admin',
+            is_bot=False,
+            is_admin=True,
+            username='admin',
+            language_code='ru',
+        ).save()
+
+
+def update_info(user) -> None:
+    db_user = init_user(user)
+
+    if not db_user:
+        return
+
+    db_user.last_name = user.last_name
+    db_user.first_name = user.first_name
+    db_user.username = user.username
+    db_user.is_bot = user.is_bot
+    db_user.save()
+
+
 def init_user(user) -> User:
     try:
         return User.objects.get({'id': user.id})
@@ -142,6 +185,7 @@ def init_user(user) -> User:
             id=user.id,
             first_name=user.first_name,
             is_bot=user.is_bot,
+            is_admin=False,
             username=user.username,
             chosen_name=' ',
             initial_reason=' ',

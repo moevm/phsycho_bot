@@ -8,10 +8,12 @@ from telegram.ext import (
     CallbackQueryHandler,
     MessageHandler,
     Filters,
+    ConversationHandler
 )
 
 from databases.db import (
-    auth_in_db
+    auth_in_db,
+    create_admin
 )
 
 from modules.stt_module.voice_module import (
@@ -24,12 +26,23 @@ from commands.user_commands import (
     stats,
     change_focus,
     change_mode,
-    change_pronoun
+    change_pronoun,
+    update_user_info,
+    start_question_conversation,
+    add_question,
+    error_input_question
 )
 
 from commands.admin_commands import (
     debug_get_users_not_answer_last24hours,
-    debug_get_users_not_finish_survey
+    debug_get_users_not_finish_survey,
+    add_admin,
+    add_answer,
+    get_support_questions,
+    get_answer_with_id,
+    start_answer_conversation,
+    get_answer_id,
+    error_input_answer
 )
 
 from commands.handlers import (
@@ -37,6 +50,8 @@ from commands.handlers import (
     button,
     text_processing
 )
+
+from env_config import ADMIN
 
 import my_cron
 
@@ -60,6 +75,43 @@ def main(token):
     updater.dispatcher.add_handler(
         CommandHandler('get_users_not_answer_last24hours', debug_get_users_not_answer_last24hours)
     )
+
+    updater.dispatcher.add_handler(CommandHandler('add_admin', add_admin))
+    updater.dispatcher.add_handler(CommandHandler('get_support_questions', get_support_questions))
+    updater.dispatcher.add_handler(CommandHandler('update_info', update_user_info))
+    updater.dispatcher.add_handler(CommandHandler('get_answer_with_id', get_answer_with_id))
+
+    updater.dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler('add_question', start_question_conversation)],
+            states={
+                "add_question": [
+                    MessageHandler(Filters.text & ~Filters.command, add_question)
+                ]
+            },
+            fallbacks=[
+                MessageHandler(Filters.voice | Filters.command, error_input_question)
+            ]
+        )
+    )
+
+    updater.dispatcher.add_handler(
+        ConversationHandler(
+            entry_points=[CommandHandler('answer_support_question', start_answer_conversation)],
+            states={
+                "get_answer_id": [
+                    MessageHandler(Filters.text & ~Filters.command, get_answer_id)
+                ],
+                "add_answer": [
+                    MessageHandler(Filters.text & ~Filters.command, add_answer)
+                ]
+            },
+            fallbacks=[
+                MessageHandler(Filters.voice | Filters.command, error_input_answer)
+            ]
+        )
+    )
+
     updater.dispatcher.add_handler(CommandHandler('cancel', cancel))
 
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
@@ -81,6 +133,9 @@ class Worker(threading.Thread):
         try:
             token_try = self.work_queue.get()
             self.process(token_try)
+
+            if ADMIN.isdigit():
+                create_admin(int(ADMIN))
         finally:
             pass
 

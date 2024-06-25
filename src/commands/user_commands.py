@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import (
-    CallbackContext
+    CallbackContext,
+    ConversationHandler
 )
 
 from utilities import (
@@ -15,7 +16,12 @@ from databases.db import (
     change_user_pronoun,
     get_user_pronoun,
     change_user_mode,
-    get_user_mode
+    get_user_mode,
+    update_info
+)
+
+from databases.questions_db import (
+    init_question
 )
 
 from keyboard import (
@@ -84,3 +90,33 @@ def change_pronoun(update: Update, context: CallbackContext):
         update.message.reply_text(
             'Режим общения изменен. Текущий режим: общение на "Ты"'
         )
+
+
+def update_user_info(update: Update, context: CallbackContext) -> None:
+    update_info(update.effective_user)
+    set_last_usage(update.effective_user)
+    update.message.reply_text("Информация успешно обновлена.")
+
+
+def start_question_conversation(update: Update, context: CallbackContext):
+    update.message.reply_text("Введите вопрос:")
+    user = init_user(update.effective_user)
+    set_last_usage(user)
+    return "add_question"
+
+
+def add_question(update: Update, context: CallbackContext):
+    user = init_user(update.effective_user)
+
+    text = update.message.text
+    if len(text):
+        init_question(user, text)
+        update.message.reply_text("Вопрос успешно создан!")
+    else:
+        update.message.reply_text("Некорректно задан вопрос.")
+    return ConversationHandler.END
+
+
+def error_input_question(update: Update, context: CallbackContext):
+    update.message.reply_text("Ожидался текст.")
+    return ConversationHandler.END

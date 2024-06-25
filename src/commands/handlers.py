@@ -34,7 +34,6 @@ from keyboard import (
 )
 
 from modules.tts_module.silero_module import (
-    clear_audio_cache,
     bot_answer_audio
 )
 
@@ -123,7 +122,7 @@ def handle_conversation_mode(update, context, user, query):
     elif query.data == 'c_voice':
         push_user_mode(user, True)
     dialog(update,
-           text=translation.gettext('Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'))
+           text=translation.gettext('Спасибо! Ты можешь изменить способ общения в любой момент командой /change_mode'))
     ask_start_questions(update, context)
 
 
@@ -295,7 +294,9 @@ def send_audio_answer(update: Update, context: CallbackContext):
     if audio:
         update.effective_user.send_voice(voice=audio.content)
         # push_bot_answer(update.update_id, answer=audio.content, text=text)
-        clear_audio_cache()  # only for testing
+
+        # only for tests
+        # clear_audio_cache()
     else:
         error(update, context)
 
@@ -316,7 +317,7 @@ def ask_user_conversation_mode(update: Update, context: CallbackContext):
     )
 
 
-def ask_start_questions(update, context):
+def ask_start_questions(update: Update, context: CallbackContext):
     user = init_user(update.effective_user)
     translation = set_translation(user)
     dialog(update,
