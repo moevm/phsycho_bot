@@ -31,7 +31,7 @@ def test_start_command(app_and_username):
     assert msg.text == 'Спасибо! Ты можешь изменить обращение в любой момент командой /change_pronoun'
     sleep(1)
     msg = app.get_messages(username, msg.id + 1)
-    assert msg.text == 'Спасибо! Ты можешь изменить обращение в любой момент командой /change_mode'
+    assert msg.text == 'Спасибо! Ты можешь изменить способ общения в любой момент командой /change_mode'
     sleep(1)
     msg = app.get_messages(username, msg.id + 1)
     assert msg.text == ('Сейчас немного расскажу, как будет устроено наше взаимодействие. Данное приложение '
