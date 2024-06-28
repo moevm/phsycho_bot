@@ -74,8 +74,6 @@ services:
   zookeeper:
     image: "wurstmeister/zookeeper"
     container_name: "zookeeper"
-    ports:
-      - "2181:2181"
     volumes:
       - zookeeper-data:/opt/zookeeper-3.4.13/data
       - zookeeper-conf:/opt/zookeeper-3.4.13/conf
@@ -83,8 +81,6 @@ services:
   kafka:
     image: "wurstmeister/kafka:2.13-2.8.1"
     container_name: "kafka"
-    ports:
-      - "9094:9094"
     env_file: .env
     volumes:
       - kafka-data:/kafka
