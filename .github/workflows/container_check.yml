@@ -35,7 +35,7 @@ jobs:
       - name: Start containers
         run: |
           docker compose up -d
-          sleep 30
+          sleep 45
 
       - name: Check containers
         run: |

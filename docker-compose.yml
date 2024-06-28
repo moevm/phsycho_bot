@@ -1,6 +1,3 @@
-version: "3"
-
-
 services:
   db:
     container_name: "mongo-db"
@@ -8,9 +5,17 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - db-data:/data/db/
+      - db-data:/data/db
+      - db-conf:/data/configdb
     ports:
       - "127.0.0.1:27018:27017"
+    healthcheck:
+      test: mongosh --eval 'db.runCommand("ping")' --quiet
+      interval: 2m
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+      start_interval: 15s
 
   bot:
     container_name: "bot"
@@ -21,14 +26,29 @@ services:
     restart: unless-stopped
     env_file: .env
     depends_on:
-      - db
-      - kafka
+      db:
+        condition: service_healthy
+      silero-tts-service:
+        condition: service_healthy
+      whisper-asr-webservice:
+        condition: service_healthy
+      zookeeper:
+        condition: service_started
+      kafka:
+        condition: service_started
 
   silero-tts-service:
     image: "navatusein/silero-tts-service:1.0.0"
     container_name: "silero-tts-service"
     restart: unless-stopped
     env_file: .env
+    healthcheck:
+      test: curl -is localhost:9898 | head -n 1 | grep 200 || exit 1
+      interval: 2m
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+      start_interval: 15s
     deploy:
       resources:
         limits:
@@ -43,21 +63,33 @@ services:
       - ASR_MODEL_PATH=/data/whisper
     volumes:
       - whisper-data:/data/whisper/
-
+    healthcheck:
+      test: timeout 3 bash -c "</dev/tcp/localhost/9000"; echo $?
+      interval: 2m
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+      start_interval: 15s
 
   zookeeper:
-    image: wurstmeister/zookeeper
-    container_name: zookeeper
-    ports:
-      - "2181:2181"
+    image: "wurstmeister/zookeeper"
+    container_name: "zookeeper"
+    volumes:
+      - zookeeper-data:/opt/zookeeper-3.4.13/data
+      - zookeeper-conf:/opt/zookeeper-3.4.13/conf
+
   kafka:
     image: "wurstmeister/kafka:2.13-2.8.1"
-    container_name: kafka
-    ports:
-      - "9094:9094"
+    container_name: "kafka"
     env_file: .env
+    volumes:
+      - kafka-data:/kafka
 
 
 volumes:
   db-data:
+  db-conf:
   whisper-data:
+  zookeeper-data:
+  zookeeper-conf:
+  kafka-data:
