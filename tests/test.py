@@ -116,10 +116,22 @@ def test_change_pronoun(app_and_username):
 def test_change_mode(app_and_username):
     app, username = app_and_username
     msg = app.send_message(username, '/change_mode')
-    sleep(10)
+    sleep(20)
     msg = app.get_messages(username, msg.id + 1)
     if msg.text:
         msg = app.send_message(username, '/change_mode')
-        sleep(10)
+        sleep(20)
         msg = app.get_messages(username, msg.id + 1)
     assert msg.media == pyrogram.enums.MessageMediaType.VOICE
+
+
+def test_add_question(app_and_username):
+    app, username = app_and_username
+    msg = app.send_message(username, '/add_question')
+    sleep(2)
+    msg = app.get_messages(username, msg.id + 1)
+    assert msg.text == 'Введите вопрос:'
+    msg = app.send_message(username, 'Как долго ждать ответ?')
+    sleep(2)
+    msg = app.get_messages(username, msg.id + 1)
+    assert msg.text == 'Вопрос успешно создан!'
