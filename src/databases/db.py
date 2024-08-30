@@ -3,6 +3,7 @@ import logging
 from typing import List, Optional
 from string import punctuation
 from collections import Counter
+
 import nltk
 from nltk.corpus import stopwords
 from pymystem3 import Mystem
@@ -49,6 +50,7 @@ class User(MongoModel):
     feelings = fields.ListField(fields.DictField())
     ready_flag = fields.BooleanField()
     last_usage = fields.DateTimeField()
+    registration_date = fields.DateTimeField()
     preferences = fields.ListField(fields.DictField())  # [{"voice mode": False - text mode}, {"pronoun": True - Вы}]
 
     def get_last_focus(self):
@@ -61,7 +63,11 @@ class User(MongoModel):
     #     return f'{self.id} | {self.first_name} | {self.last_name}'
 
     def __str__(self):
-        return f'{self.id} | {self.language_code} | {self.first_name} | {self.last_name}'
+        return (f'{self.id} | '
+                f'{self.language_code} | '
+                f'{self.first_name} | '
+                f'{self.last_name} | '
+                f'{self.registration_date.strftime("%d/%m/%Y, %H:%M:%S")}')
 
 
 class Schedule(MongoModel):
@@ -161,6 +167,7 @@ def create_admin(user_id: int) -> None:
             is_admin=True,
             username='admin',
             language_code='ru',
+            registration_date=datetime.datetime.now(),
         ).save()
 
 
@@ -191,6 +198,7 @@ def init_user(user) -> User:
             initial_reason=' ',
             initial_reason_flag=False,
             language_code=user.language_code,
+            registration_date=datetime.datetime.now(),
         ).save()
 
 
