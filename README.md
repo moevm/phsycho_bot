@@ -4,7 +4,7 @@
 1. Создать бота в Telegram (см. инструкцию по [ссылке](https://sendpulse.com/ru/knowledge-base/chatbot/telegram/create-telegram-chatbot))
 2. Склонировать репозиторий
 3. В папке репозитория создать файл с названием `.env `
-4. Скопировать в файл `.env` информацию из файла `env_file`
+4. Скопировать в файл `.env` информацию из файла `env_file`. [Подробнее о параметрах `.env`](env_parameters.md).
 5. Заменить в файле `.env` `PasteYourTelegramToken` на токен созданного бота в Telegram
 6. Установить режим отладки бота (в `.env` указать `DEBUG=true` или `DEBUG=false`)
 7. В терминале в папке репозитория выполнить команды:
