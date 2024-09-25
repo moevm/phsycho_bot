@@ -299,6 +299,21 @@ def get_user_initial_reason(user):
     return db_user.initial_reason
 
 
+def get_regular_users():
+    regular_users = []
+    for user in User.objects.raw({'is_admin': False}):
+        regular_users.append(
+            {
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'is_bot': user.is_bot,
+                'language_code': user.language_code,
+            }
+        )
+    return regular_users
+
+
 def push_user_initial_reason(user, reason):
     db_user = init_user(user)
     db_user.initial_reason = reason

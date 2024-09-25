@@ -9,13 +9,15 @@ from telegram.ext import Updater
 
 from commands.handlers import (
     ask_ready,
-    resume_survey
+    resume_survey,
+    weekly_report
 )
 
 from databases.db import (
     get_schedule_list_for_feeling_ask,
     Schedule,
-    get_users_not_finish_survey
+    get_users_not_finish_survey,
+    get_regular_users
 )
 
 MINUTES_FOR_LOOP = 1
@@ -63,11 +65,18 @@ def ask_resume_survey(updater):
             resume_survey(updater, user['id'])
 
 
+def send_weekly_report(updater):
+    users = get_regular_users()
+    for user in users:
+        weekly_report(updater, user['id'])
+
+
 def main(token):
     # init_logger()
     updater = Updater(token, use_context=True)
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     schedule.every().hour.do(ask_resume_survey, updater=updater)
+    schedule.every().minute.do(send_weekly_report, updater=updater)
     while True:
         schedule.run_pending()
         time.sleep(60)
