@@ -1,27 +1,53 @@
-FROM python:3.10
+FROM python:3.10 AS base
 
-
-RUN apt-get update && apt-get install -y ffmpeg="7:5.1.4-0+deb12u1" && apt-get install -y espeak="1.48.15+dfsg-3"
+ARG TELEGRAM_TOKEN
 
 ENV RUVERSION 0.22
+ENV TZ 'Europe/Moscow'
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ffmpeg="7:5.1.6-0+deb12u1" \
+    espeak="1.48.15+dfsg-3" \
+    libsm6="2:1.2.3-1" \
+    libxext6="2:1.3.4-1+b1" \
+    git="1:2.39.5-0+deb12u2"  \
+    tzdata="2024b-0+deb12u1" && \
+    apt-get clean
+
+RUN echo $TZ > /etc/timezone && \
+    rm /etc/localtime && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+
+FROM base AS emotion_recognition
+
+RUN pip3 install --no-cache-dir \
+    torch==1.13.1+cu117 \
+    torchvision>=0.13.1+cu117 \
+    torchaudio>=0.13.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+
+WORKDIR /bot/emotion_recognition
+
+RUN git clone https://github.com/rishiswethan/Video-Audio-Face-Emotion-Recognition.git . && \
+    git checkout aec1f7d288e6e2ad55397a435b495b06cc948ebc && \
+    sed -i 's/mediapipe==0.9.0.1/mediapipe==0.10.20/g' requirements.txt
+
+RUN pip3 install --no-cache-dir -r requirements.txt
+RUN python3 -m spacy download en_core_web_lg
+
+
+FROM emotion_recognition AS phsycho_bot
+
 WORKDIR /bot
 
 COPY src/requirements.txt src/
-RUN pip3 install -r src/requirements.txt
+RUN pip3 install --no-cache-dir -r src/requirements.txt
 
 # COPY tests/requirements.txt tests/
 # RUN pip3 install -r tests/requirements.txt
 
 COPY . /bot/
 
-ENV TZ 'Europe/Moscow'
-RUN echo $TZ > /etc/timezone && \
-    apt-get install -y tzdata && \
-    rm /etc/localtime && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    dpkg-reconfigure -f noninteractive tzdata
-
-
-ARG TELEGRAM_TOKEN
-
-CMD python src/bot.py ${TELEGRAM_TOKEN} ${MONGO_INITDB_ROOT_USERNAME} ${MONGO_INITDB_ROOT_PASSWORD}
+CMD python3 src/bot.py ${TELEGRAM_TOKEN} ${MONGO_INITDB_ROOT_USERNAME} ${MONGO_INITDB_ROOT_PASSWORD}
