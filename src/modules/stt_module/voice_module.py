@@ -30,7 +30,7 @@ def split_audio(wav_filename, min_chunk_length=30000, max_chunk_length=40000, si
         return [chunk_filename]
 
     silence_ranges = detect_silence(audio, min_silence_len=min_silence_len, silence_thresh=silence_thresh)
-    silence_points = [start for start, _ in silence_ranges]
+    silence_points = [(start + end) / 2 for start, end in silence_ranges]
 
     chunks = []
     start = 0
@@ -73,7 +73,7 @@ def download_voice(update: Update):
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
 
-    chunk_filenames = split_audio(wav_filename)
+    # chunk_filenames = split_audio(wav_filename)
 
     return (wav_filename, ogg_filename)
 
