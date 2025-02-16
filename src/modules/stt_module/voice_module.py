@@ -8,6 +8,8 @@ from scipy.io import wavfile
 from telegram import Update
 from telegram.ext import CallbackContext
 from bson import json_util
+from pydub import AudioSegment
+from pydub.silence import detect_silence
 
 from modules.stt_module.whisper_module import get_att_whisper
 from modules.stt_module.audio_classes import RecognizedSentence
@@ -34,6 +36,47 @@ def download_voice(update: Update):
     # 16000 - частота дискретизации, 1 - кол-во аудиоканалов, 256К - битрейт
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
+
+    MIN_CHUNK_LENGTH = 30 * 1000
+    MAX_CHUNK_LENGTH = 40 * 1000
+    SILENCE_THRESH = -40
+    MIN_SILENCE_LEN = 500
+
+    audio = AudioSegment.from_wav(wav_filename)
+    audio_length = len(audio)
+
+    chunk_filenames = []
+
+    if audio_length <= MIN_CHUNK_LENGTH:
+        chunk_filename = ogg_filename.split(".")[0] + "_chunk_0" + ".wav"
+        chunk_filenames.append(chunk_filename)
+        audio.export(chunk_filename, format="wav")
+    else:
+        silence_ranges = detect_silence(audio, min_silence_len=MIN_SILENCE_LEN, silence_thresh=SILENCE_THRESH)
+        silence_points = [start for start, _ in silence_ranges]
+
+        chunks = []
+        start = 0
+
+        for silence in silence_points:
+            chunk_length = silence - start
+
+            if MIN_CHUNK_LENGTH <= chunk_length <= MAX_CHUNK_LENGTH:
+                chunks.append(audio[start:silence])
+                start = silence
+            elif chunk_length > MAX_CHUNK_LENGTH:
+                split_point = start + MAX_CHUNK_LENGTH
+                chunks.append(audio[start:split_point])
+                start = split_point
+
+        if start < len(audio):
+            chunks.append(audio[start:])
+
+        for i, chunk in enumerate(chunks):
+            chunk_filename = ogg_filename.split(".")[0] + "_chunk_" + str(i) + ".wav"
+            chunk_filenames.append(chunk_filename)
+            chunk.export(chunk_filename, format="wav")
+
     return (wav_filename, ogg_filename)
 
 
