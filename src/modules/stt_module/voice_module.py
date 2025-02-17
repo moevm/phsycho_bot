@@ -73,9 +73,9 @@ def download_voice(update: Update):
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
 
-    # chunk_filenames = split_audio(wav_filename)
+    chunk_filenames = split_audio(wav_filename)
 
-    return (wav_filename, ogg_filename)
+    return (wav_filename, ogg_filename, chunk_filenames)
 
 
 def noise_reduce(input_audio):
@@ -94,49 +94,55 @@ def noise_reduce(input_audio):
 
 
 def work_with_audio(update: Update, context: CallbackContext):
-    wav_filename, ogg_filename = download_voice(update)
+    wav_filename, ogg_filename, chunk_filenames = download_voice(update)
     no_noise_audio = noise_reduce(wav_filename)
     message = {
         'user': update.effective_user.to_dict(),
         'update_id': update.update_id,
         'filename': no_noise_audio,
-        'ogg_filename': ogg_filename
+        'ogg_filename': ogg_filename,
+        'chunk_filenames': chunk_filenames
     }
     produce_message('stt', json.dumps(message))
 
 
-def audio_to_text(filename, ogg_filename, update_id, user):
-    response = get_att_whisper(filename)
-
-    if response.status_code == 200:
-        input_sentence = RecognizedSentence(response.json())
-    else:
-        return
-
-    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
-    data = {
-        'chat_id': user.id,
-        'text': input_sentence.generate_output_info()
-    }
-
-    stats_sentence = input_sentence.generate_stats()
-
-    if DEBUG_MODE == DEBUG_ON:
-        response = requests.post(url, json=data)
+def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
+    input_sentence, stats_sentence = "", ""
+    for chunk_filename in chunk_filenames:
+        response = get_att_whisper(chunk_filename)
 
         if response.status_code == 200:
-            print('Request send successfully')
+            chunk_input_sentence = RecognizedSentence(response.json())
         else:
-            print('Error sending request')
+            return
 
-    elif DEBUG_MODE == DEBUG_OFF:
-        pass
+        url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
+        data = {
+            'chat_id': user.id,
+            'text': chunk_input_sentence.generate_output_info()
+        }
+
+        chunk_stats_sentence = chunk_input_sentence.generate_stats()
+
+        if DEBUG_MODE == DEBUG_ON:
+            response = requests.post(url, json=data)
+
+            if response.status_code == 200:
+                print('Request send successfully')
+            else:
+                print(f'Error sending request: {response.json()["description"]}')
+
+        elif DEBUG_MODE == DEBUG_OFF:
+            pass
+
+        input_sentence += chunk_input_sentence.get_text()
+        stats_sentence += chunk_stats_sentence + "\n"
 
     push_user_survey_progress(
         user,
         init_user(user).get_last_focus(),
         update_id,
-        user_answer=input_sentence.get_text(),
+        user_answer=input_sentence,
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
     )
