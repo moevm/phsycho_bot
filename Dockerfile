@@ -34,6 +34,12 @@ RUN git clone https://github.com/rishiswethan/Video-Audio-Face-Emotion-Recogniti
     git checkout aec1f7d288e6e2ad55397a435b495b06cc948ebc && \
     sed -i 's/mediapipe==0.9.0.1/mediapipe==0.10.20/g' requirements.txt
 
+RUN git clone https://github.com/rishiswethan/pytorch_utils.git source/pytorch_utils && \
+    cd source/pytorch_utils && \
+    git checkout v1.0.3 && \
+    cd ../.. && \
+    python3 setup.py
+
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN python3 -m spacy download en_core_web_lg
 
