@@ -1,6 +1,8 @@
 import json
 import os
 import subprocess
+from enum import unique
+
 import requests
 
 from noisereduce import reduce_noise
@@ -13,6 +15,7 @@ from pydub.silence import detect_silence
 
 from modules.stt_module.whisper_module import get_att_whisper
 from modules.stt_module.audio_classes import RecognizedSentence
+from emotion_analysis import associate_words_with_emotions
 from databases.db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
@@ -20,12 +23,15 @@ from env_config import (DEBUG_MODE,
 from kafka.kafka_producer import produce_message
 
 
-def split_audio(wav_filename, min_chunk_length=30000, max_chunk_length=40000, silence_thresh=-40, min_silence_len=500):
+def split_audio(wav_filename, unique_file_id, min_chunk_length=30000, max_chunk_length=40000, silence_thresh=-40, min_silence_len=500):
     audio = AudioSegment.from_wav(wav_filename)
+    chunk_dir_name = os.path.join('emotion_recognition', 'input_files')
+    if not os.path.exists(chunk_dir_name):
+        os.makedirs(chunk_dir_name)
     chunk_filenames = []
 
     if len(audio) <= min_chunk_length:
-        chunk_filename = wav_filename.replace(".wav", "_chunk_0.wav")
+        chunk_filename = os.path.join(chunk_dir_name, unique_file_id + "_chunk_0.wav")
         audio.export(chunk_filename, format="wav")
         return [chunk_filename]
 
@@ -49,7 +55,7 @@ def split_audio(wav_filename, min_chunk_length=30000, max_chunk_length=40000, si
         chunks.append(audio[start:])
 
     for i, chunk in enumerate(chunks):
-        chunk_filename = wav_filename.replace(".wav", f"_chunk_{i}.wav")
+        chunk_filename = os.path.join(chunk_dir_name, unique_file_id + f"_chunk_{i}.wav")
         chunk.export(chunk_filename, format="wav")
         chunk_filenames.append(chunk_filename)
 
@@ -60,10 +66,12 @@ def download_voice(update: Update):
     downloaded_file = update.message.voice.get_file()
     voice_bytearray = downloaded_file.download_as_bytearray()
 
+    unique_file_id = downloaded_file.file_unique_id
+
     ogg_filename = os.path.join('user_voices', f'user_{update.message.chat.id}')
     if not os.path.exists(ogg_filename):
         os.makedirs(ogg_filename)
-    ogg_filename += f"/{downloaded_file.file_unique_id}.ogg"
+    ogg_filename += f"/{unique_file_id}.ogg"
 
     with open(ogg_filename, "wb") as voice_file:
         voice_file.write(voice_bytearray)
@@ -73,7 +81,7 @@ def download_voice(update: Update):
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
 
-    chunk_filenames = split_audio(wav_filename)
+    chunk_filenames = split_audio(wav_filename, unique_file_id)
 
     return (wav_filename, ogg_filename, chunk_filenames)
 
@@ -122,8 +130,6 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
             'text': chunk_input_sentence.generate_output_info()
         }
 
-        chunk_stats_sentence = chunk_input_sentence.generate_stats()
-
         if DEBUG_MODE == DEBUG_ON:
             response = requests.post(url, json=data)
 
@@ -135,8 +141,25 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
         elif DEBUG_MODE == DEBUG_OFF:
             pass
 
+        word, emotion = associate_words_with_emotions(chunk_filename.split('/')[-1], chunk_input_sentence.get_text())
+        url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
+        data = {
+            'chat_id': user.id,
+            'text': f"{word, emotion}"
+        }
+
+        if DEBUG_MODE == DEBUG_ON:
+            response = requests.post(url, json=data)
+
+            if response.status_code == 200:
+                print('Request send successfully')
+            else:
+                print(f'Error sending request: {response.json()["description"]}')
+
         input_sentence += chunk_input_sentence.get_text()
-        stats_sentence += chunk_stats_sentence + "\n"
+        stats_sentence += chunk_input_sentence.generate_stats() + "\n"
+
+
 
     push_user_survey_progress(
         user,

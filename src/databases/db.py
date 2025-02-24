@@ -12,6 +12,7 @@ from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
 
+from emotion_analysis import get_words_statistics
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
     return pytz.utc.localize(datetime.datetime.combine(date, time))
@@ -230,9 +231,6 @@ def get_user_answer(user, focus, step) -> str:
 
 
 def get_user_word_statistics(user_id, start_date=None, end_date=None):
-    nltk.download('stopwords')
-    mystem = Mystem()
-
     if start_date and end_date:
         survey_progress_objects = SurveyProgress.objects.raw({
             'time_receive_answer': {
@@ -243,12 +241,7 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
     else:
         survey_progress_objects = SurveyProgress.objects.all()
     answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
-
-    tokens = mystem.lemmatize(answers.lower())
-    stop_words = set(stopwords.words('russian'))
-    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
-
-    return dict(Counter(tokens))
+    return get_words_statistics(answers)
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
