@@ -30,11 +30,8 @@ RUN pip3 install --no-cache-dir \
 
 WORKDIR /bot/emotion_recognition
 
-RUN git clone https://github.com/rishiswethan/Video-Audio-Face-Emotion-Recognition.git . && \
-    git checkout aec1f7d288e6e2ad55397a435b495b06cc948ebc && \
-    sed -i 's/mediapipe==0.9.0.1/mediapipe==0.10.20/g' requirements.txt
-RUN sed -i "s/torch.load(model_save_path)/torch.load(model_save_path, map_location=config.device)/g" source/audio_analysis_utils/predict.py
-
+RUN git clone https://github.com/elizaveta-andreeva/Video-Audio-Face-Emotion-Recognition.git . && \
+    git checkout 63f8b64b456fa3cdfd89379660a171145ea256cb
 
 RUN git clone https://github.com/rishiswethan/pytorch_utils.git source/pytorch_utils && \
     cd source/pytorch_utils && \
