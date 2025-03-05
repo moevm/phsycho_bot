@@ -20,6 +20,10 @@ from modules.stt_module.voice_module import (
     work_with_audio
 )
 
+from modules.video.video_module import (
+    work_with_video
+)
+
 from commands.user_commands import (
     start,
     help_bot,
@@ -118,6 +122,7 @@ def main(token):
 
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
     updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.video_note, work_with_video))
     updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
 
     updater.start_polling()
