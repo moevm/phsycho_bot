@@ -95,6 +95,7 @@ class SurveyProgress(MongoModel):
     need_answer = fields.BooleanField()
     user_answer = fields.CharField()
     audio_file = fields.FileField()
+    video_file = fields.FileField(blank=True)
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
     stats = fields.CharField()
@@ -109,6 +110,7 @@ class SurveyProgress(MongoModel):
             f'{self.user_answer=} | '
             f'{self.stats=} | '
             f'{self.audio_file=} | '
+            f'{self.video_file=} | '
             f'{self.time_send_question=}, '
             f'{self.time_receive_answer=}'
         )
@@ -204,6 +206,7 @@ def init_survey_progress(
         user_answer="INIT PROGRESS",
         stats="",
         audio_file=None,
+        video_file=None,
 ) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(
@@ -215,6 +218,7 @@ def init_survey_progress(
         need_answer=need_answer,
         user_answer=user_answer,
         audio_file=audio_file,
+        video_file=video_file,
         stats=stats,
         time_send_question=date,
         time_receive_answer=date,
@@ -337,6 +341,7 @@ def push_user_survey_progress(
         user_answer="INIT PROGRESS",
         stats="",
         audio_file=None,
+        video_file=None,
 ):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
@@ -349,6 +354,7 @@ def push_user_survey_progress(
         need_answer=need_answer,
         user_answer=user_answer,
         audio_file=audio_file,
+        video_file=video_file,
         stats=stats,
         time_send_question=date,
         time_receive_answer=date,
@@ -435,6 +441,13 @@ def get_user_audio(user):
     # audio_id = file_storage.find({"filename": 'audio_file'}, no_cursor_timeout=True).distinct('_id')
     # print(json.loads(json_util.dumps(audio_id)))
     return audio_file
+
+
+def get_user_video(user):
+    progress = list(SurveyProgress.objects.values().all())
+    file_storage = gridfs.GridFSBucket(_get_db())
+    video_file = file_storage.open_download_stream(progress[-1]["video_file"])._id
+    return video_file
 
 
 def get_bot_audio():
