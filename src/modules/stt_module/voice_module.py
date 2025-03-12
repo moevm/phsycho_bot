@@ -82,7 +82,8 @@ def download_voice(update: Update):
     command = f"ffmpeg -i {ogg_filename} -ar 16000 -ac 1 -ab 256K -f wav {wav_filename}"
     subprocess.run(command.split())
 
-    chunk_filenames = split_audio(wav_filename, unique_file_id)
+    no_noise_audio = noise_reduce(wav_filename)
+    chunk_filenames = split_audio(no_noise_audio, unique_file_id)
 
     return (wav_filename, ogg_filename, chunk_filenames)
 
@@ -104,11 +105,10 @@ def noise_reduce(input_audio):
 
 def work_with_audio(update: Update, context: CallbackContext):
     wav_filename, ogg_filename, chunk_filenames = download_voice(update)
-    no_noise_audio = noise_reduce(wav_filename)
     message = {
         'user': update.effective_user.to_dict(),
         'update_id': update.update_id,
-        'filename': no_noise_audio,
+        'filename': wav_filename,
         'ogg_filename': ogg_filename,
         'chunk_filenames': chunk_filenames
     }
