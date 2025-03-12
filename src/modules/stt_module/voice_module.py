@@ -1,7 +1,7 @@
 import json
 import os
 import subprocess
-from enum import unique
+from collections import Counter
 
 import requests
 
@@ -16,6 +16,7 @@ from pydub.silence import detect_silence
 from modules.stt_module.whisper_module import get_att_whisper
 from modules.stt_module.audio_classes import RecognizedSentence
 from emotion_analysis import associate_words_with_emotions
+from utilities.wrapper import send_text
 from databases.db import push_user_survey_progress, init_user, get_user_audio
 
 from env_config import (DEBUG_MODE,
@@ -116,6 +117,7 @@ def work_with_audio(update: Update, context: CallbackContext):
 
 def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
     input_sentence, stats_sentence = "", ""
+    emotions = Counter()
     for chunk_filename in chunk_filenames:
         response = get_att_whisper(chunk_filename)
 
@@ -124,42 +126,14 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
         else:
             return
 
-        url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
-        data = {
-            'chat_id': user.id,
-            'text': chunk_input_sentence.generate_output_info()
-        }
-
-        if DEBUG_MODE == DEBUG_ON:
-            response = requests.post(url, json=data)
-
-            if response.status_code == 200:
-                print('Request send successfully')
-            else:
-                print(f'Error sending request: {response.json()["description"]}')
-
-        elif DEBUG_MODE == DEBUG_OFF:
-            pass
-
         word, emotion = associate_words_with_emotions(chunk_filename.split('/')[-1], chunk_input_sentence.get_text())
-        url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
-        data = {
-            'chat_id': user.id,
-            'text': f"{word, emotion}"
-        }
+        emotions.update([emotion])
 
         if DEBUG_MODE == DEBUG_ON:
-            response = requests.post(url, json=data)
-
-            if response.status_code == 200:
-                print('Request send successfully')
-            else:
-                print(f'Error sending request: {response.json()["description"]}')
+            send_text(user.id, f"{chunk_input_sentence.generate_output_info()}\n{word, emotion}")
 
         input_sentence += chunk_input_sentence.get_text()
         stats_sentence += chunk_input_sentence.generate_stats() + "\n"
-
-
 
     push_user_survey_progress(
         user,
@@ -168,12 +142,10 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
         user_answer=input_sentence,
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
+        emotion=max(emotions)
     )
     os.remove(ogg_filename)
 
     if DEBUG_MODE == DEBUG_ON:
         print(get_user_audio(user))
-        user.effective_user.send_message(
-            "ID записи с твоим аудиосообщением в базе данных: "
-            + str(json.loads(json_util.dumps(get_user_audio(user))))
-        )
+        send_text(user.id, "ID записи с твоим аудиосообщением в базе данных: " + str(json.loads(json_util.dumps(get_user_audio(user)))))
