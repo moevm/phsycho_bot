@@ -4,7 +4,6 @@ import subprocess
 
 from telegram import Update
 from telegram.ext import CallbackContext
-from pydub import AudioSegment
 from bson import json_util
 
 from emotion_analysis import predict_emotion
@@ -30,7 +29,10 @@ def extract_audio_pydub(video_path):
 
 
 def download_video(update: Update):
-    video_file = update.message.video_note
+    if update.message.video_note:
+        video_file = update.message.video_note
+    else:
+        video_file = update.message.video
     downloaded_file = video_file.get_file()
     video_bytearray = downloaded_file.download_as_bytearray()
 
