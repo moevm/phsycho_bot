@@ -17,5 +17,5 @@ from emotion_recognition.source.face_emotion_utils.utils import find_filename_ma
 def predict_emotion(filename):
     print("PREDICT EMOTION")
     result = predict(filename, video_mode=True, target_fps=2)
-    emotions = Counter([frame_result[0] for frame_result in result])
-    return max(emotions)
+    emotions = [frame_result[0] for frame_result in result]
+    return max(emotions, key=emotions.count)
