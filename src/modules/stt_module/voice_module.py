@@ -142,7 +142,7 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
         user_answer=input_sentence,
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
-        emotion=max(emotions)
+        emotion=max(emotions, key=emotions.get)
     )
     os.remove(ogg_filename)
 
