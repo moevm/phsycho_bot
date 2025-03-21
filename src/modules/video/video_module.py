@@ -81,6 +81,7 @@ def work_with_video(update: Update, context: CallbackContext):
         stats=input_sentence.generate_stats(),
         audio_file=open(ogg_filename, 'rb'),
         video_file=open(video_path, 'rb'),
+        emotion=emotion
     )
     os.remove(ogg_filename)
 

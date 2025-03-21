@@ -99,6 +99,7 @@ class SurveyProgress(MongoModel):
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
     stats = fields.CharField()
+    emotion = fields.CharField()
 
     def __str__(self):
         return (
@@ -111,6 +112,7 @@ class SurveyProgress(MongoModel):
             f'{self.stats=} | '
             f'{self.audio_file=} | '
             f'{self.video_file=} | '
+            f'{self.emotion=} | '
             f'{self.time_send_question=}, '
             f'{self.time_receive_answer=}'
         )
@@ -205,6 +207,7 @@ def init_survey_progress(
         need_answer=False,
         user_answer="INIT PROGRESS",
         stats="",
+        emotion="",
         audio_file=None,
         video_file=None,
 ) -> SurveyProgress:
@@ -220,6 +223,7 @@ def init_survey_progress(
         audio_file=audio_file,
         video_file=video_file,
         stats=stats,
+        emotion=emotion,
         time_send_question=date,
         time_receive_answer=date,
     )
@@ -340,6 +344,7 @@ def push_user_survey_progress(
         need_answer=False,
         user_answer="INIT PROGRESS",
         stats="",
+        emotion="",
         audio_file=None,
         video_file=None,
 ):
@@ -356,6 +361,7 @@ def push_user_survey_progress(
         audio_file=audio_file,
         video_file=video_file,
         stats=stats,
+        emotion=emotion,
         time_send_question=date,
         time_receive_answer=date,
     ).save()
