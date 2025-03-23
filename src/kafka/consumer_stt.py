@@ -10,7 +10,7 @@ def process_stt_message(message_info):
     message_info = json.loads(message_info)
     user = User(**message_info['user'])
     audio_to_text(message_info['filename'], message_info['ogg_filename'], message_info['chunk_filenames'],
-                  message_info['update_id'], user)
+                  message_info['chunk_start_times'], message_info['update_id'], user)
 
 
 def main():

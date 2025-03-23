@@ -30,11 +30,12 @@ def split_audio(wav_filename, unique_file_id, min_chunk_length=30000, max_chunk_
     if not os.path.exists(chunk_dir_name):
         os.makedirs(chunk_dir_name)
     chunk_filenames = []
+    chunk_start_times = []
 
     if len(audio) <= min_chunk_length:
         chunk_filename = os.path.join(chunk_dir_name, unique_file_id + "_chunk_0.wav")
         audio.export(chunk_filename, format="wav")
-        return [chunk_filename]
+        return [chunk_filename], [0]
 
     silence_ranges = detect_silence(audio, min_silence_len=min_silence_len, silence_thresh=silence_thresh)
     silence_points = [(start + end) / 2 for start, end in silence_ranges]
@@ -46,21 +47,24 @@ def split_audio(wav_filename, unique_file_id, min_chunk_length=30000, max_chunk_
         chunk_length = silence - start
         if min_chunk_length <= chunk_length <= max_chunk_length:
             chunks.append(audio[start:silence])
+            chunk_start_times.append(start)
             start = silence
         elif chunk_length > max_chunk_length:
             split_point = start + max_chunk_length
             chunks.append(audio[start:split_point])
+            chunk_start_times.append(start)
             start = split_point
 
     if start < len(audio):
         chunks.append(audio[start:])
+        chunk_start_times.append(start)
 
     for i, chunk in enumerate(chunks):
         chunk_filename = os.path.join(chunk_dir_name, unique_file_id + f"_chunk_{i}.wav")
         chunk.export(chunk_filename, format="wav")
         chunk_filenames.append(chunk_filename)
 
-    return chunk_filenames
+    return chunk_filenames, chunk_start_times
 
 
 def download_voice(update: Update):
@@ -83,9 +87,9 @@ def download_voice(update: Update):
     subprocess.run(command.split())
 
     no_noise_audio = noise_reduce(wav_filename)
-    chunk_filenames = split_audio(no_noise_audio, unique_file_id)
+    chunk_filenames, chunk_start_times = split_audio(no_noise_audio, unique_file_id)
 
-    return (wav_filename, ogg_filename, chunk_filenames)
+    return (wav_filename, ogg_filename, chunk_filenames, chunk_start_times)
 
 
 def noise_reduce(input_audio):
@@ -104,21 +108,24 @@ def noise_reduce(input_audio):
 
 
 def work_with_audio(update: Update, context: CallbackContext):
-    wav_filename, ogg_filename, chunk_filenames = download_voice(update)
+    wav_filename, ogg_filename, chunk_filenames, chunk_start_times = download_voice(update)
     message = {
         'user': update.effective_user.to_dict(),
         'update_id': update.update_id,
         'filename': wav_filename,
         'ogg_filename': ogg_filename,
-        'chunk_filenames': chunk_filenames
+        'chunk_filenames': chunk_filenames,
+        'chunk_start_times': chunk_start_times
     }
     produce_message('stt', json.dumps(message))
 
 
-def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
+def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, update_id, user):
     input_sentence, stats_sentence = "", ""
     emotions = Counter()
-    for chunk_filename in chunk_filenames:
+    audio_emotions_statistics = {}
+
+    for chunk_filename, start_time in zip(chunk_filenames, chunk_start_times):
         response = get_att_whisper(chunk_filename)
 
         if response.status_code == 200:
@@ -132,7 +139,11 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
         if DEBUG_MODE == DEBUG_ON:
             send_text(user.id, f"{chunk_input_sentence.generate_output_info()}\n{word, emotion}")
 
-        input_sentence += chunk_input_sentence.get_text()
+        text = chunk_input_sentence.get_text()
+
+        audio_emotions_statistics[chunk_filename] = {"emotion": emotion, "word": word, "text": text, "start_time": start_time}
+
+        input_sentence += text
         stats_sentence += chunk_input_sentence.generate_stats() + "\n"
 
     push_user_survey_progress(
@@ -142,7 +153,7 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, update_id, user):
         user_answer=input_sentence,
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
-        emotion=max(emotions, key=emotions.get)
+        audio_emotions_statistics=audio_emotions_statistics
     )
     os.remove(ogg_filename)
 
