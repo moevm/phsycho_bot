@@ -99,7 +99,7 @@ class SurveyProgress(MongoModel):
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
     stats = fields.CharField()
-    audio_emotions_statistics = fields.DictField()
+    audio_emotions_statistics = fields.ListField(fields.DictField())
 
     def __str__(self):
         return (
@@ -248,6 +248,22 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
         survey_progress_objects = SurveyProgress.objects.all()
     answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
     return get_words_statistics(answers)
+
+
+def get_user_emotions_statistics(user_id, start_date=None, end_date=None):
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
+
+    all_audio_emotions_statistics = list(map(lambda x: x.audio_emotions_statistics, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    emotions_and_words = [(stats['emotion'], stats['word']) for sublist in all_audio_emotions_statistics for stats in sublist]
+    return emotions_and_words
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
@@ -509,6 +525,21 @@ def get_users_not_finish_survey():
                     'survey_step': survey_progress.survey_step,
                 }
             )
+    return users
+
+
+def get_users():
+    users = []
+    for user in User.objects.raw({'is_admin': False}):
+        users.append(
+            {
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'is_bot': user.is_bot,
+                'language_code': user.language_code,
+            }
+        )
     return users
 
 

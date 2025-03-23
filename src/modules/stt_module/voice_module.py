@@ -123,7 +123,7 @@ def work_with_audio(update: Update, context: CallbackContext):
 def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, update_id, user):
     input_sentence, stats_sentence = "", ""
     emotions = Counter()
-    audio_emotions_statistics = {}
+    audio_emotions_statistics = []
 
     for chunk_filename, start_time in zip(chunk_filenames, chunk_start_times):
         response = get_att_whisper(chunk_filename)
@@ -141,7 +141,7 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, up
 
         text = chunk_input_sentence.get_text()
 
-        audio_emotions_statistics[chunk_filename] = {"emotion": emotion, "word": word, "text": text, "start_time": start_time}
+        audio_emotions_statistics.append({"filename": chunk_filename, "emotion": emotion, "word": word, "text": text, "start_time": start_time})
 
         input_sentence += text
         stats_sentence += chunk_input_sentence.generate_stats() + "\n"

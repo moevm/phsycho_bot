@@ -2,6 +2,9 @@ import datetime
 import logging
 import sys
 import time
+from collections import Counter
+
+import pytz
 from typing import List
 
 import schedule
@@ -9,13 +12,16 @@ from telegram.ext import Updater
 
 from commands.handlers import (
     ask_ready,
-    resume_survey
+    resume_survey,
+    send_weekly_emotions_report
 )
 
 from databases.db import (
     get_schedule_list_for_feeling_ask,
     Schedule,
-    get_users_not_finish_survey
+    get_users_not_finish_survey,
+    get_users,
+    get_user_emotions_statistics
 )
 
 MINUTES_FOR_LOOP = 1
@@ -63,11 +69,26 @@ def ask_resume_survey(updater):
             resume_survey(updater, user['id'])
 
 
+def weekly_emotions_statistics(updater):
+    end_date = pytz.utc.localize(datetime.datetime.utcnow())
+    start_date = end_date - datetime.timedelta(weeks=1)
+
+    users = get_users()
+    for user in users:
+        emotions_statistics = get_user_emotions_statistics(user['id'], start_date, end_date)
+        if not emotions_statistics:
+            continue
+        emotion_counter = Counter(emotions_statistics)
+
+        send_weekly_emotions_report(updater, user['id'], emotion_counter)
+
+
 def main(token):
     # init_logger()
     updater = Updater(token, use_context=True)
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     schedule.every().hour.do(ask_resume_survey, updater=updater)
+    schedule.every().sunday.at("20:00").do(weekly_emotions_statistics, updater=updater)
     while True:
         schedule.run_pending()
         time.sleep(60)
