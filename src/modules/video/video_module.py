@@ -12,6 +12,8 @@ from modules.stt_module.audio_classes import RecognizedSentence
 from modules.stt_module.voice_module import noise_reduce
 from databases.db import push_user_survey_progress, init_user, get_user_video
 from env_config import (DEBUG_MODE, DEBUG_ON, DEBUG_OFF, TOKEN)
+from kafka.kafka_producer import produce_message
+from utilities.wrapper import send_text
 
 
 def extract_audio_pydub(video_path):
@@ -44,7 +46,6 @@ def download_video(update: Update):
     if not os.path.exists(emotion_files_dir_name):
         os.makedirs(emotion_files_dir_name)
 
-
     mp4_filename = os.path.join(video_dir, f"{downloaded_file.file_unique_id}.mp4")
     mp4_filename_emotion_dir = os.path.join(emotion_files_dir_name, f"{downloaded_file.file_unique_id}.mp4")
 
@@ -56,12 +57,22 @@ def download_video(update: Update):
 
     return mp4_filename, mp4_filename_emotion_dir
 
+
 def work_with_video(update: Update, context: CallbackContext):
     video_path, emotion_dir_video_path = download_video(update)
 
-    print(f"VIDEO SAVED: {video_path}")
+    message = {
+        'user': update.effective_user.to_dict(),
+        'update_id': update.update_id,
+        'video_path': video_path,
+        'emotion_dir_video_path': emotion_dir_video_path
+    }
+    produce_message('video', json.dumps(message))
+
+
+def process_video(video_path, emotion_dir_video_path, update_id, user):
     emotion = predict_emotion(emotion_dir_video_path)
-    update.effective_user.send_message(f"Result emotion: {emotion}")
+    send_text(user.id, f"Result emotion: {emotion}")
 
     audio_path, ogg_filename = extract_audio_pydub(video_path)
     no_noise_audio = noise_reduce(audio_path)
@@ -69,14 +80,12 @@ def work_with_video(update: Update, context: CallbackContext):
     input_sentence = RecognizedSentence(response.json())
 
     if DEBUG_MODE == DEBUG_ON:
-        update.effective_user.send_message(input_sentence.generate_output_info())
-
-    print(input_sentence.generate_output_info())
+        send_text(user.id, input_sentence.generate_output_info())
 
     push_user_survey_progress(
-        init_user(update.effective_user),
-        init_user(update.effective_user).get_last_focus(),
-        update.update_id,
+        init_user(user),
+        init_user(user).get_last_focus(),
+        update_id,
         user_answer=input_sentence.get_text(),
         stats=input_sentence.generate_stats(),
         audio_file=open(ogg_filename, 'rb'),
@@ -86,9 +95,6 @@ def work_with_video(update: Update, context: CallbackContext):
     os.remove(ogg_filename)
 
     if DEBUG_MODE == DEBUG_ON:
-        user = init_user(update.effective_user)
         print(get_user_video(user))
-        update.effective_user.send_message(
-            "ID записи с твоим видеосообщением в базе данных: "
-            + str(json.loads(json_util.dumps(get_user_video(user))))
-        )
+        send_text(user.id, "ID записи с твоим видеосообщением в базе данных: "
+                  + str(json.loads(json_util.dumps(get_user_video(user)))))

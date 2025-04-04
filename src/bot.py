@@ -60,6 +60,7 @@ from env_config import ADMIN
 import my_cron
 import kafka.consumer_tts
 import kafka.consumer_stt
+import kafka.consumer_video
 
 from logs import init_logger
 
@@ -155,12 +156,14 @@ class Worker(threading.Thread):
             kafka.consumer_tts.main()
         elif token_ == 'kafka-stt':
             kafka.consumer_stt.main()
+        elif token_ == 'kafka-video':
+            kafka.consumer_video.main()
         else:
             my_cron.main(sys.argv[1])
 
 
 if __name__ == '__main__':
-    tokens = ['bot', 'schedule', 'kafka-tts', 'kafka-stt']
+    tokens = ['bot', 'schedule', 'kafka-tts', 'kafka-stt', 'kafka-video']
     work_queue = queue.Queue()
     for token in tokens:
         work_queue.put(token)

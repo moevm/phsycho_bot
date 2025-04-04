@@ -60,3 +60,18 @@ def send_voice(text, user, reply_markup):
         response = requests.post(url, data=data, files=files)
         if response.status_code != 200:
             print(f'Error sending request: {response.text}')
+
+
+def send_text(user_id, text):
+    url = f'https://api.telegram.org/bot{TOKEN}/sendMessage'
+    data = {
+        'chat_id': user_id,
+        'text': text
+    }
+
+    if DEBUG_MODE == DEBUG_ON:
+        response = requests.post(url, json=data)
+        if response.status_code == 200:
+            print('Request send successfully')
+        else:
+            print(f'Error sending request: {response.json()["description"]}')
