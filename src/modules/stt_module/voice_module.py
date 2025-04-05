@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import subprocess
 from collections import Counter
 
@@ -121,6 +122,7 @@ def work_with_audio(update: Update, context: CallbackContext):
 
 
 def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, update_id, user):
+    processing_start_time = time.time()
     input_sentence, stats_sentence = "", ""
     emotions = Counter()
     audio_emotions_statistics = []
@@ -136,15 +138,17 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, up
         word, emotion = associate_words_with_emotions(chunk_filename.split('/')[-1], chunk_input_sentence.get_text())
         emotions.update([emotion])
 
-        if DEBUG_MODE == DEBUG_ON:
-            send_text(user.id, f"{chunk_input_sentence.generate_output_info()}\n{word, emotion}")
-
         text = chunk_input_sentence.get_text()
 
         audio_emotions_statistics.append({"filename": chunk_filename, "emotion": emotion, "word": word, "text": text, "start_time": start_time})
 
         input_sentence += text
         stats_sentence += chunk_input_sentence.generate_stats() + "\n"
+
+    if DEBUG_MODE == DEBUG_ON:
+        processing_end_time = time.time()
+        processing_time = processing_end_time - processing_start_time
+        send_text(user.id, f"Processing time: {processing_time:.2f} seconds")
 
     push_user_survey_progress(
         user,
