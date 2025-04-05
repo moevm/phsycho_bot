@@ -1,8 +1,12 @@
+import os
 from pyrogram import Client
 
 
 def get_app_info():
-    with open('app_variables.txt', encoding="utf-8") as f:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    app_variables_path = os.path.join(script_dir, 'app_variables.txt')
+
+    with open(app_variables_path, encoding="utf-8") as f:
         lines = f.readlines()
 
     api_id, api_hash, username = None, None, None

@@ -1,9 +1,10 @@
-import os
+import os, sys
 import asyncio
 from moviepy import VideoFileClip
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from create_app import create_app
 
 VIDEO_FOLDER = 'video_messages'
