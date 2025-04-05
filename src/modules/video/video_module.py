@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import time
 
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -71,7 +72,15 @@ def work_with_video(update: Update, context: CallbackContext):
 
 
 def process_video(video_path, emotion_dir_video_path, update_id, user):
+    start_time = time.time()
+
     emotion = predict_emotion(emotion_dir_video_path)
+
+    if DEBUG_MODE == DEBUG_ON:
+        end_time = time.time()
+        processing_time = end_time - start_time
+        send_text(user.id, f"Processing time: {processing_time:.2f} seconds")
+
     send_text(user.id, f"Result emotion: {emotion}")
 
     audio_path, ogg_filename = extract_audio_pydub(video_path)
