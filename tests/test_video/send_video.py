@@ -6,7 +6,7 @@ from pyrogram.types import Message
 
 from create_app import create_app
 
-VIDEO_FOLDER = 'video_data'
+VIDEO_FOLDER = 'video_messages'
 
 user_response = None
 response_event = asyncio.Event()
