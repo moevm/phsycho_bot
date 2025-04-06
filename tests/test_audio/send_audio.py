@@ -46,7 +46,7 @@ async def main():
 
     for root, _, files in os.walk(AUDIO_FOLDER):
         for file in files:
-            if file.lower().endswith('.mp4'):
+            if file.lower().endswith(('.mp3', '.wav', '.ogg')):
                 filename = os.path.join(root, file)
 
                 response = await send_audio_and_wait(app, username, filename)
