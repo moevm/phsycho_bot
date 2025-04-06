@@ -19,10 +19,11 @@ def get_video_duration(filename):
     return duration
 
 
-async def handle_message(client: Client, message: Message):
+async def handle_message(client: Client, message: Message, expected_username: str):
     global user_response
-    user_response = message.text
-    response_event.set()
+    if message.from_user.username == expected_username and message.text.startswith("Processing time"):
+        user_response = message.text
+        response_event.set()
 
 
 async def send_video_and_wait(app: Client, username: str, filename: str):
@@ -41,7 +42,7 @@ async def main():
 
     @app.on_message(filters.text & filters.private)
     async def message_handler(client: Client, message: Message):
-        await handle_message(client, message)
+        await handle_message(client, message, username)
 
     await app.start()
 
