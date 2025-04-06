@@ -18,14 +18,15 @@ def get_audio_duration(file_path):
     return duration
 
 
-async def handle_message(client: Client, message: Message):
+async def handle_message(client: Client, message: Message, expected_username: str):
     global user_response
-    user_response = message.text
-    response_event.set()
+    if message.from_user.username == expected_username and message.text.startswith("Processing time"):
+        user_response = message.text
+        response_event.set()
 
 
 async def send_audio_and_wait(app: Client, username: str, filename: str):
-    print(f"Sending video: {filename}")
+    print(f"Sending audio: {filename}")
 
     await app.send_audio(username, filename)
 
@@ -40,7 +41,7 @@ async def main():
 
     @app.on_message(filters.text & filters.private)
     async def message_handler(client: Client, message: Message):
-        await handle_message(client, message)
+        await handle_message(client, message, username)
 
     await app.start()
 
@@ -51,6 +52,7 @@ async def main():
 
                 response = await send_audio_and_wait(app, username, filename)
                 if response:
+                    print(response)
                     processing_time = float(str(response).split(": ")[1].split(" ")[0])
                     audio_duration = get_audio_duration(filename)
                     print(f"Filename: {filename}, Processing time: {processing_time:.2f} seconds, "
