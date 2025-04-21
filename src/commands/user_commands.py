@@ -6,7 +6,8 @@ from telegram.ext import (
 
 from utilities import (
     set_translation,
-    dialog
+    dialog,
+    Statistics
 )
 
 from databases.db import (

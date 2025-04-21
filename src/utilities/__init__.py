@@ -5,3 +5,7 @@ from utilities.translation import (
 from utilities.wrapper import (
     dialog
 )
+
+from utilities.statistics import (
+    Statistics
+)
