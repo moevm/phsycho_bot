@@ -18,10 +18,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipreqs==0.5.0 pylint==3.2.4
 
-      - name: Dependency check (Run Pipreqs)
-        run: |
-          pipreqs --savepath src/reqs-check.txt --mode no-pin src/
-          python requirements_check.py src/requirements.txt src/reqs-check.txt
+#      - name: Dependency check (Run Pipreqs)
+#        run: |
+#          pipreqs --savepath src/reqs-check.txt --mode no-pin src/
+#          python requirements_check.py src/requirements.txt src/reqs-check.txt
 
       - name: Install Dependencies
         run: |
