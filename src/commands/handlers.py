@@ -265,6 +265,11 @@ def resume_survey(updater, user) -> None:
     updater.bot.send_message(user, translation.gettext("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
 
 
+def weekly_report(updater, user) -> None:
+    translation = set_translation(user)
+    updater.bot.send_message(user, translation.gettext("Еженедельный отчет"))
+
+
 def ask_feelings(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     translation = set_translation(user)
