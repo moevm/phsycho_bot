@@ -22,6 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: phsycho_bot
     image: bot
     restart: unless-stopped
     env_file: .env
