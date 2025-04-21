@@ -12,7 +12,7 @@ from modules.stt_module.whisper_module import get_att_whisper
 from modules.stt_module.audio_classes import RecognizedSentence
 from modules.stt_module.voice_module import noise_reduce
 from databases.db import push_user_survey_progress, init_user, get_user_video
-from env_config import (DEBUG_MODE, DEBUG_ON, DEBUG_OFF, TOKEN)
+from env_config import (DEBUG_MODE, DEBUG_ON)
 from kafka.kafka_producer import produce_message
 from utilities.wrapper import send_text
 
@@ -92,13 +92,13 @@ def process_video(video_path, emotion_dir_video_path, update_id, user):
         send_text(user.id, input_sentence.generate_output_info())
 
     push_user_survey_progress(
-        init_user(user),
-        init_user(user).get_last_focus(),
-        update_id,
+        user=init_user(user),
+        focus=init_user(user).get_last_focus(),
+        id_=update_id,
         user_answer=input_sentence.get_text(),
         stats=input_sentence.generate_stats(),
-        audio_file=open(ogg_filename, 'rb'),
-        video_file=open(video_path, 'rb'),
+        audio_file=open(ogg_filename, 'rb'), # pylint: disable=consider-using-with
+        video_file=open(video_path, 'rb'), # pylint: disable=consider-using-with
         emotion=emotion
     )
     os.remove(ogg_filename)

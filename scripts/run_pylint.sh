@@ -3,4 +3,4 @@
 # WORKDIR
 cd ..
 
-pylint $(git ls-files '/src/*.py')
+pylint $(find src -type f -name "*.py")

@@ -157,7 +157,6 @@ class Engine:  # класс движка
             step_number
         ]
         new_survey_progress = init_survey_progress(
-            self.user, self.last_focus, self.update.update_id, step_number, new_step_info['next']
-        )
+            user=self.user, focus=self.last_focus, id_=self.update.update_id, survey_step=step_number)
         next_step = Step(self.update, new_survey_progress, self.last_focus)
         return next_step

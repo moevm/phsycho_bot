@@ -203,15 +203,14 @@ def init_survey_progress(
         focus,
         id_=0,
         survey_step=0,
-        next_step=1,
         need_answer=False,
         user_answer="INIT PROGRESS",
-        stats="",
-        emotion="",
-        audio_file=None,
-        video_file=None,
+        stats=""
 ) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
+    emotion = ""
+    audio_file = None
+    video_file = None
     return SurveyProgress(
         id=id_,
         user=user,
@@ -266,7 +265,7 @@ def get_survey_progress(user, focus) -> SurveyProgress:
         if i.user.id == user.id:
             filtered_survey.append(i)
     if len(filtered_survey) == 0:
-        return init_survey_progress(user, focus)
+        return init_survey_progress(user=user, focus=focus)
     return filtered_survey[-1]
 
 
@@ -340,8 +339,6 @@ def push_user_survey_progress(
         focus,
         id_=0,
         survey_step=0,
-        _=1,
-        need_answer=False,
         user_answer="INIT PROGRESS",
         stats="",
         emotion="",
@@ -350,6 +347,7 @@ def push_user_survey_progress(
 ):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
+    need_answer = False
     SurveyProgress(
         id=id_,
         user=db_user,
