@@ -1,10 +1,4 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'emotion_recognition')))
-
-from emotion_recognition.source.face_emotion_utils.predict import predict
+from emotion_recognition.source.face_emotion_utils.predict import predict  # pylint: disable=import-error
 
 
 def predict_emotion(filename):
