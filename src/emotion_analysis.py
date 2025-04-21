@@ -1,15 +1,9 @@
-import os
-import sys
 from string import punctuation
 from collections import Counter
 import nltk
 from nltk.corpus import stopwords
 from pymystem3 import Mystem
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'emotion_recognition')))
-
-from emotion_recognition.source.audio_analysis_utils.predict import predict
+from emotion_recognition.source.audio_analysis_utils.predict import predict  # pylint: disable=import-error
 
 
 def get_words_statistics(text: str):
@@ -24,7 +18,7 @@ def get_words_statistics(text: str):
 
 
 def predict_emotion(filename):
-    emotion, predicted_label, prediction_string = predict(filename)
+    emotion, _, _ = predict(filename)
     return emotion
 
 

@@ -3,10 +3,9 @@ import logging
 import sys
 import time
 from collections import Counter
-
-import pytz
 from typing import List
 
+import pytz
 import schedule
 from telegram.ext import Updater
 

@@ -2,10 +2,6 @@ import json
 import os
 import time
 import subprocess
-from collections import Counter
-
-import requests
-
 from noisereduce import reduce_noise
 from scipy.io import wavfile
 from telegram import Update
@@ -20,52 +16,65 @@ from emotion_analysis import associate_words_with_emotions
 from utilities.wrapper import send_text
 from databases.db import push_user_survey_progress, init_user, get_user_audio
 
-from env_config import (DEBUG_MODE,
-                        DEBUG_ON, DEBUG_OFF, TOKEN)
+from env_config import (DEBUG_MODE, DEBUG_ON)
 from kafka.kafka_producer import produce_message
 
 
-def split_audio(wav_filename, unique_file_id, min_chunk_length=30000, max_chunk_length=40000, silence_thresh=-40, min_silence_len=500):
-    audio = AudioSegment.from_wav(wav_filename)
-    chunk_dir_name = os.path.join('emotion_recognition', 'input_files')
-    if not os.path.exists(chunk_dir_name):
-        os.makedirs(chunk_dir_name)
-    chunk_filenames = []
-    chunk_start_times = []
-
-    if len(audio) <= min_chunk_length:
-        chunk_filename = os.path.join(chunk_dir_name, unique_file_id + "_chunk_0.wav")
-        audio.export(chunk_filename, format="wav")
-        return [chunk_filename], [0]
-
+def get_silence_points(audio, min_silence_len, silence_thresh):
     silence_ranges = detect_silence(audio, min_silence_len=min_silence_len, silence_thresh=silence_thresh)
-    silence_points = [(start + end) / 2 for start, end in silence_ranges]
+    return [(start + end) / 2 for start, end in silence_ranges]
 
+
+def generate_chunks(audio, silence_points, min_len, max_len):
     chunks = []
+    starts = []
     start = 0
 
     for silence in silence_points:
         chunk_length = silence - start
-        if min_chunk_length <= chunk_length <= max_chunk_length:
-            chunks.append(audio[start:silence])
-            chunk_start_times.append(start)
-            start = silence
-        elif chunk_length > max_chunk_length:
-            split_point = start + max_chunk_length
+        if min_len <= chunk_length <= max_len:
+            chunks.append(audio[start:int(silence)])
+            starts.append(start)
+            start = int(silence)
+        elif chunk_length > max_len:
+            split_point = start + max_len
             chunks.append(audio[start:split_point])
-            chunk_start_times.append(start)
+            starts.append(start)
             start = split_point
 
     if start < len(audio):
         chunks.append(audio[start:])
-        chunk_start_times.append(start)
+        starts.append(start)
 
+    return chunks, starts
+
+
+def export_chunks(chunks, base_dir, file_id):
+    filenames = []
     for i, chunk in enumerate(chunks):
-        chunk_filename = os.path.join(chunk_dir_name, unique_file_id + f"_chunk_{i}.wav")
-        chunk.export(chunk_filename, format="wav")
-        chunk_filenames.append(chunk_filename)
+        filename = os.path.join(base_dir, f"{file_id}_chunk_{i}.wav")
+        chunk.export(filename, format="wav")
+        filenames.append(filename)
+    return filenames
 
-    return chunk_filenames, chunk_start_times
+
+def split_audio(wav_filename, unique_file_id, min_chunk_length=30000, max_chunk_length=40000, silence_thresh=-40,
+                min_silence_len=500):
+    audio = AudioSegment.from_wav(wav_filename)
+    chunk_dir = os.path.join('emotion_recognition', 'input_files')
+    if not os.path.exists(chunk_dir):
+        os.makedirs(chunk_dir)
+
+    if len(audio) <= min_chunk_length:
+        filename = os.path.join(chunk_dir, f"{unique_file_id}_chunk_0.wav")
+        audio.export(filename, format="wav")
+        return [filename], [0]
+
+    silence_points = get_silence_points(audio, min_silence_len, silence_thresh)
+    chunks, start_times = generate_chunks(audio, silence_points, min_chunk_length, max_chunk_length)
+    filenames = export_chunks(chunks, chunk_dir, unique_file_id)
+
+    return filenames, start_times
 
 
 def download_voice(update: Update):
@@ -121,46 +130,63 @@ def work_with_audio(update: Update, context: CallbackContext):
     produce_message('stt', json.dumps(message))
 
 
+def process_chunk(chunk_filename, start_time):
+    response = get_att_whisper(chunk_filename)
+
+    if response.status_code != 200:
+        return None
+
+    sentence = RecognizedSentence(response.json())
+    word, emotion = associate_words_with_emotions(os.path.basename(chunk_filename), sentence.get_text())
+
+    return {
+        "text": sentence.get_text(),
+        "stats": sentence.generate_stats(),
+        "emotion": emotion,
+        "word": word,
+        "start_time": start_time,
+        "filename": chunk_filename,
+    }
+
+
 def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, update_id, user):
-    processing_start_time = time.time()
-    input_sentence, stats_sentence = "", ""
-    emotions = Counter()
-    audio_emotions_statistics = []
+    start_time = time.time()
+    full_text = []
+    stats_blocks = []
+    emotion_stats = []
 
-    for chunk_filename, start_time in zip(chunk_filenames, chunk_start_times):
-        response = get_att_whisper(chunk_filename)
-
-        if response.status_code == 200:
-            chunk_input_sentence = RecognizedSentence(response.json())
-        else:
+    for chunk_filename, start_time_chunk in zip(chunk_filenames, chunk_start_times):
+        result = process_chunk(chunk_filename, start_time_chunk)
+        if not result:
             return
 
-        word, emotion = associate_words_with_emotions(chunk_filename.split('/')[-1], chunk_input_sentence.get_text())
-        emotions.update([emotion])
-
-        text = chunk_input_sentence.get_text()
-
-        audio_emotions_statistics.append({"filename": chunk_filename, "emotion": emotion, "word": word, "text": text, "start_time": start_time})
-
-        input_sentence += text
-        stats_sentence += chunk_input_sentence.generate_stats() + "\n"
+        full_text.append(result["text"])
+        stats_blocks.append(result["stats"])
+        emotion_stats.append({
+            "filename": result["filename"],
+            "emotion": result["emotion"],
+            "word": result["word"],
+            "text": result["text"],
+            "start_time": result["start_time"]
+        })
 
     if DEBUG_MODE == DEBUG_ON:
-        processing_end_time = time.time()
-        processing_time = processing_end_time - processing_start_time
-        send_text(user.id, f"Processing time: {processing_time:.2f} seconds")
+        elapsed = time.time() - start_time
+        send_text(user.id, f"Processing time: {elapsed:.2f} seconds")
 
     push_user_survey_progress(
-        user,
-        init_user(user).get_last_focus(),
-        update_id,
-        user_answer=input_sentence,
-        stats=stats_sentence,
+        user=user,
+        focus=init_user(user).get_last_focus(),
+        id_=update_id,
+        user_answer="".join(full_text),
+        stats="\n".join(stats_blocks),
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
-        audio_emotions_statistics=audio_emotions_statistics
+        audio_emotions_statistics=emotion_stats
     )
+
     os.remove(ogg_filename)
 
     if DEBUG_MODE == DEBUG_ON:
         print(get_user_audio(user))
-        send_text(user.id, "ID записи с твоим аудиосообщением в базе данных: " + str(json.loads(json_util.dumps(get_user_audio(user)))))
+        send_text(user.id, "ID записи с твоим аудиосообщением в базе данных: " +
+                  str(json.loads(json_util.dumps(get_user_audio(user)))))

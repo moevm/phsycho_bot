@@ -1,12 +1,6 @@
 import datetime
 import logging
 from typing import List, Optional
-from string import punctuation
-from collections import Counter
-import nltk
-from nltk.corpus import stopwords
-from pymystem3 import Mystem
-
 import pytz
 from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
@@ -202,7 +196,6 @@ def init_survey_progress(
         focus,
         id_=0,
         survey_step=0,
-        next_step=1,
         need_answer=False,
         user_answer="INIT PROGRESS",
         stats="",
