@@ -1,16 +1,12 @@
 import datetime
 import logging
 from typing import List, Optional
-from string import punctuation
-from collections import Counter
-import nltk
-from nltk.corpus import stopwords
-from pymystem3 import Mystem
-
 import pytz
 from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
+from emotion_analysis import get_words_statistics
+
 
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
@@ -95,9 +91,11 @@ class SurveyProgress(MongoModel):
     need_answer = fields.BooleanField()
     user_answer = fields.CharField()
     audio_file = fields.FileField()
+    video_file = fields.FileField(blank=True)
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
     stats = fields.CharField()
+    emotion = fields.CharField()
 
     def __str__(self):
         return (
@@ -109,6 +107,8 @@ class SurveyProgress(MongoModel):
             f'{self.user_answer=} | '
             f'{self.stats=} | '
             f'{self.audio_file=} | '
+            f'{self.video_file=} | '
+            f'{self.emotion=} | '
             f'{self.time_send_question=}, '
             f'{self.time_receive_answer=}'
         )
@@ -199,13 +199,14 @@ def init_survey_progress(
         focus,
         id_=0,
         survey_step=0,
-        next_step=1,
         need_answer=False,
         user_answer="INIT PROGRESS",
-        stats="",
-        audio_file=None,
+        stats=""
 ) -> SurveyProgress:
     date = pytz.utc.localize(datetime.datetime.utcnow())
+    emotion = ""
+    audio_file = None
+    video_file = None
     return SurveyProgress(
         id=id_,
         user=user,
@@ -215,7 +216,9 @@ def init_survey_progress(
         need_answer=need_answer,
         user_answer=user_answer,
         audio_file=audio_file,
+        video_file=video_file,
         stats=stats,
+        emotion=emotion,
         time_send_question=date,
         time_receive_answer=date,
     )
@@ -230,9 +233,6 @@ def get_user_answer(user, focus, step) -> str:
 
 
 def get_user_word_statistics(user_id, start_date=None, end_date=None):
-    nltk.download('stopwords')
-    mystem = Mystem()
-
     if start_date and end_date:
         survey_progress_objects = SurveyProgress.objects.raw({
             'time_receive_answer': {
@@ -243,12 +243,24 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
     else:
         survey_progress_objects = SurveyProgress.objects.all()
     answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    return get_words_statistics(answers)
 
-    tokens = mystem.lemmatize(answers.lower())
-    stop_words = set(stopwords.words('russian'))
-    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
 
-    return dict(Counter(tokens))
+def get_user_emotions_statistics(user_id, start_date=None, end_date=None):
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
+
+    all_user_answers = list(map(lambda x: (x.emotion, get_words_statistics(x.user_answer)),
+                                filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    emotions_and_words = [(answer[0], max(answer[1], key=answer[1].get)) for answer in all_user_answers]
+    return emotions_and_words
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
@@ -258,7 +270,7 @@ def get_survey_progress(user, focus) -> SurveyProgress:
         if i.user.id == user.id:
             filtered_survey.append(i)
     if len(filtered_survey) == 0:
-        return init_survey_progress(user, focus)
+        return init_survey_progress(user=user, focus=focus)
     return filtered_survey[-1]
 
 
@@ -332,14 +344,15 @@ def push_user_survey_progress(
         focus,
         id_=0,
         survey_step=0,
-        _=1,
-        need_answer=False,
         user_answer="INIT PROGRESS",
         stats="",
+        emotion="",
         audio_file=None,
+        video_file=None,
 ):
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
+    need_answer = False
     SurveyProgress(
         id=id_,
         user=db_user,
@@ -349,7 +362,9 @@ def push_user_survey_progress(
         need_answer=need_answer,
         user_answer=user_answer,
         audio_file=audio_file,
+        video_file=video_file,
         stats=stats,
+        emotion=emotion,
         time_send_question=date,
         time_receive_answer=date,
     ).save()
@@ -437,6 +452,13 @@ def get_user_audio(user):
     return audio_file
 
 
+def get_user_video(user):
+    progress = list(SurveyProgress.objects.values().all())
+    file_storage = gridfs.GridFSBucket(_get_db())
+    video_file = file_storage.open_download_stream(progress[-1]["video_file"])._id
+    return video_file
+
+
 def get_bot_audio():
     answer = list(BotAudioAnswer.objects.values().all())
     file_storage = gridfs.GridFSBucket(_get_db())
@@ -506,6 +528,21 @@ def get_users_not_finish_survey():
                     'survey_step': survey_progress.survey_step,
                 }
             )
+    return users
+
+
+def get_users():
+    users = []
+    for user in User.objects.raw({'is_admin': False}):
+        users.append(
+            {
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'is_bot': user.is_bot,
+                'language_code': user.language_code,
+            }
+        )
     return users
 
 

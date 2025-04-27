@@ -1,2 +1,4 @@
 pyrogram==2.0.106
 pytest==8.1.1
+pyromod==3.1.6
+moviepy==2.1.2

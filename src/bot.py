@@ -20,6 +20,10 @@ from modules.stt_module.voice_module import (
     work_with_audio
 )
 
+from modules.video.video_module import (
+    work_with_video
+)
+
 from commands.user_commands import (
     start,
     help_bot,
@@ -56,6 +60,7 @@ from env_config import ADMIN
 import my_cron
 import kafka.consumer_tts
 import kafka.consumer_stt
+import kafka.consumer_video
 
 from logs import init_logger
 
@@ -118,6 +123,7 @@ def main(token):
 
     updater.dispatcher.add_handler(CallbackQueryHandler(button))
     updater.dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, text_processing))
+    updater.dispatcher.add_handler(MessageHandler(Filters.video_note | Filters.video, work_with_video))
     updater.dispatcher.add_handler(MessageHandler(Filters.voice, work_with_audio))
 
     updater.start_polling()
@@ -150,12 +156,14 @@ class Worker(threading.Thread):
             kafka.consumer_tts.main()
         elif token_ == 'kafka-stt':
             kafka.consumer_stt.main()
+        elif token_ == 'kafka-video':
+            kafka.consumer_video.main()
         else:
             my_cron.main(sys.argv[1])
 
 
 if __name__ == '__main__':
-    tokens = ['bot', 'schedule', 'kafka-tts', 'kafka-stt']
+    tokens = ['bot', 'schedule', 'kafka-tts', 'kafka-stt', 'kafka-video']
     work_queue = queue.Queue()
     for token in tokens:
         work_queue.put(token)
