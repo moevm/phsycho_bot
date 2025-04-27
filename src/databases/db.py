@@ -1,16 +1,12 @@
 import datetime
 import logging
 from typing import List, Optional
-from string import punctuation
-from collections import Counter
-import nltk
-from nltk.corpus import stopwords
-from pymystem3 import Mystem
-
 import pytz
 from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
+from emotion_analysis import get_words_statistics
+
 
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
@@ -237,9 +233,6 @@ def get_user_answer(user, focus, step) -> str:
 
 
 def get_user_word_statistics(user_id, start_date=None, end_date=None):
-    nltk.download('stopwords')
-    mystem = Mystem()
-
     if start_date and end_date:
         survey_progress_objects = SurveyProgress.objects.raw({
             'time_receive_answer': {
@@ -250,12 +243,24 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
     else:
         survey_progress_objects = SurveyProgress.objects.all()
     answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    return get_words_statistics(answers)
 
-    tokens = mystem.lemmatize(answers.lower())
-    stop_words = set(stopwords.words('russian'))
-    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
 
-    return dict(Counter(tokens))
+def get_user_emotions_statistics(user_id, start_date=None, end_date=None):
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
+
+    all_user_answers = list(map(lambda x: (x.emotion, get_words_statistics(x.user_answer)),
+                                filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    emotions_and_words = [(answer[0], max(answer[1], key=answer[1].get)) for answer in all_user_answers]
+    return emotions_and_words
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
@@ -523,6 +528,21 @@ def get_users_not_finish_survey():
                     'survey_step': survey_progress.survey_step,
                 }
             )
+    return users
+
+
+def get_users():
+    users = []
+    for user in User.objects.raw({'is_admin': False}):
+        users.append(
+            {
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'is_bot': user.is_bot,
+                'language_code': user.language_code,
+            }
+        )
     return users
 
 
