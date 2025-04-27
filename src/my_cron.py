@@ -88,7 +88,7 @@ def main(token):
     updater = Updater(token, use_context=True)
     schedule.every(MINUTES_FOR_LOOP).minutes.do(cron, updater=updater)
     schedule.every().hour.do(ask_resume_survey, updater=updater)
-    schedule.every(5).minutes.do(weekly_emotions_statistics, updater=updater)
+    schedule.every().sunday.at("20:00").do(weekly_emotions_statistics, updater=updater)
     while True:
         schedule.run_pending()
         time.sleep(60)
