@@ -79,9 +79,9 @@ def process_video(video_path, emotion_dir_video_path, update_id, user):
     if DEBUG_MODE == DEBUG_ON:
         end_time = time.time()
         processing_time = end_time - start_time
-        send_text(user.id, f"Processing time: {processing_time:.2f} seconds")
+        send_text(user.id, f"Время обработки: {processing_time:.2f} секунд")
 
-    send_text(user.id, f"Result emotion: {emotion}")
+    send_text(user.id, f"Распознанная эмоция: {emotion}")
 
     audio_path, ogg_filename = extract_audio_pydub(video_path)
     no_noise_audio = noise_reduce(audio_path)
