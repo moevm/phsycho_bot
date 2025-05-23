@@ -265,6 +265,14 @@ def resume_survey(updater, user) -> None:
     updater.bot.send_message(user, translation.gettext("Продолжить прохождение опроса?"), reply_markup=ready_keyboard())
 
 
+def send_weekly_emotions_report(updater, user_id, emotions_statistics) -> None:
+    top3_emotions = emotions_statistics.most_common(3)
+    formatted_emotions = "\n".join([f"{word} - {emotion}" for (emotion, word), _ in top3_emotions])
+    message_text = (f"Твоя статистика эмоций за неделю:\nна этой неделе ты наиболее часто употреблял данные слова "
+                    f"при этом испытывал следующие эмоции:\n{formatted_emotions}")
+    updater.bot.send_message(user_id, message_text)
+
+
 def ask_feelings(update: Update, context: CallbackContext) -> None:
     user = init_user(update.effective_user)
     translation = set_translation(user)

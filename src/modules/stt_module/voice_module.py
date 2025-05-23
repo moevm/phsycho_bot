@@ -92,9 +92,9 @@ def audio_to_text(filename, ogg_filename, update_id, user):
         pass
 
     push_user_survey_progress(
-        user,
-        init_user(user).get_last_focus(),
-        update_id,
+        user=user,
+        focus=init_user(user).get_last_focus(),
+        id_=update_id,
         user_answer=input_sentence.get_text(),
         stats=stats_sentence,
         audio_file=open(ogg_filename, 'rb'),  # pylint: disable=consider-using-with
