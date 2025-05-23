@@ -12,7 +12,7 @@
         libsm6="2:1.2.3-1" \
         libxext6="2:1.3.4-1+b1" \
         git="1:2.39.5-0+deb12u2"  \
-        tzdata="2025a-0+deb12u1" && \
+        tzdata="2025b-0+deb12u1" && \
         apt-get clean
 
     RUN echo $TZ > /etc/timezone && \
