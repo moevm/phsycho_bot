@@ -172,7 +172,16 @@ def audio_to_text(filename, ogg_filename, chunk_filenames, chunk_start_times, up
 
     if DEBUG_MODE == DEBUG_ON:
         elapsed = time.time() - start_time
-        send_text(user.id, f"Processing time: {elapsed:.2f} seconds")
+        send_text(user.id, f"Время обработки: {elapsed:.2f} секунд")
+        formatted_stats = "\n\n".join([
+            f"Файл: {stat['filename']}\n"
+            f"Эмоция: {stat['emotion']}\n"
+            f"Слово: \"{stat['word']}\"\n"
+            f"Фраза: \"{stat['text']}\"\n"
+            f"Начало: {stat['start_time']:.2f} сек"
+            for stat in emotion_stats
+        ])
+        send_text(user.id, f"Статистика эмоций:\n{formatted_stats}")
 
     push_user_survey_progress(
         user=user,
