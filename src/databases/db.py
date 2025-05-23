@@ -1,17 +1,12 @@
 import datetime
 import logging
 from typing import List, Optional
-from string import punctuation
-from collections import Counter
-import nltk
-from nltk.corpus import stopwords
-from pymystem3 import Mystem
-
 import pytz
 from pymodm import connect, fields, MongoModel
 from pymodm.connection import _get_db
 import gridfs
 
+from emotion_analysis import get_words_statistics
 
 def get_datetime_with_tz(date: datetime.date, time: datetime.time):
     return pytz.utc.localize(datetime.datetime.combine(date, time))
@@ -98,6 +93,7 @@ class SurveyProgress(MongoModel):
     time_send_question = fields.DateTimeField()
     time_receive_answer = fields.DateTimeField()
     stats = fields.CharField()
+    audio_emotions_statistics = fields.ListField(fields.DictField())
 
     def __str__(self):
         return (
@@ -109,6 +105,7 @@ class SurveyProgress(MongoModel):
             f'{self.user_answer=} | '
             f'{self.stats=} | '
             f'{self.audio_file=} | '
+            f'{self.audio_emotions_statistics=} | '
             f'{self.time_send_question=}, '
             f'{self.time_receive_answer=}'
         )
@@ -199,12 +196,14 @@ def init_survey_progress(
         focus,
         id_=0,
         survey_step=0,
-        next_step=1,
         need_answer=False,
         user_answer="INIT PROGRESS",
         stats="",
         audio_file=None,
+        audio_emotions_statistics=None,
 ) -> SurveyProgress:
+    if audio_emotions_statistics is None:
+        audio_emotions_statistics = {}
     date = pytz.utc.localize(datetime.datetime.utcnow())
     return SurveyProgress(
         id=id_,
@@ -216,6 +215,7 @@ def init_survey_progress(
         user_answer=user_answer,
         audio_file=audio_file,
         stats=stats,
+        audio_emotions_statistics=audio_emotions_statistics,
         time_send_question=date,
         time_receive_answer=date,
     )
@@ -230,9 +230,6 @@ def get_user_answer(user, focus, step) -> str:
 
 
 def get_user_word_statistics(user_id, start_date=None, end_date=None):
-    nltk.download('stopwords')
-    mystem = Mystem()
-
     if start_date and end_date:
         survey_progress_objects = SurveyProgress.objects.raw({
             'time_receive_answer': {
@@ -243,12 +240,23 @@ def get_user_word_statistics(user_id, start_date=None, end_date=None):
     else:
         survey_progress_objects = SurveyProgress.objects.all()
     answers = ' '.join(map(lambda x: x.user_answer, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    return get_words_statistics(answers)
 
-    tokens = mystem.lemmatize(answers.lower())
-    stop_words = set(stopwords.words('russian'))
-    tokens = list(filter(lambda token: token not in stop_words and token.strip() not in punctuation, tokens))
 
-    return dict(Counter(tokens))
+def get_user_emotions_statistics(user_id, start_date=None, end_date=None):
+    if start_date and end_date:
+        survey_progress_objects = SurveyProgress.objects.raw({
+            'time_receive_answer': {
+                '$gte': start_date,
+                '$lt': end_date
+            }
+        })
+    else:
+        survey_progress_objects = SurveyProgress.objects.all()
+
+    all_audio_emotions_statistics = list(map(lambda x: x.audio_emotions_statistics, filter(lambda x: x.user.id == user_id, survey_progress_objects)))
+    emotions_and_words = [(stats['emotion'], stats['word']) for sublist in all_audio_emotions_statistics for stats in sublist]
+    return emotions_and_words
 
 
 def get_survey_progress(user, focus) -> SurveyProgress:
@@ -337,7 +345,10 @@ def push_user_survey_progress(
         user_answer="INIT PROGRESS",
         stats="",
         audio_file=None,
+        audio_emotions_statistics=None,
 ):
+    if audio_emotions_statistics is None:
+        audio_emotions_statistics = {}
     date = pytz.utc.localize(datetime.datetime.utcnow())
     db_user = init_user(user)
     SurveyProgress(
@@ -350,6 +361,7 @@ def push_user_survey_progress(
         user_answer=user_answer,
         audio_file=audio_file,
         stats=stats,
+        audio_emotions_statistics=audio_emotions_statistics,
         time_send_question=date,
         time_receive_answer=date,
     ).save()
@@ -506,6 +518,21 @@ def get_users_not_finish_survey():
                     'survey_step': survey_progress.survey_step,
                 }
             )
+    return users
+
+
+def get_users():
+    users = []
+    for user in User.objects.raw({'is_admin': False}):
+        users.append(
+            {
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'is_bot': user.is_bot,
+                'language_code': user.language_code,
+            }
+        )
     return users
 
 
